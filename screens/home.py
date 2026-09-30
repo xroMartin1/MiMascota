@@ -3,13 +3,14 @@ from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from kivy.app import App
+from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.utils import get_color_from_hex, platform
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.modalview import ModalView
 from kivymd.uix.screen import MDScreen
-from screens.widgets import Card, Action, Text, row, column, pill, icon_tile, PRIMARY, INK, MUTED, MINT, PEACH, WHITE
+from screens.widgets import Card, Action, Text, row, column, pill, icon_tile, PRIMARY, INK, MUTED, MINT, PEACH, WHITE, LIME
 from screens.features import CareFeatures
 from services.store import LocalStore
 from services.cloud import Supabase
@@ -20,7 +21,7 @@ DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "petcare.json"
 class HomeScreen(CareFeatures, MDScreen):
     def __init__(self, data_file=None, **kwargs):
         super().__init__(**kwargs)
-        self.md_bg_color = get_color_from_hex("#F1F9F5")
+        self.md_bg_color = get_color_from_hex("#F7F8FA")
         if data_file is None:
             data_file = (Path(App.get_running_app().user_data_dir) / "petcare.json"
                          if platform in ("android", "ios") else DATA_FILE)
@@ -35,25 +36,28 @@ class HomeScreen(CareFeatures, MDScreen):
         self.selected_pet = self.data["pets"][0]["id"] if self.data["pets"] else None
         self.shell = column(spacing=0)
         self.add_widget(self.shell)
-        self.header = Card(bg="#F7FCF9", radius=0, orientation="horizontal", adaptive=False,
-                           size_hint_y=None, height=dp(62), padding=[dp(20), dp(8)], spacing=12)
-        self.header.add_widget(icon_tile("paw", size=32))
-        branding = column(spacing=0)
-        branding.add_widget(Text("Mi Mascota", 20, PRIMARY, bold=True, height=25))
+        self.header = Card(bg="#F7F8FA", radius=0, orientation="horizontal", adaptive=False,
+                           size_hint_y=None, height=dp(72), padding=[dp(18), dp(10)], spacing=10)
+        self.header.add_widget(icon_tile("paw", size=40, bg=LIME))
+        branding = column(spacing=0, size_hint_y=None, height=dp(46), pos_hint={"center_y": .5})
+        branding.add_widget(Text("Mi Mascota", 22, INK, bold=True, height=28))
         self.subtitle = Text("Inicio", 11, MUTED, height=18)
         branding.add_widget(self.subtitle)
         self.header.add_widget(branding)
-        self.header.add_widget(Action(icon="bell-outline", bg="#F7FCF9", fg=PRIMARY,
-                                      width=40, callback=self.notifications))
-        self.header.add_widget(Action(icon="account-outline", bg="#DCECE3", fg=PRIMARY, width=38,
-                                      height=38, radius=19, callback=self.account))
+        header_actions = row(height=40, spacing=8, size_hint_x=None, width=dp(88),
+                             pos_hint={"center_y": .5})
+        header_actions.add_widget(Action(icon="bell-outline", bg=MINT, fg=PRIMARY,
+                                         width=40, height=40, radius=20, callback=self.notifications))
+        header_actions.add_widget(Action(icon="account-outline", bg=MINT, fg=PRIMARY,
+                                         width=40, height=40, radius=20, callback=self.account))
+        self.header.add_widget(header_actions)
         self.shell.add_widget(self.header)
         self.scroll = ScrollView(do_scroll_x=False, bar_width=dp(2), bar_color=(0, .32, .27, .2))
-        self.content = column(spacing=14, padding=[18, 16, 18, 22], adaptive=True)
+        self.content = column(spacing=16, padding=[18, 18, 18, 26], adaptive=True)
         self.scroll.add_widget(self.content)
         self.shell.add_widget(self.scroll)
         self.nav = Card(bg=WHITE, radius=0, orientation="horizontal", adaptive=False,
-                        size_hint_y=None, height=dp(62), padding=[dp(12), dp(5)], spacing=6)
+                        size_hint_y=None, height=dp(68), padding=[dp(12), dp(6)], spacing=6)
         self.shell.add_widget(self.nav)
         self.show("Inicio")
         self.reminder_clock = Clock.schedule_interval(self.check_reminders, 30)
@@ -68,13 +72,28 @@ class HomeScreen(CareFeatures, MDScreen):
         self.content.clear_widgets()
         self.nav.clear_widgets()
         for title, icon in [("Inicio", "home-outline"), ("Mascotas", "paw"),
-                            ("Rutina", "creation"), ("Salud", "heart-pulse")]:
-            self.nav.add_widget(Action(title, icon=icon, vertical=True, font_size=11,
-                                       bg=MINT if title == page else WHITE,
-                                       fg=PRIMARY if title == page else MUTED,
-                                       callback=partial(self.show, title)))
+                            ("Chapa", "qrcode-scan"), ("Rutina", "creation"),
+                            ("Salud", "heart-pulse")]:
+            if title == "Chapa":
+                self.nav.add_widget(Action(title, icon=icon, vertical=True, font_size=10,
+                                           bg=PRIMARY, fg=WHITE, callback=self.qr_info))
+            else:
+                self.nav.add_widget(Action(title, icon=icon, vertical=True, font_size=10,
+                                           bg=MINT if title == page else WHITE,
+                                           fg=PRIMARY if title == page else MUTED,
+                                           callback=partial(self.show, title)))
         {"Inicio": self.home, "Mascotas": self.pets, "Rutina": self.routine, "Salud": self.health}[page]()
         self.scroll.scroll_y = 1
+        Animation.cancel_all(self.content, "opacity")
+        self.content.opacity = 1
+        for index, widget in enumerate(reversed(self.content.children)):
+            if index >= 6:
+                break
+            widget.opacity = 0
+            def reveal(_, item=widget):
+                if item.parent is self.content:
+                    Animation(opacity=1, duration=.25, t="out_quad").start(item)
+            Clock.schedule_once(reveal, index * .045)
 
 
     def heading(self, title, subtitle, badge=None):
@@ -82,9 +101,9 @@ class HomeScreen(CareFeatures, MDScreen):
         if badge:
             line = row(height=25)
             tag = pill(badge, icon="check-decagram")
-            tag.size_hint_x = .62
+            tag.size_hint_x = .78
             line.add_widget(tag)
-            line.add_widget(Text("", size_hint_x=.38))
+            line.add_widget(Text("", size_hint_x=.22))
             box.add_widget(line)
         box.add_widget(Text(title, 23, INK, bold=True, height=31))
         box.add_widget(Text(subtitle, 12, MUTED, height=22))

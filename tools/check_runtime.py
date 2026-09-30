@@ -8,6 +8,8 @@ def installed():
         return False
     if version("Kivy") != "2.3.1" or version("kivymd") != "1.2.0":
         return False
+    if not (1, 6) <= tuple(int(part) for part in version("segno").split(".")[:2]) < (2, 0):
+        return False
     requests_version = tuple(int(part) for part in version("requests").split(".")[:2])
     return (2, 32) <= requests_version < (3, 0)
 

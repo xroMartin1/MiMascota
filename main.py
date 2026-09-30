@@ -15,16 +15,16 @@ if platform not in ("android", "ios"):
 Window.softinput_mode = "below_target"
 
 # Fondo general de la aplicación
-Window.clearcolor = get_color_from_hex("#F1F9F5")
+Window.clearcolor = get_color_from_hex("#F7F8FA")
 
 
-class PetCareApp(MDApp):
+class MiMascotaApp(MDApp):
 
     def build(self):
 
         # Tema general
         self.theme_cls.theme_style = "Light"
-        self.theme_cls.primary_palette = "Teal"
+        self.theme_cls.primary_palette = "BlueGray"
         self.title = "Mi Mascota"
 
         screen_manager = MDScreenManager()
@@ -41,5 +41,5 @@ class PetCareApp(MDApp):
 
 
 if __name__ == "__main__":
-    PetCareApp().run()
+    MiMascotaApp().run()
     

@@ -8,6 +8,8 @@ from unittest.mock import patch, Mock
 
 from services.store import LocalStore, empty_data, normalize, pet_values, complete_task, pending, import_guest
 from services.cloud import Supabase, CloudError
+from services.qr import start_trial, trial_expired, preview_payload, write_preview_png
+from datetime import timezone, timedelta
 
 
 def pet():
@@ -20,6 +22,22 @@ def task():
 
 
 class StorageTests(unittest.TestCase):
+    def test_qr_trial_is_stable_expires_and_keeps_private_fields_out(self):
+        data = empty_data()
+        pet_data = dict(pet(), email="owner@example.com", phone="555-222")
+        start = datetime(2026, 9, 30, tzinfo=timezone.utc)
+        trial = start_trial(data["qr_trials"], pet_data["id"], start)
+        self.assertIs(start_trial(data["qr_trials"], pet_data["id"], start + timedelta(days=2)), trial)
+        self.assertFalse(trial_expired(trial, start + timedelta(days=13)))
+        self.assertTrue(trial_expired(trial, start + timedelta(days=14)))
+        payload = preview_payload(pet_data, trial)
+        self.assertIn("Nube", payload)
+        self.assertNotIn("owner@example.com", payload)
+        self.assertNotIn("555-222", payload)
+        with TemporaryDirectory() as tmp:
+            path = write_preview_png(pet_data, trial, Path(tmp) / "chapa.png")
+            self.assertEqual(path.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+
     def test_empty_guest_and_roundtrip(self):
         with TemporaryDirectory() as tmp:
             store = LocalStore(Path(tmp) / "guest.json")
@@ -59,6 +77,18 @@ class StorageTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 pet_values(dict(name="Nube", kind="Gato", weight=value))
 
+    def test_microchip_status_and_existing_pets(self):
+        values = dict(name="Nube", kind="Gato", chip="123456")
+        self.assertEqual(pet_values(dict(values, chip_status="Sí"))["chip"], "123456")
+        self.assertEqual(pet_values(dict(values, chip_status="No"))["chip"], "")
+        self.assertEqual(pet_values(dict(values, chip_status="No sé"))["chip_status"], "No sé")
+        old_pet = dict(pet())
+        old_pet.pop("chip_status")
+        old_pet["chip"] = ""
+        data = empty_data()
+        data["pets"].append(old_pet)
+        self.assertEqual(normalize(data)["pets"][0]["chip_status"], "No sé")
+
     def test_recurrence_skips_past_and_records_history(self):
         data = empty_data()
         item = task()
@@ -78,7 +108,7 @@ class StorageTests(unittest.TestCase):
         self.assertEqual(pending(data), [])
         complete_task(data, item)
         self.assertFalse(item["done"])
-        self.assertEqual(len(data["events"]), 1)
+        self.assertEqual(data["events"], [])
 
     def test_import_does_not_duplicate_or_change_guest(self):
         guest = empty_data()

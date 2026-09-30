@@ -12,7 +12,7 @@ KINDS = ("Cuidado", "Medicamento", "Vacuna", "Desparasitación", "Cita")
 
 
 def empty_data():
-    return {"version": 2, "pets": [], "routines": [], "events": [], "cloud_revision": 0}
+    return {"version": 2, "pets": [], "routines": [], "events": [], "qr_trials": {}, "cloud_revision": 0}
 
 
 def normalize(value):
@@ -20,6 +20,20 @@ def normalize(value):
         raise ValueError("Archivo de datos inválido")
     data = empty_data()
     data.update(deepcopy(value))
+    if not isinstance(data["qr_trials"], dict):
+        raise ValueError("Chapas QR inválidas")
+    for pet_id, trial in data["qr_trials"].items():
+        if not isinstance(pet_id, str) or not isinstance(trial, dict):
+            raise ValueError("Chapa QR inválida")
+        if not all(isinstance(trial.get(key), str) for key in ("code", "started_at", "expires_at")):
+            raise ValueError("Chapa QR inválida")
+        try:
+            started = datetime.fromisoformat(trial["started_at"])
+            expires = datetime.fromisoformat(trial["expires_at"])
+            if started.tzinfo is None or expires.tzinfo is None or expires <= started:
+                raise ValueError("Fechas sin zona o fuera de orden")
+        except ValueError:
+            raise ValueError("Fechas de chapa QR inválidas") from None
     for collection in ("pets", "routines", "events"):
         if not isinstance(data[collection], list):
             raise ValueError("Lista de datos inválida")
@@ -37,6 +51,10 @@ def normalize(value):
                     "events": ("title", "detail", "pet")}[collection]
             if any(not isinstance(item.get(k), str) for k in keys):
                 raise ValueError("Campos de datos inválidos")
+            if collection == "pets":
+                item.setdefault("chip_status", "Sí" if item["chip"] else "No sé")
+                if item["chip_status"] not in ("Sí", "No", "No sé"):
+                    raise ValueError("Estado de microchip inválido")
             if collection == "routines":
                 item.setdefault("pet", "")
                 item.setdefault("kind", "Cuidado")
@@ -87,6 +105,11 @@ def pet_values(values):
     result = {k: str(values.get(k, "")).strip() for k in ("name", "kind", "breed", "age", "weight", "chip")}
     if not result["name"] or not result["kind"]:
         raise ValueError("Escribe el nombre y la especie.")
+    result["chip_status"] = str(values.get("chip_status", "Sí" if result["chip"] else "No sé")).strip()
+    if result["chip_status"] not in ("Sí", "No", "No sé"):
+        raise ValueError("Selecciona una opción válida para el microchip.")
+    if result["chip_status"] != "Sí":
+        result["chip"] = ""
     if result["weight"] and result["weight"] != "—":
         try:
             weight = float(result["weight"].replace(",", "."))
@@ -106,6 +129,11 @@ def complete_task(data, task, now=None):
     now = now or datetime.now()
     if task["done"]:
         task["done"] = False
+        for index in range(len(data["events"]) - 1, -1, -1):
+            event = data["events"][index]
+            if event.get("task_id") == task["id"] and event.get("status") == "Completado":
+                data["events"].pop(index)
+                break
         return
     data["events"].append({"id": uuid.uuid4().hex, "pet": task["pet"], "title": task["title"],
                            "detail": task["detail"], "date": now.strftime(DATE_FORMAT),
@@ -132,4 +160,6 @@ def import_guest(target, guest):
     for key in ("pets", "routines", "events"):
         known = {v["id"] for v in result[key]}
         result[key].extend(deepcopy(v) for v in guest[key] if v["id"] not in known)
+    result["qr_trials"].update({key: deepcopy(value) for key, value in guest["qr_trials"].items()
+                                if key not in result["qr_trials"]})
     return normalize(result)

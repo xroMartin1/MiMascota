@@ -11,7 +11,7 @@ Cuidar de una o varias mascotas implica coordinar múltiples tareas: horarios de
 - Perder el seguimiento de las fechas de vacunación o desparasitación.
 - Carecer de un registro médico centralizado con antecedentes de alergias, diagnósticos, síntomas y controles de peso.
 
-** Mi mascota** resuelve estos problemas ofreciendo un centro de control unificado e intuitivo donde puedes gestionar los perfiles de tus mascotas, programar sus cuidados recurrentes, recibir alertas y mantener un registro de salud detallado.
+**Mi Mascota** resuelve estos problemas ofreciendo un centro de control unificado e intuitivo donde puedes gestionar los perfiles de tus mascotas, programar sus cuidados recurrentes, recibir alertas y mantener un registro de salud detallado.
 
 ---
 
@@ -30,15 +30,18 @@ Cuidar de una o varias mascotas implica coordinar múltiples tareas: horarios de
 - **Recordatorios Locales**: Alertas dentro de la app con avisos visuales según fecha y hora.
 - **Historial Médico y de Salud**: Registro organizado por evento (vacunas, alergias, enfermedades, síntomas y controles veterinarios).
 - **Almacenamiento Local de Datos**: Guardado atómico con respaldos automáticos `.bak` para evitar pérdida de información.
+- **Chapa QR de Prueba**: Código escaneable por mascota, sin cuenta y sin datos privados.
 - **Soporte Multiplataforma**: Funciona en PC (Windows) y está preparada para Android.
 
-## Chapa Digital QR (Identificación Inteligente)
+## Chapa digital QR
 
-Mi Mascota incluirá un sistema de identificación digital mediante códigos QR diseñado para la seguridad de tu mascota:
+La chapa de **prueba local** ya funciona sin registro: crea una mascota, toca «Abrir mi chapa QR» y escanéala con otra cámara. El PNG contiene solo nombre, especie e identificador de prueba. Se guarda un período de 14 días por mascota y volver a abrir la pantalla no lo reinicia. La app oculta el QR cuando termina el período.
 
-- **Funcionamiento**: Cada usuario registrado podrá asociar una chapa física a su perfil de mascota. Al escanear el código QR impreso en el collar, cualquier persona que encuentre a la mascota podrá ver una página web pública de emergencia con los datos médicos relevantes y los métodos de contacto del dueño, **sin necesidad de instalar la aplicación**.
-- **Privacidad y Control**: El dueño decidirá desde la app qué datos de contacto (teléfono, comuna/ciudad, notas de alergias o medicamentos críticos) serán visibles en la pantalla de emergencia al escanear el código.
-- **Modelo de Adquisición**: Las chapas físicas se podrán adquirir directamente a través de la plataforma, viniendo el código QR ya preconfigurado y vinculado automáticamente a la cuenta del usuario.
+Esta prueba **no es una ficha pública ni un sistema de rescate**: una foto del QR seguirá siendo legible después del plazo y no permite contactar a la familia. Para la versión pública se necesita una URL por chapa, una página web de emergencia y caducidad comprobada en Supabase, nunca dentro del QR. Esa página debe mostrar solo los datos que el dueño elija y permitir enviar un mensaje sin publicar su correo ni teléfono. La compra y el envío de la placa física aún no están implementados.
+
+La ilustración de Inicio se carga desde `assets/Placa_Icon.png`; las vistas de la placa física usan `assets/PlacaReal_Front.png` y `assets/PlacaReal_Back.png`. `assets/placa_preview.png` queda como alternativa cuando faltan las dos vistas. El QR de esos mockups es solo ilustrativo. Las decisiones visuales están en [DISENO_Y_QR.md](DISENO_Y_QR.md).
+
+La ilustración de Rutina se carga desde `assets/MascotsBanner.png` y mantiene el texto como elemento editable de Kivy. Si falta el archivo, se usa la ilustración vectorial integrada.
 
 ---
 
@@ -117,7 +120,7 @@ MiMascota/
 ├── supabase/               # Esquemas SQL preliminares para backend
 ├── main.py                 # Punto de entrada de la aplicación
 ├── requirements.txt        # Dependencias del proyecto (Kivy, KivyMD, etc.)
-├── Iniciar PetCare.bat     # Lanzador automático para Windows
+├── Iniciar MiMascota.bat   # Lanzador automático para Windows
 └── README.md               # Documentación del proyecto
 ```
 
@@ -125,7 +128,7 @@ MiMascota/
 
 ## Próximos Pasos (Roadmap)
 
-- **Integración de Backend Completo**: Implementación de base de datos en la nube (Supabase / PostgreSQL) y autenticación de usuarios (Inicio de sesión / Registro).
-- **Sistema de Chapa Digital QR**: Desarrollo de la generación automática de códigos QR en Python, diseño de la página web pública de emergencia para escaneo móvil y habilitación del flujo de vinculación con perfiles de mascotas.
+- **Integración de Backend Completo**: Completar el flujo público de la chapa y la mensajería con Supabase; el registro y la copia privada ya tienen una base funcional cuando se configura el proyecto.
+- **QR público con Supabase**: Publicar una ficha de emergencia, comprobar la caducidad en el servidor y recibir avisos de personas que encuentren a la mascota sin revelar los datos privados del dueño.
 - **Notificaciones Push en Segundo Plano**: Integración con Firebase Cloud Messaging (FCM) para avisos en móviles sin requerir que la app esté abierta.
 - **Publicación de APK Android**: Compilación oficial vía Buildozer / Docker para distribución en Android.

@@ -1,4 +1,4 @@
-# Probar PetCare en un teléfono Android
+# Probar Mi Mascota en un teléfono Android
 
 El proyecto ya tiene `buildozer.spec`. El APK **todavía no está compilado**: este equipo Windows no tiene WSL instalado. Para crear el APK usa estos pasos. El empaquetado conserva Kivy y KivyMD.
 
@@ -32,20 +32,20 @@ La [guía de Buildozer](https://buildozer.readthedocs.io/en/latest/installation/
 Todavía en Ubuntu:
 
 ```bash
-mkdir -p ~/PetCareApp
-rsync -a --exclude='venv/' --exclude='.venv/' --exclude='data/' --exclude='previews/' --exclude='.kivy/' --exclude='.buildozer/' --exclude='bin/' --exclude='__pycache__/' /mnt/c/Users/marco/OneDrive/Desktop/PetCareApp/ ~/PetCareApp/
-cd ~/PetCareApp
+mkdir -p ~/MiMascota
+rsync -a --exclude='venv/' --exclude='.venv/' --exclude='data/' --exclude='previews/' --exclude='.kivy/' --exclude='.buildozer/' --exclude='bin/' --exclude='__pycache__/' /mnt/c/Users/marco/OneDrive/Desktop/MiMascota/ ~/MiMascota/
+cd ~/MiMascota
 source ~/buildozer-venv/bin/activate
 buildozer -v android debug
 ```
 
-La primera compilación descarga Android SDK/NDK y puede tardar bastante. Acepta las licencias si te las pide. Si termina bien, el APK estará en `~/PetCareApp/bin/`. La [guía oficial de Kivy](https://kivy.org/doc/stable/guide/packaging-android.html) describe este flujo con Buildozer.
+La primera compilación descarga Android SDK/NDK y puede tardar bastante. Acepta las licencias si te las pide. Si termina bien, el APK estará en `~/MiMascota/bin/`. La [guía oficial de Kivy](https://kivy.org/doc/stable/guide/packaging-android.html) describe este flujo con Buildozer.
 
 Para dejar el APK accesible desde Windows:
 
 ```bash
-mkdir -p /mnt/c/Users/marco/OneDrive/Desktop/PetCareApp/apk
-cp bin/*.apk /mnt/c/Users/marco/OneDrive/Desktop/PetCareApp/apk/
+mkdir -p /mnt/c/Users/marco/OneDrive/Desktop/MiMascota/apk
+cp bin/*.apk /mnt/c/Users/marco/OneDrive/Desktop/MiMascota/apk/
 ```
 
 ## 4. Instalarlo en el teléfono
@@ -54,6 +54,8 @@ Conecta el teléfono por USB y copia el `.apk` de la carpeta `apk` a Descargas. 
 
 La app abrirá en modo invitado. Prueba a registrar una mascota, agregar un cuidado, cerrar y volver a abrir: los datos deben seguir allí. En Android se guardan en la carpeta privada de la app; son independientes de `data/petcare.json` de Windows. Si desinstalas el APK, esos datos pueden perderse: exporta una copia o usa una cuenta con respaldo antes de hacerlo.
 
-La nube requiere configurar Supabase según [CONFIGURACION.md](CONFIGURACION.md). El archivo `config.json`, si existe al copiar el proyecto, se incluye en el APK; coloca sólo la **clave publicable**, nunca secretos. Las notificaciones push de Firebase y el QR público aún no funcionan en el teléfono.
+Para probar el QR local, registra una mascota, abre «Mi chapa QR» y escanéala con otro teléfono. Verás nombre y especie, sin datos de contacto. Los 14 días solo controlan su presentación dentro de la app; el contenido de una foto del QR no se puede desactivar sin un servidor.
+
+La nube requiere crear un proyecto Supabase, ejecutar [supabase/schema.sql](supabase/schema.sql) y copiar `config.example.json` a `config.json` con la URL y **clave publicable**, nunca secretos. Las notificaciones push de Firebase y la ficha QR pública aún no están activadas.
 
 Si tu teléfono es iPhone, esta ruta no genera una app iOS. Para iOS se necesita macOS y el flujo `kivy-ios`/Xcode; [Buildozer describe los requisitos](https://buildozer.readthedocs.io/en/latest/installation/#targeting-ios).

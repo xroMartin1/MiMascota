@@ -22,10 +22,10 @@ function Test-Runtime([string]$pythonPath) {
 }
 
 function Find-BasePython {
-    if ($env:PETCARE_PYTHON -and (Test-Path -LiteralPath $env:PETCARE_PYTHON -PathType Leaf)) {
+    if ($env:MIMASCOTA_PYTHON -and (Test-Path -LiteralPath $env:MIMASCOTA_PYTHON -PathType Leaf)) {
         try {
-            & $env:PETCARE_PYTHON -c 'import sys; assert sys.version_info[:2] in ((3, 11), (3, 12))' 2>$null
-            if ($LASTEXITCODE -eq 0) { return $env:PETCARE_PYTHON }
+            & $env:MIMASCOTA_PYTHON -c 'import sys; assert sys.version_info[:2] in ((3, 11), (3, 12))' 2>$null
+            if ($LASTEXITCODE -eq 0) { return $env:MIMASCOTA_PYTHON }
         } catch { }
     }
     $candidates = @(
@@ -65,7 +65,7 @@ try {
         }
         if (-not $RuntimeHome) {
             if (-not $env:LOCALAPPDATA) { throw "No se encontro LOCALAPPDATA para crear el entorno." }
-            $RuntimeHome = Join-Path $env:LOCALAPPDATA "PetCareApp"
+            $RuntimeHome = Join-Path $env:LOCALAPPDATA "MiMascota"
         }
         New-Item -ItemType Directory -Path $RuntimeHome -Force | Out-Null
         $runtime = Join-Path $RuntimeHome "dev-venv"

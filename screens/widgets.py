@@ -1,8 +1,13 @@
 """Componentes visuales compartidos; ilustraciones vectoriales dibujadas en Kivy."""
 from pathlib import Path
-from kivy.graphics import Color, RoundedRectangle, Ellipse, Line, Triangle
+import math
+from kivy.clock import Clock
+from kivy.graphics import Color, RoundedRectangle, Ellipse, Line, Triangle, Rectangle, PushMatrix, PopMatrix, Rotate
 from kivy.metrics import dp, sp
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.image import Image
+from kivy.uix.spinner import Spinner, SpinnerOption
 from kivy.uix.label import Label
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.widget import Widget
@@ -10,11 +15,12 @@ from kivy.utils import get_color_from_hex as rgba
 from kivymd import fonts_path
 from kivymd.icon_definitions import md_icons
 
-PRIMARY = "#00594D"
-INK = "#172D29"
-MUTED = "#70827C"
-MINT = "#EAF5EF"
-PEACH = "#FFF0E9"
+PRIMARY = "#286F83"
+INK = "#193C47"
+MUTED = "#71838B"
+MINT = "#E7F3F4"
+PEACH = "#FBEAE1"
+LIME = "#DAEFA0"
 WHITE = "#FFFFFF"
 
 
@@ -49,6 +55,32 @@ class Icon(Text):
         self.width = dp(width)
 
 
+class SoftSpinnerOption(SpinnerOption):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("background_normal", "")
+        kwargs.setdefault("background_down", "")
+        kwargs.setdefault("background_color", rgba(WHITE))
+        kwargs.setdefault("color", rgba(INK))
+        kwargs.setdefault("font_size", sp(14))
+        kwargs.setdefault("height", dp(50))
+        super().__init__(**kwargs)
+
+
+class SoftSpinner(Spinner):
+    def __init__(self, bg=MINT, fg=PRIMARY, **kwargs):
+        super().__init__(background_normal="", background_down="",
+                         background_color=(0, 0, 0, 0), color=rgba(fg),
+                         font_size=sp(14), option_cls=SoftSpinnerOption, **kwargs)
+        with self.canvas.before:
+            Color(*rgba(bg))
+            self.surface = RoundedRectangle(radius=[dp(14)])
+        self.bind(pos=self._update_surface, size=self._update_surface)
+
+    def _update_surface(self, *_):
+        self.surface.pos = self.pos
+        self.surface.size = self.size
+
+
 class Card(BoxLayout):
     def __init__(self, bg=WHITE, radius=23, padding=18, spacing=10, adaptive=True, accent=False, **kwargs):
         super().__init__(orientation=kwargs.pop("orientation", "vertical"),
@@ -57,7 +89,7 @@ class Card(BoxLayout):
         self.accent = accent
         with self.canvas.before:
             # Una sombra apenas perceptible mantiene la superficie ligera.
-            Color(0.05, .22, .16, .025)
+            Color(0.05, .16, .14, .04)
             self.shadow = RoundedRectangle(radius=[self.radius_value])
             self.fill = Color(*rgba(bg))
             self.shape = RoundedRectangle(radius=[self.radius_value])
@@ -80,7 +112,7 @@ class Card(BoxLayout):
 
 class Action(ButtonBehavior, Card):
     def __init__(self, text="", icon=None, callback=None, bg=PRIMARY, fg=WHITE,
-                 width=None, height=44, radius=10, vertical=False, font_size=12, **kwargs):
+                 width=None, height=44, radius=14, vertical=False, font_size=12, **kwargs):
         super().__init__(bg=bg, radius=radius, padding=[dp(4 if vertical else 9), dp(5)], spacing=4,
                          adaptive=False, orientation="vertical" if vertical else "horizontal",
                          size_hint_y=None, height=dp(height), **kwargs)
@@ -156,6 +188,91 @@ class PetAvatar(Widget):
             pet_face(self.center_x - size / 2, self.center_y - size / 2, size, self.kind.casefold() == "gato")
 
 
+class TagArt(Widget):
+    """Una chapa editorial decorativa; el QR que se escanea se genera por separado."""
+    def __init__(self, **kwargs):
+        self.phase = 0.0
+        self._motion = None
+        super().__init__(**kwargs)
+        self.bind(pos=self.draw, size=self.draw)
+
+    def on_parent(self, _instance, parent):
+        if self._motion is not None:
+            self._motion.cancel()
+            self._motion = None
+        if parent is not None:
+            self._motion = Clock.schedule_interval(self._tick, 1 / 12)
+
+    def _tick(self, delta):
+        self.phase += delta
+        self.draw()
+
+    def draw(self, *_):
+        self.canvas.clear()
+        if self.width <= 0 or self.height <= 0:
+            return
+        x, y, w, h = self.x, self.y, self.width, self.height
+        s = min(w / dp(125), h / dp(140))
+        cx, cy = x + w * .52, y + h * .50
+        tw, th = dp(86) * s, dp(108) * s
+        left, bottom = cx - tw / 2, cy - th / 2
+        with self.canvas:
+            Color(.16, .44, .52, .22)
+            Line(ellipse=(x + dp(8) * s, y + dp(5) * s,
+                          w - dp(16) * s, h - dp(10) * s), width=1)
+            for px, py, size in ((.13, .72, 4), (.88, .28, 5), (.78, .86, 3)):
+                Color(.16, .44, .52, .46)
+                Ellipse(pos=(x + w * px, y + h * py), size=(dp(size) * s, dp(size) * s))
+            PushMatrix()
+            Rotate(angle=-9 + math.sin(self.phase * 1.4) * 2.2, origin=(cx, cy))
+            Color(0, 0, 0, .18)
+            RoundedRectangle(pos=(left + dp(5) * s, bottom - dp(5) * s),
+                             size=(tw, th), radius=[dp(17) * s])
+            Color(*rgba(LIME))
+            RoundedRectangle(pos=(left, bottom), size=(tw, th), radius=[dp(17) * s])
+            Color(*rgba(INK))
+            Ellipse(pos=(cx - dp(6) * s, bottom + th - dp(19) * s),
+                    size=(dp(12) * s, dp(12) * s))
+            qx, qy = left + dp(18) * s, bottom + dp(26) * s
+            unit = dp(6) * s
+            Line(rectangle=(qx, qy + unit * 4, unit * 3, unit * 3), width=1.6)
+            Rectangle(pos=(qx + unit, qy + unit * 5), size=(unit, unit))
+            for gx, gy in ((4, 6), (5, 6), (6, 6), (4, 4), (6, 4), (0, 2), (2, 2),
+                           (4, 2), (6, 2), (0, 0), (2, 0), (5, 0), (6, 0)):
+                Rectangle(pos=(qx + gx * unit, qy + gy * unit), size=(unit * .7, unit * .7))
+            Color(*rgba(PRIMARY))
+            RoundedRectangle(pos=(left + dp(18) * s, bottom + dp(12) * s),
+                             size=(tw - dp(36) * s, dp(3) * s), radius=[dp(2) * s])
+            PopMatrix()
+
+
+class FloatingTag(FloatLayout):
+    """Mueve suavemente la ilustración 2D sin volver a generar su textura."""
+    def __init__(self, **kwargs):
+        self.phase = 0.0
+        self._motion = None
+        super().__init__(**kwargs)
+        source = Path(__file__).resolve().parents[1] / "assets" / "Placa_Icon.png"
+        self.image = Image(source=str(source), fit_mode="contain", size_hint=(None, None),
+                           size=(dp(112), dp(142)))
+        self.add_widget(self.image)
+        self.bind(pos=self._place, size=self._place)
+
+    def on_parent(self, _instance, parent):
+        if self._motion is not None:
+            self._motion.cancel()
+            self._motion = None
+        if parent is not None:
+            self._motion = Clock.schedule_interval(self._tick, 1 / 20)
+
+    def _tick(self, delta):
+        self.phase += delta
+        self._place()
+
+    def _place(self, *_):
+        self.image.center = (self.center_x, self.center_y + math.sin(self.phase * 1.7) * dp(3))
+
+
 class SpaArt(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -191,3 +308,23 @@ class SpaArt(Widget):
         self.tag.pos, self.tag.size = (x+dp(23), y+h-dp(36)), (w-dp(40), dp(22))
         self.title.pos, self.title.size = (x+dp(15), y+dp(12)), (w-dp(30), dp(27))
         self.caption.pos, self.caption.size = (x+dp(15), y+dp(39)), (w-dp(30), dp(17))
+
+
+class SpaBanner(FloatLayout):
+    """La ilustración aportada por el usuario con texto nítido y editable encima."""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        path = Path(__file__).resolve().parents[1] / "assets" / "MascotsBanner.png"
+        self.add_widget(Image(source=str(path), fit_mode="cover", size_hint=(1, 1),
+                              pos_hint={"x": 0, "y": 0}))
+        tag = Card(bg=WHITE, radius=15, padding=[dp(10), 0], adaptive=False,
+                   size_hint=(None, None), width=dp(153), height=dp(28),
+                   pos_hint={"x": .045, "top": .94})
+        tag.add_widget(Text("DÍA DE SPA & MIMOS", 10, PRIMARY, bold=True))
+        self.add_widget(tag)
+        self.add_widget(Text("Un respiro para compartir", 11, "#D9EFF0",
+                             size_hint=(.9, None), height=dp(18),
+                             pos_hint={"x": .05, "y": .22}))
+        self.add_widget(Text("Su momento de mimos", 19, WHITE, bold=True,
+                             size_hint=(.9, None), height=dp(31),
+                             pos_hint={"x": .05, "y": .07}))

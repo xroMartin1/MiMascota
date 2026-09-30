@@ -10,11 +10,11 @@ sys.path.insert(0, str(ROOT))
 
 from kivy.clock import Clock
 from kivy.core.window import Window
-from main import PetCareApp
+from main import MiMascotaApp
 from screens.home import HomeScreen
 
 
-class CheckUI(PetCareApp):
+class CheckUI(MiMascotaApp):
     def build(self):
         self.temporary = TemporaryDirectory()
         self.theme_cls.theme_style = "Light"
@@ -39,8 +39,8 @@ class CheckUI(PetCareApp):
         self.page = next(self.pages, None)
         if self.page is None:
             Window.size = (320, 640)
-            self.screen.show("Mascotas")
-            Clock.schedule_once(self.finish, .5)
+            self.screen.show("Inicio")
+            Clock.schedule_once(self.capture_small_home, .5)
             return
         self.screen.show(self.page)
         Clock.schedule_once(self.capture, .35)
@@ -49,14 +49,20 @@ class CheckUI(PetCareApp):
         self.root.export_to_png(str(ROOT / "previews" / f"{self.page}.png"))
         Clock.schedule_once(self.next_page, .1)
 
+    def capture_small_home(self, _):
+        self.root.export_to_png(str(ROOT / "previews" / "compacta-inicio.png"))
+        self.screen.show("Mascotas")
+        Clock.schedule_once(self.finish, .4)
+
     def check_actions(self):
         s = self.screen
         captured = []
         original_form = s.form
         s.form = lambda title, fields, submit, **kwargs: captured.append((fields, submit))
         s.register_pet()
-        _, submit = captured.pop()
-        values = dict(name="Nube", kind="Gato", breed="Común", age="1 año", weight="-1", chip="")
+        fields, submit = captured.pop()
+        values = {key: value for key, _, value in fields}
+        values.update(name="Nube", kind="Gato", breed="Común", age="1 año", weight="-1", chip_status="No")
         try:
             submit(values)
             raise AssertionError("Invalid weight accepted")
@@ -67,6 +73,12 @@ class CheckUI(PetCareApp):
         assert s.save()
         pet = s.data["pets"][-1]
         s.selected_pet = pet["id"]
+        s.qr_info(pet)
+        assert pet["id"] in s.data["qr_trials"]
+        assert (s.data_file.parent / "qr" / ("prueba-" + pet["id"] + ".png")).exists()
+        for widget in list(Window.children):
+            if hasattr(widget, "dismiss"):
+                widget.dismiss(animation=False)
         s.add_event()
         _, submit = captured.pop()
         submit(dict(title="Control", detail="Revisión anual", date="2026-09-27 10:00", kind="Control"))
