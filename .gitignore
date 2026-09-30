@@ -1,0 +1,36 @@
+# Entornos virtuales
+venv/
+.venv/
+dev-venv/
+env/
+ENV/
+
+# Python cache y compilados
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+.eggs/
+
+# Datos locales de usuario y configuración privada
+data/
+config.json
+.kivy/
+previews/
+*.bak
+
+# Builds y paquetes de Android
+.buildozer/
+bin/
+apk/
+
+# Archivos de sistema e IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
