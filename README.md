@@ -1,6 +1,6 @@
 # Mi Mascota
 
-**PetCare** es una aplicación móvil y de escritorio desarrollada con **Python, Kivy y KivyMD**, diseñada para facilitar el seguimiento integral, la gestión médica y la rutina diaria de tus mascotas.
+   **Mi Mascota** es una aplicación móvil y de escritorio desarrollada con **Python, Kivy y KivyMD**, diseñada para facilitar el seguimiento integral, la gestión médica y la rutina diaria de tus mascotas.
 
 ---
 
@@ -11,7 +11,7 @@ Cuidar de una o varias mascotas implica coordinar múltiples tareas: horarios de
 - Perder el seguimiento de las fechas de vacunación o desparasitación.
 - Carecer de un registro médico centralizado con antecedentes de alergias, diagnósticos, síntomas y controles de peso.
 
-**PetCare** resuelve estos problemas ofreciendo un centro de control unificado e intuitivo donde puedes gestionar los perfiles de tus mascotas, programar sus cuidados recurrentes, recibir alertas y mantener un registro de salud detallado.
+** Mi mascota** resuelve estos problemas ofreciendo un centro de control unificado e intuitivo donde puedes gestionar los perfiles de tus mascotas, programar sus cuidados recurrentes, recibir alertas y mantener un registro de salud detallado.
 
 ---
 
@@ -34,7 +34,7 @@ Cuidar de una o varias mascotas implica coordinar múltiples tareas: horarios de
 
 ## Chapa Digital QR (Identificación Inteligente)
 
-PetCare incluirá un sistema de identificación digital mediante códigos QR diseñado para la seguridad de tu mascota:
+Mi Mascota incluirá un sistema de identificación digital mediante códigos QR diseñado para la seguridad de tu mascota:
 
 - **Funcionamiento**: Cada usuario registrado podrá asociar una chapa física a su perfil de mascota. Al escanear el código QR impreso en el collar, cualquier persona que encuentre a la mascota podrá ver una página web pública de emergencia con los datos médicos relevantes y los métodos de contacto del dueño, **sin necesidad de instalar la aplicación**.
 - **Privacidad y Control**: El dueño decidirá desde la app qué datos de contacto (teléfono, comuna/ciudad, notas de alergias o medicamentos críticos) serán visibles en la pantalla de emergencia al escanear el código.
@@ -83,9 +83,9 @@ PetCare incluirá un sistema de identificación digital mediante códigos QR dis
 
 ---
 
-### Opción alternativa en Windows (`Iniciar PetCare.bat`)
+### Opción alternativa en Windows (`Iniciar MiMascota.bat`)
 
-En Windows puedes hacer **doble clic** en `Iniciar PetCare.bat`. Este script verifica el entorno de Python, crea automáticamente el entorno virtual local si no existe, instala las dependencias necesarias y ejecuta la app sin configuraciones adicionales.
+En Windows puedes hacer **doble clic** en `Iniciar MiMascota.bat`. Este script verifica el entorno de Python, crea automáticamente el entorno virtual local si no existe, instala las dependencias necesarias y ejecuta la app sin configuraciones adicionales.
 
 ---
 
