@@ -1,0 +1,200 @@
+#:import rgba kivy.utils.get_color_from_hex
+#:import md_icons kivymd.icon_definitions.md_icons
+#:import fonts_path kivymd.fonts_path
+
+<ViewColumn>:
+    orientation: 'vertical'
+    spacing: dp(8)
+
+<ViewRow>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(40)
+    spacing: dp(8)
+
+<ViewText>:
+    font_size: sp(14)
+    color: rgba('#193C47')
+    halign: 'left'
+    valign: 'middle'
+    text_size: (self.width, None) if self.wrap else self.size
+    shorten_from: 'right'
+
+<ViewCard>:
+    padding: dp(18)
+    spacing: dp(10)
+    canvas.before:
+        Color:
+            rgba: .05, .16, .14, .04
+        RoundedRectangle:
+            pos: self.x, self.y - dp(3)
+            size: self.size
+            radius: [dp(self.radius)]
+        Color:
+            rgba: rgba(self.bg)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(self.radius)]
+        Color:
+            rgba: rgba('#286F83') if self.accent else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.x + dp(13), self.top - dp(3)
+            size: max(0, self.width - dp(26)), dp(3)
+            radius: [dp(2)]
+
+<ViewAction>:
+    bg: '#286F83'
+    radius: 14
+    adaptive: False
+    orientation: 'vertical' if self.vertical else 'horizontal'
+    size_hint_y: 1 if self.vertical else None
+    height: dp(44)
+    padding: [dp(4 if self.vertical else 9), dp(5)]
+    spacing: dp(4) if self.icon and self.text else 0
+    opacity: .68 if self.state == 'down' else 1
+    ViewText:
+        text: md_icons.get(root.icon, '')
+        font_name: fonts_path + 'materialdesignicons-webfont.ttf'
+        font_size: sp(22 if root.vertical or not root.text else 18)
+        color: rgba(root.fg)
+        halign: 'center'
+        size_hint_x: 1 if root.icon and (root.vertical or not root.text) else None
+        size_hint_y: 1 if root.icon else None
+        width: dp(22) if root.icon else 0
+        height: dp(22) if root.icon else 0
+        opacity: 1 if root.icon else 0
+    ViewText:
+        text: root.text
+        font_size: sp(root.font_size)
+        color: rgba(root.fg)
+        halign: 'center'
+        bold: not root.vertical
+        shorten: True
+        size_hint_x: 1 if root.text else None
+        size_hint_y: 1 if root.text else None
+        width: 0
+        height: 0
+
+<ViewSpinnerOption>:
+    background_normal: ''
+    background_down: ''
+    background_color: rgba('#FFFFFF')
+    color: rgba('#193C47')
+    font_size: sp(14)
+    height: dp(50)
+
+<ViewSpinner>:
+    background_normal: ''
+    background_down: ''
+    background_color: 0, 0, 0, 0
+    color: rgba(self.fg)
+    font_size: sp(14)
+    option_cls: 'ViewSpinnerOption'
+    canvas.before:
+        Color:
+            rgba: rgba(self.bg)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(14)]
+
+<ViewPill>:
+    bg: '#FBEAE1' if self.warm else '#E7F3F4'
+    radius: 14
+    orientation: 'horizontal'
+    padding: [dp(10), dp(4)]
+    spacing: dp(5) if self.icon else 0
+    adaptive: False
+    size_hint_y: None
+    height: dp(27)
+    ViewText:
+        text: md_icons.get(root.icon, '')
+        font_name: fonts_path + 'materialdesignicons-webfont.ttf'
+        font_size: sp(13)
+        halign: 'center'
+        color: rgba('#A44D2E' if root.warm else '#286F83')
+        size_hint_x: None
+        width: dp(14) if root.icon else 0
+    ViewText:
+        text: root.text
+        font_size: sp(10)
+        color: rgba('#A44D2E' if root.warm else '#286F83')
+        shorten: True
+
+<ViewIconTile>:
+    bg: '#E7F3F4'
+    radius: 13
+    adaptive: False
+    padding: 0
+    size_hint: None, None
+    size: dp(self.tile_size), dp(self.tile_size)
+    pos_hint: {'center_y': .5}
+    ViewText:
+        text: md_icons.get(root.icon, '')
+        font_name: fonts_path + 'materialdesignicons-webfont.ttf'
+        font_size: sp(23)
+        color: rgba('#A44D2E' if root.bg == '#FBEAE1' else '#286F83')
+        halign: 'center'
+
+<FloatingTag>:
+    Image:
+        id: image
+        source: root.source
+        fit_mode: 'contain'
+        size_hint: None, None
+        size: dp(112), dp(142)
+
+<SpaArt>:
+    ViewText:
+        id: tag
+        text: 'DÍA DE SPA & BELLEZA'
+        font_size: sp(10)
+        color: rgba('#286F83')
+        bold: True
+    ViewText:
+        id: title
+        text: 'Momento de consentimiento'
+        font_size: sp(18)
+        color: rgba('#FFFFFF')
+        bold: True
+    ViewText:
+        id: caption
+        text: 'Un pequeño mimo, una gran felicidad'
+        font_size: sp(11)
+        color: rgba('#C5ECE0')
+
+<SpaBanner>:
+    Image:
+        source: root.source
+        fit_mode: 'cover'
+        size_hint: 1, 1
+        pos_hint: {'x': 0, 'y': 0}
+    ViewCard:
+        bg: '#FFFFFF'
+        radius: 15
+        padding: [dp(10), 0]
+        adaptive: False
+        size_hint: None, None
+        size: dp(153), dp(28)
+        pos_hint: {'x': .045, 'top': .94}
+        ViewText:
+            text: 'DÍA DE SPA & MIMOS'
+            font_size: sp(10)
+            color: rgba('#286F83')
+            bold: True
+    ViewText:
+        text: 'Un respiro para compartir'
+        font_size: sp(11)
+        color: rgba('#D9EFF0')
+        size_hint: .9, None
+        height: dp(18)
+        pos_hint: {'x': .05, 'y': .22}
+    ViewText:
+        text: 'Su momento de mimos'
+        font_size: sp(19)
+        color: rgba('#FFFFFF')
+        bold: True
+        size_hint: .9, None
+        height: dp(31)
+        pos_hint: {'x': .05, 'y': .07}

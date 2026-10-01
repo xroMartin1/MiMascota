@@ -1,10 +1,14 @@
+from pathlib import Path
+
 from kivy.core.window import Window
+from kivy.lang import Builder
 from kivy.utils import get_color_from_hex, platform
 
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 
 from screens.home import HomeScreen
+from screens.views import load_views
 
 
 # Simulación de pantalla de teléfono sólo en escritorio.
@@ -27,13 +31,8 @@ class MiMascotaApp(MDApp):
         self.theme_cls.primary_palette = "BlueGray"
         self.title = "Mi Mascota"
 
-        screen_manager = MDScreenManager()
-
-        screen_manager.add_widget(
-            HomeScreen(name="home")
-        )
-
-        return screen_manager
+        load_views()
+        return Builder.load_file(str(Path(__file__).resolve().parent / 'main.kv'))
 
     def on_stop(self):
         if self.root and hasattr(self.root, "get_screen"):

@@ -1,0 +1,214 @@
+#:import rgba kivy.utils.get_color_from_hex
+
+<HomeScreen>:
+    md_bg_color: rgba('#FFFFFF')
+
+<HomeShell@ViewColumn>:
+    spacing: dp(0)
+    ViewCard:
+        id: header
+        bg: '#FFFFFF'
+        radius: 0
+        orientation: 'horizontal'
+        adaptive: False
+        size_hint_y: None
+        height: dp(72)
+        padding: [dp(18), dp(10)]
+        spacing: dp(10)
+        ViewIconTile:
+            id: brand_icon
+            icon: 'paw'
+            tile_size: 40
+            bg: '#DAEFA0'
+        ViewColumn:
+            id: branding
+            spacing: dp(0)
+            size_hint_y: None
+            height: dp(46)
+            pos_hint: {'center_y': 0.5}
+            ViewText:
+                id: brand_title
+                text: 'Mi Mascota'
+                font_size: sp(22)
+                color: rgba('#193C47')
+                bold: True
+                size_hint_y: None
+                height: dp(28)
+            ViewText:
+                id: subtitle
+                text: 'Inicio'
+                font_size: sp(11)
+                color: rgba('#71838B')
+                size_hint_y: None
+                height: dp(18)
+        ViewRow:
+            id: header_actions
+            height: dp(40)
+            spacing: dp(8)
+            size_hint_x: None
+            width: dp(88)
+            pos_hint: {'center_y': 0.5}
+            ViewAction:
+                id: notifications
+                icon: 'bell-outline'
+                bg: '#E7F3F4'
+                fg: '#286F83'
+                size_hint_x: None
+                width: dp(40)
+                height: dp(40)
+                radius: 20
+                callback: root.context['notifications']
+            ViewAction:
+                id: account
+                icon: 'account-outline'
+                bg: '#E7F3F4'
+                fg: '#286F83'
+                size_hint_x: None
+                width: dp(40)
+                height: dp(40)
+                radius: 20
+                callback: root.context['account']
+    ViewScrollView:
+        id: scroll
+        do_scroll_x: False
+        bar_width: dp(2)
+        bar_color: (0, 0.32, 0.27, 0.2)
+        ViewColumn:
+            id: content
+            spacing: dp(16)
+            padding: [dp(v) for v in [18, 18, 18, 26]]
+            adaptive: True
+    ViewCard:
+        id: navigation
+        bg: '#FFFFFF'
+        radius: 0
+        orientation: 'horizontal'
+        adaptive: False
+        size_hint_y: None
+        height: dp(68)
+        padding: [dp(12), dp(6)]
+        spacing: dp(6)
+
+<NavigationQr@ViewAction>:
+    text: root.context['text']
+    icon: root.context['icon']
+    vertical: True
+    font_size: 10
+    bg: '#286F83'
+    fg: '#FFFFFF'
+    callback: root.context['callback']
+
+<NavigationTab@ViewAction>:
+    text: root.context['text']
+    icon: root.context['icon']
+    vertical: True
+    font_size: 10
+    bg: '#E7F3F4' if root.context['selected'] else '#FFFFFF'
+    fg: '#286F83' if root.context['selected'] else '#71838B'
+    callback: root.context['callback']
+
+<HeadingBox@ViewColumn>:
+    adaptive: True
+    spacing: dp(3)
+
+<HeadingLine@ViewRow>:
+    height: dp(25)
+
+<HeadingTag@ViewPill>:
+    text: root.context['text']
+    icon: 'check-decagram'
+
+<HeadingSpacer@ViewText>:
+    text: ''
+    size_hint_x: 0.22
+
+<HeadingTitle@ViewText>:
+    text: root.context['text']
+    font_size: sp(23)
+    color: rgba('#193C47')
+    bold: True
+    size_hint_y: None
+    height: dp(31)
+
+<HeadingSubtitle@ViewText>:
+    text: root.context['text']
+    font_size: sp(12)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(22)
+
+<DetailRowLine@ViewRow>:
+    height: dp(50)
+    spacing: dp(12)
+    ViewIconTile:
+        icon: root.context['icon']
+        bg: '#FBEAE1' if root.context['warm'] else '#E7F3F4'
+    ViewColumn:
+        spacing: dp(2)
+        ViewText:
+            text: root.context['title']
+            font_size: sp(16)
+            color: rgba('#193C47')
+            bold: True
+            size_hint_y: None
+            height: dp(26)
+            shorten: True
+        ViewText:
+            text: root.context['detail']
+            font_size: sp(11)
+            color: rgba('#71838B')
+            size_hint_y: None
+            height: dp(22)
+            shorten: True
+
+<LinkCard@ViewCard>:
+    padding: dp(12)
+    spacing: dp(0)
+
+<LinkCardLine@ViewRow>:
+    height: dp(52)
+    spacing: dp(10)
+
+<LinkArrow@ViewAction>:
+    icon: 'arrow-right'
+    size_hint_x: None
+    width: dp(38)
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    callback: root.context['callback']
+    radius: 19
+
+<CareDialog@ViewModalView>:
+    size_hint: (0.92, None)
+    height: dp(root.context['height'])
+    background_color: (0, 0, 0, 0)
+    overlay_color: (0.02, 0.12, 0.1, 0.45)
+    ViewCard:
+        id: card
+        adaptive: False
+        padding: dp(22)
+        spacing: dp(14)
+        ViewRow:
+            height: dp(36)
+            ViewText:
+                text: root.context['text']
+                font_size: sp(20)
+                color: rgba('#193C47')
+                bold: True
+            ViewAction:
+                icon: 'close'
+                size_hint_x: None
+                width: dp(36)
+                height: dp(36)
+                bg: '#E7F3F4'
+                fg: '#286F83'
+                callback: root.context['callback']
+
+<MessageBody@ViewText>:
+    text: root.context['text']
+    font_size: sp(14)
+    color: rgba('#71838B')
+
+<MessageAccept@ViewAction>:
+    text: 'Entendido'
+    callback: root.context['callback']

@@ -9,12 +9,8 @@ import uuid
 
 from kivy.clock import Clock
 from kivy.metrics import dp
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.modalview import ModalView
-from kivy.uix.textinput import TextInput
-from kivy.uix.image import Image
 from pathlib import Path
-from screens.widgets import Card, Action, Text, PetAvatar, SpaArt, SpaBanner, TagArt, FloatingTag, SoftSpinner, row, column, PRIMARY, INK, MUTED, MINT, WHITE, LIME
+from screens.views import view
 from services.store import LocalStore, normalize, pet_values, complete_task, pending, import_guest, DATE_FORMAT, KINDS
 from services.cloud import CloudError
 from services.qr import start_trial, trial_expired, write_preview_png, TRIAL_DAYS
@@ -35,57 +31,40 @@ class CareFeatures:
         late = pending(self.data, due_only=True)
         self.heading("Siempre cerca.", "Su cuidado diario, en un solo lugar.",
                      "TU ESPACIO" if self.cloud.user else "SIN CUENTA · DATOS LOCALES")
-        hero = Card(bg="#103D49", padding=20, spacing=10, radius=28)
-        hero_top = row(height=22, spacing=4)
-        hero_top.add_widget(Text("01 / TU CHAPA", 10, LIME, bold=True))
-        hero_top.add_widget(Text("14 DÍAS", 10, LIME, bold=True, halign="right",
-                                 size_hint_x=.35))
-        hero.add_widget(hero_top)
-        hero_story = row(height=142, spacing=0)
-        hero_story.add_widget(Text("Si se pierde,\nque vuelva\ncontigo.", 22, WHITE,
-                                   bold=True))
+        hero = view('HomeHero')
+        hero_story = view('HomeHeroStory')
         tag_path = Path(__file__).resolve().parents[1] / "assets" / "Placa_Icon.png"
-        tag_art = FloatingTag if tag_path.exists() else TagArt
-        hero_story.add_widget(tag_art(size_hint_x=None, width=dp(112)))
+        hero_story.add_widget(view('HomeFloatingTag' if tag_path.exists() else 'HomeVectorTag'))
         hero.add_widget(hero_story)
-        hero.add_widget(Text("Su camino de vuelta comienza aquí. Prueba el QR sin crear una cuenta.",
-                             12, "#D8EAEC", height=46))
-        hero.add_widget(Action("ABRIR MI CHAPA QR", icon="qrcode-scan", bg=LIME, fg="#103D49",
-                               height=50, radius=16, callback=self.qr_info))
+        hero.add_widget(view('HomeQrDescription'))
+        hero.add_widget(view('HomeOpenQr', callback=self.qr_info))
         self.content.add_widget(hero)
-        card = column(adaptive=True, spacing=10)
-        card.add_widget(Text("02 / HOY EN UN VISTAZO", 11, PRIMARY, bold=True, height=24))
-        counts = row(height=86, spacing=6)
+        card = view('HomeOverview')
+        counts = view('HomeCounts')
         for number, label in ((len(self.data["pets"]), "Mascotas"),
                               (len(tasks), "Cuidados\npendientes"),
                               (len(late), "Cuidados\natrasados")):
-            metric = column(spacing=0)
-            metric.add_widget(Text(str(number).zfill(2), 29, INK, bold=True, height=43))
-            metric.add_widget(Text(label, 11, MUTED, height=38))
+            metric = view('HomeMetric', number=str(number).zfill(2), label=label)
             counts.add_widget(metric)
         card.add_widget(counts)
         if not self.data["pets"]:
-            card.add_widget(Text("Empieza por registrar a tu mascota.\nNo necesitas crear una cuenta.", 13, MUTED, height=44))
-            card.add_widget(Action("Registrar mi primera mascota", icon="paw", callback=self.register_pet))
+            card.add_widget(view('HomeEmptyPets'))
+            card.add_widget(view('HomeRegisterPet', callback=self.register_pet))
         else:
-            card.add_widget(Action("Ver mis mascotas", icon="paw", callback=partial(self.show, "Mascotas")))
+            card.add_widget(view('HomeViewPets', callback=partial(self.show, 'Mascotas')))
         self.content.add_widget(card)
         if tasks:
             task = tasks[0]
-            card = Card(padding=16, spacing=10)
-            card.add_widget(Text("PRÓXIMO CUIDADO", 11, PRIMARY, height=20))
+            card = view('HomeNextCare')
             card.add_widget(self.detail_row(task["icon"] if task["icon"] in ("paw", "walk", "creation", "bathtub-outline") else "calendar-clock",
                                            task["title"], f'{self.pet_name(task["pet"])} · {task["time"]}'))
-            card.add_widget(Action("Ver detalle y completar", icon="check-circle-outline", callback=partial(self.task_detail, task)))
+            card.add_widget(view('HomeCareDetails', callback=partial(self.task_detail, task)))
             self.content.add_widget(card)
         else:
             self.content.add_widget(self.link_card("calendar-clock", "Todo a tu ritmo", "Agrega tu próximo cuidado en Rutina", "Rutina"))
         self.content.add_widget(self.link_card("bathtub-outline", "Rutina & Mimos", "Paseos, higiene y recordatorios", "Rutina"))
         self.content.add_widget(self.link_card("heart-pulse", "Salud y bienestar", "Vacunas, tratamientos e historial", "Salud"))
-        card = Card(bg=MINT, padding=16, spacing=10)
-        card.add_widget(Text("Tus datos, a tu manera", 16, PRIMARY, bold=True, height=25))
-        card.add_widget(Text("Puedes usar los cuidados sin conexión.\nCon una cuenta también puedes guardar una copia en la nube.", 12, MUTED, height=51))
-        card.add_widget(Action("Mi cuenta y copias de seguridad", icon="cloud-outline", callback=self.account))
+        card = view('HomeAccount', callback=self.account)
         self.content.add_widget(card)
 
     def pet_name(self, pet_id):
@@ -101,26 +80,24 @@ class CareFeatures:
 
     def pets(self):
         self.heading("Mis Compañeros", f'{len(self.data["pets"])} mascotas en este espacio')
-        self.content.add_widget(Action("Registrar mascota", icon="plus", callback=self.register_pet))
+        self.content.add_widget(view('PetsRegister', callback=self.register_pet))
         if not self.data["pets"]:
-            self.content.add_widget(Text("Aquí verás sus perfiles y datos de cuidado.", 13, MUTED, height=60))
+            self.content.add_widget(view('PetsEmpty'))
         for pet in self.data["pets"]:
-            card = Card(padding=16, spacing=10, accent=True)
-            top = row(height=76, spacing=14)
-            top.add_widget(PetAvatar(kind=pet["kind"], size_hint_x=None, width=dp(74)))
-            copy = column(spacing=4)
-            copy.add_widget(Text(pet["name"], 21, INK, bold=True, height=30, shorten=True))
-            copy.add_widget(Text(f'{pet["breed"]} · {pet["age"]}', 12, MUTED, height=30, shorten=True))
-            top.add_widget(copy)
-            card.add_widget(top)
-            card.add_widget(Text(f'Peso: {self.weight_text(pet)}   ·   Chip: {self.chip_text(pet)}', 12, PRIMARY, height=30, shorten=True))
-            card.add_widget(Action("Abrir QR de " + pet["name"], icon="qrcode-scan", bg=MINT, fg=PRIMARY,
-                                   callback=partial(self.qr_info, pet)))
-            card.add_widget(Action("Ver perfil y editar", icon="arrow-right", bg=MINT, fg=PRIMARY, callback=partial(self.profile, pet)))
+            card = view(
+                'PetCard',
+                kind=pet['kind'],
+                name=pet['name'],
+                summary=f"{pet['breed']} · {pet['age']}",
+                details=f'Peso: {self.weight_text(pet)}   ·   Chip: {self.chip_text(pet)}',
+                qr_label='Abrir QR de ' + pet['name'],
+                open_qr=partial(self.qr_info, pet),
+                open_profile=partial(self.profile, pet),
+            )
             self.content.add_widget(card)
-        card = Card(padding=16, spacing=10)
+        card = view('PetsQrCard')
         card.add_widget(self.detail_row("qrcode-scan", "Chapa digital QR", "Escanea una prueba sin crear cuenta"))
-        card.add_widget(Action("Abrir mi chapa de prueba", icon="qrcode-scan", callback=self.qr_info))
+        card.add_widget(view('PetsOpenQr', callback=self.qr_info))
         self.content.add_widget(card)
 
     def register_pet(self, *_, pet=None):
@@ -163,16 +140,18 @@ class CareFeatures:
 
     def profile(self, pet, *_):
         modal, card = self.dialog(pet["name"], 510)
-        card.add_widget(PetAvatar(kind=pet["kind"], size_hint_y=None, height=dp(95)))
-        card.add_widget(Text(f'{pet["breed"]} · {pet["age"]}\nPeso: {self.weight_text(pet)}\nMicrochip: {self.chip_text(pet)}', 14, INK))
+        card.add_widget(view('ProfileAvatar', kind=pet['kind']))
+        card.add_widget(view(
+            'ProfileSummary',
+            text=f"{pet['breed']} · {pet['age']}\nPeso: {self.weight_text(pet)}\nMicrochip: {self.chip_text(pet)}",
+        ))
         def act(callback, *_):
             modal.dismiss()
             callback()
-        card.add_widget(Action("Ver expediente", icon="heart-pulse", callback=partial(act, partial(self.select_pet, pet["id"]))))
-        card.add_widget(Action("Ver chapa QR", icon="qrcode-scan", bg=MINT, fg=PRIMARY,
-                               callback=partial(act, partial(self.qr_info, pet))))
-        card.add_widget(Action("Editar perfil", icon="pencil-outline", bg=MINT, fg=PRIMARY, callback=partial(act, partial(self.register_pet, pet=pet))))
-        card.add_widget(Action("Eliminar mascota", bg="#FFF0E9", fg="#A44D2E", callback=partial(act, partial(self.delete_pet, pet))))
+        card.add_widget(view('ProfileHealth', callback=partial(act, partial(self.select_pet, pet['id']))))
+        card.add_widget(view('ProfileQr', callback=partial(act, partial(self.qr_info, pet))))
+        card.add_widget(view('ProfileEdit', callback=partial(act, partial(self.register_pet, pet=pet))))
+        card.add_widget(view('ProfileDelete', callback=partial(act, partial(self.delete_pet, pet))))
         modal.open()
 
     def delete_pet(self, pet):
@@ -193,25 +172,32 @@ class CareFeatures:
     def routine(self):
         self.heading("Rutina & Mimos", "Cuidados que se adaptan a su día a día")
         banner_path = Path(__file__).resolve().parents[1] / "assets" / "MascotsBanner.png"
-        banner = SpaBanner if banner_path.exists() else SpaArt
-        self.content.add_widget(banner(size_hint_y=None, height=dp(220)))
-        self.content.add_widget(Action("Agregar cuidado o recordatorio", icon="plus", callback=self.add_routine))
+        self.content.add_widget(view('RoutineImageBanner' if banner_path.exists() else 'RoutineVectorBanner'))
+        self.content.add_widget(view('RoutineAdd', callback=self.add_routine))
         tasks = sorted(self.data["routines"], key=lambda t: (t["done"], t["due_at"] or "9999"))
-        self.content.add_widget(Text(f'{len(pending(self.data))} pendientes · {len(tasks)} en total', 13, MUTED, height=24))
+        self.content.add_widget(view(
+            'RoutineCount',
+            text=f'{len(pending(self.data))} pendientes · {len(tasks)} en total',
+        ))
         for task in tasks:
             self.content.add_widget(self.task_card(task))
         if not tasks:
-            self.content.add_widget(Text("Agrega un paseo, una toma o una cita.\nTe avisaremos aquí mientras la app esté abierta.", 13, MUTED, height=55))
+            self.content.add_widget(view('RoutineEmpty'))
 
     def task_card(self, task):
-        card = Card(padding=14, spacing=8)
+        card = view('CareTaskCard')
         card.add_widget(self.detail_row("check-circle-outline" if task["done"] else "calendar-clock", task["title"], self.pet_name(task["pet"]) + " · " + task["kind"]))
-        card.add_widget(Text(("Completado · " if task["done"] else "") + (task["due_at"] or task["time"]), 12, PRIMARY, height=24))
-        actions = row(height=44, spacing=8)
-        actions.add_widget(Action("Ver detalles", bg=MINT, fg=PRIMARY, callback=partial(self.task_detail, task)))
+        actions = view('CareTaskActions', callback=partial(self.task_detail, task))
+        card.add_widget(view(
+            'CareTaskDate',
+            text=('Completado · ' if task['done'] else '') + (task['due_at'] or task['time']),
+        ))
         if task["kind"] == "Cuidado":
-            actions.add_widget(Action("Reabrir" if task["done"] else "Hecho", icon="check",
-                                      callback=partial(self.toggle_routine, task["id"])))
+            actions.add_widget(view(
+                'CareTaskToggle',
+                text='Reabrir' if task['done'] else 'Hecho',
+                callback=partial(self.toggle_routine, task['id']),
+            ))
         card.add_widget(actions)
         return card
 
@@ -259,25 +245,32 @@ class CareFeatures:
 
     def task_detail(self, task, *_):
         modal, card = self.dialog("Detalle del cuidado", 530)
-        card.add_widget(Text(task["title"], 20, INK, bold=True, height=48))
-        card.add_widget(Text(f'{self.pet_name(task["pet"])} · {task["kind"]}\n{task["time"]}\nRepetición: {task["repeat"]}', 13, PRIMARY, height=65))
-        details = Text(task["detail"] or "Sin detalles adicionales", 13, MUTED)
-        details.bind(width=lambda instance, width: setattr(instance, "text_size", (width, None)),
-                     texture_size=lambda instance, size: setattr(instance, "height", size[1] + dp(12)))
-        details.size_hint_y = None
-        scroll = ScrollView(do_scroll_x=False)
+        details = view('TaskDetailDetails', text=task['detail'] or 'Sin detalles adicionales')
+        card.add_widget(view('TaskTitle', text=task['title']))
+        card.add_widget(view(
+            'TaskSummary',
+            text=f"{self.pet_name(task['pet'])} · {task['kind']}\n{task['time']}\nRepetición: {task['repeat']}",
+        ))
+        scroll = view('TaskDetailScroll')
         scroll.add_widget(details)
         card.add_widget(scroll)
         def act(callback, *_):
             modal.dismiss()
             callback()
-        card.add_widget(Action("Volver a pendiente" if task["done"] else "Marcar como realizado", icon="check", callback=partial(act, partial(self.toggle_routine, task["id"]))))
-        card.add_widget(Action("Editar / reprogramar", bg=MINT, fg=PRIMARY, callback=partial(act, partial(self.add_routine, task=task))))
+        card.add_widget(view(
+            'TaskComplete',
+            text='Volver a pendiente' if task['done'] else 'Marcar como realizado',
+            callback=partial(act, partial(self.toggle_routine, task['id'])),
+        ))
+        card.add_widget(view('TaskEdit', callback=partial(act, partial(self.add_routine, task=task))))
         def remove():
             self.data["routines"].remove(task)
             if self.save():
                 self.show(self.active)
-        card.add_widget(Action("Eliminar cuidado", bg="#FFF0E9", fg="#A44D2E", callback=partial(act, lambda: self.confirm("Eliminar cuidado", "El cuidado se eliminará. Sus registros previos en el historial se conservan.", remove))))
+        card.add_widget(view(
+            'TaskDelete',
+            callback=partial(act, lambda: self.confirm('Eliminar cuidado', 'El cuidado se eliminará. Sus registros previos en el historial se conservan.', remove)),
+        ))
         modal.open()
 
     def toggle_routine(self, task_id, *_):
@@ -289,30 +282,38 @@ class CareFeatures:
     def health(self):
         self.heading("Salud y Bienestar", "Expediente y cuidados de cada mascota")
         if not self.data["pets"]:
-            self.content.add_widget(Text("Registra tu mascota para crear su expediente.", 13, MUTED, height=55))
-            self.content.add_widget(Action("Registrar mascota", icon="plus", callback=self.register_pet))
+            self.content.add_widget(view('HealthEmptyPets'))
+            self.content.add_widget(view('HealthRegisterPet', callback=self.register_pet))
             return
         if self.selected_pet not in [p["id"] for p in self.data["pets"]]:
             self.selected_pet = self.data["pets"][0]["id"]
         options = {f'{i + 1}. {p["name"]}': p["id"] for i, p in enumerate(self.data["pets"])}
-        selector = SoftSpinner(text=next(label for label, pid in options.items() if pid == self.selected_pet),
-                               values=list(options), size_hint_y=None, height=dp(44))
+        selector = view(
+            'HealthSelector',
+            text=next((label for label, pid in options.items() if pid == self.selected_pet)),
+            values=list(options),
+        )
         selector.bind(text=lambda _, label: self.select_pet(options[label]))
         self.content.add_widget(selector)
         events = [e for e in self.data["events"] if e["pet"] == self.selected_pet]
-        card = Card(padding=16, spacing=8, accent=True)
-        card.add_widget(Text(self.pet_name(self.selected_pet), 21, INK, bold=True, height=30))
-        card.add_widget(Text(f'{len(events)} eventos en el historial\nSin evaluación automática del estado de salud.', 12, MUTED, height=42))
+        card = view(
+            'HealthSummary',
+            name=self.pet_name(self.selected_pet),
+            summary=f'{len(events)} eventos en el historial\nSin evaluación automática del estado de salud.',
+        )
         self.content.add_widget(card)
-        self.content.add_widget(Action("Registrar evento médico", icon="clipboard-plus-outline", callback=self.add_event))
-        self.content.add_widget(Action("Consultar historial", icon="history", bg=MINT, fg=PRIMARY, callback=self.history))
-        self.content.add_widget(Text("Tratamientos y próximas citas", 18, INK, bold=True, height=30))
+        self.content.add_widget(view('HealthAddEvent', callback=self.add_event))
+        self.content.add_widget(view('HealthHistory', callback=self.history))
+        self.content.add_widget(view('HealthTreatmentTitle'))
         tasks = [r for r in pending(self.data) if r["pet"] == self.selected_pet and r["kind"] != "Cuidado"]
         for task in tasks:
             self.content.add_widget(self.task_card(task))
         if not tasks:
-            self.content.add_widget(Text("No hay tratamientos o citas pendientes.", 13, MUTED, height=36))
-        self.content.add_widget(Action("Agregar tratamiento, vacuna o cita", icon="plus", callback=partial(self.add_routine, kind="Medicamento")))
+            self.content.add_widget(view('HealthEmptyTasks'))
+        self.content.add_widget(view(
+            'HealthAddTreatment',
+            callback=partial(self.add_routine, kind='Medicamento'),
+        ))
 
     def add_event(self, *_, event=None):
         if not self.selected_pet:
@@ -342,23 +343,23 @@ class CareFeatures:
     def history(self, *_):
         modal, card = self.dialog("Historial médico", 580)
         modal.size_hint_y = .88
-        scroll = ScrollView(do_scroll_x=False)
-        entries = column(adaptive=True, spacing=12)
+        scroll = view('HistoryScroll')
+        entries = view('HistoryEntries')
         events = [e for e in self.data["events"] if e["pet"] == self.selected_pet]
         if not events:
-            entries.add_widget(Text("Todavía no hay eventos registrados.", 14, MUTED, height=70))
+            entries.add_widget(view('HistoryEmpty'))
         for event in sorted(events, key=lambda e: e.get("date", ""), reverse=True):
-            item = Card(bg=MINT, padding=12, spacing=6)
-            item.add_widget(Text(event["title"], 17, INK, bold=True, height=32, shorten=True))
-            item.add_widget(Text(event.get("date", "Sin fecha") + " · " + event.get("kind", "Evento"), 11, MUTED, height=28))
-            body = Text(event["detail"] or "Sin detalles adicionales", 13, INK, height=50)
-            body.bind(width=lambda w, width: setattr(w, "text_size", (width, None)),
-                      texture_size=lambda w, size: setattr(w, "height", size[1] + dp(10)))
+            item = view(
+                'HistoryItem',
+                title=event['title'],
+                date=event.get('date', 'Sin fecha') + ' · ' + event.get('kind', 'Evento'),
+            )
+            body = view('HistoryBody', text=event['detail'] or 'Sin detalles adicionales')
             item.add_widget(body)
             def edit(_, e=event):
                 modal.dismiss()
                 self.add_event(event=e)
-            item.add_widget(Action("Editar evento", bg=WHITE, fg=PRIMARY, callback=edit))
+            item.add_widget(view('HistoryEdit', callback=edit))
             def delete(_, e=event):
                 modal.dismiss()
                 def remove():
@@ -366,7 +367,7 @@ class CareFeatures:
                     if self.save():
                         self.show(self.active)
                 self.confirm("Eliminar evento", "Se eliminará este registro del historial.", remove)
-            item.add_widget(Action("Eliminar evento", bg=WHITE, fg=MUTED, callback=delete))
+            item.add_widget(view('HistoryDelete', callback=delete))
             entries.add_widget(item)
         scroll.add_widget(entries)
         card.add_widget(scroll)
@@ -376,8 +377,8 @@ class CareFeatures:
              visible_when=None, hints=None, input_types=None, templates=None, date_shortcuts=None):
         modal, card = self.dialog(title)
         modal.size_hint_y = .88
-        scroll = ScrollView(do_scroll_x=False)
-        inputs = column(adaptive=True, spacing=10)
+        scroll = view('FormScroll')
+        inputs = view('FormInputs')
         entries = {}
         field_rows = {}
         visible_when = visible_when or {}
@@ -385,34 +386,33 @@ class CareFeatures:
         input_types = input_types or {}
         date_shortcuts = date_shortcuts or {}
         for key, caption, value in fields:
-            field_row = column(adaptive=True, spacing=4)
-            field_row.add_widget(Text(caption, 12, MUTED, height=25))
+            field_row = view('FormFieldRow', text=caption)
             if choices and key in choices:
-                entry = SoftSpinner(text=value, values=list(choices[key]), size_hint_y=None, height=dp(44))
+                entry = view('FormChoice', text=value, values=list(choices[key]))
             else:
                 multiline = key == "detail"
-                entry = TextInput(text=value, multiline=multiline, password=password and key == "password",
-                                  size_hint_y=None, height=dp(85 if multiline else 44), font_size=dp(14),
-                                  padding=[dp(12), dp(10)], background_normal="", background_active="",
-                                  background_color=(.94, .97, .98, 1), foreground_color=(.06, .19, .22, 1),
-                                  hint_text=hints.get(key, ""), input_type=input_types.get(key, "text"))
+                entry = view(
+                    'FormTextInput',
+                    text=value,
+                    multiline=multiline,
+                    password=password and key == 'password',
+                    hint_text=hints.get(key, ''),
+                    input_type=input_types.get(key, 'text'),
+                )
             entries[key] = entry
             field_row.add_widget(entry)
             if key in date_shortcuts:
-                shortcuts = row(height=36, spacing=6)
+                shortcuts = view('FormShortcuts')
                 for label, offset in date_shortcuts[key]:
                     def set_date(_, target=entry, delta=offset):
                         target.text = (datetime.now() + delta).strftime(DATE_FORMAT)
-                    shortcuts.add_widget(Action(label, bg=MINT, fg=PRIMARY, height=36,
-                                                font_size=10, callback=set_date))
+                    shortcuts.add_widget(view('FormDateShortcut', text=label, callback=set_date))
                 field_row.add_widget(shortcuts)
             field_rows[key] = field_row
         template_row = None
         if templates:
-            template_row = column(adaptive=True, spacing=4)
-            template_row.add_widget(Text("EMPEZAR CON UNA IDEA · PUEDES CAMBIAR TODO", 10, PRIMARY, height=23))
-            template = SoftSpinner(text="Elegir idea rápida", values=list(templates),
-                                   size_hint_y=None, height=dp(44))
+            template_row = view('FormTemplateRow')
+            template = view('FormTemplate', values=list(templates))
             def apply_template(_, label):
                 for key, value in templates.get(label, {}).items():
                     entries[key].text = value
@@ -433,7 +433,7 @@ class CareFeatures:
         update_visible()
         scroll.add_widget(inputs)
         card.add_widget(scroll)
-        error = Text("", 12, "#AA4625", height=0)
+        error = view('FormError')
         card.add_widget(error)
         def clear_error(*_):
             error.text = ""
@@ -457,44 +457,45 @@ class CareFeatures:
             modal.dismiss()
             if persist:
                 self.show(self.active)
-        card.add_widget(Action("Continuar" if not persist else "Guardar", icon="check", callback=save))
+        card.add_widget(view('FormSubmit', text='Continuar' if not persist else 'Guardar', callback=save))
         modal.open()
 
     def prompt_register_pet(self, purpose):
         modal, card = self.dialog("Primero, tu mascota", 330)
-        card.add_widget(Text(f"Para {purpose.lower()}, registra una mascota. No necesitas crear una cuenta.",
-                             14, MUTED))
+        card.add_widget(view(
+            'RegistrationPrompt',
+            text=f'Para {purpose.lower()}, registra una mascota. No necesitas crear una cuenta.',
+        ))
         def start(*_):
             modal.dismiss()
             self.register_pet()
-        card.add_widget(Action("Registrar mascota", icon="paw", callback=start))
-        card.add_widget(Action("Ahora no", bg=MINT, fg=PRIMARY, callback=lambda *_: modal.dismiss()))
+        card.add_widget(view('RegistrationStart', callback=start))
+        card.add_widget(view('RegistrationCancel', callback=lambda *_: modal.dismiss()))
         modal.open()
 
     def confirm(self, title, body, callback):
         modal, card = self.dialog(title, 360)
-        card.add_widget(Text(body, 14, MUTED))
+        card.add_widget(view('ConfirmationBody', text=body))
         def accept(*_):
             modal.dismiss()
             callback()
-        card.add_widget(Action("Confirmar", callback=accept))
-        card.add_widget(Action("Cancelar", bg=MINT, fg=PRIMARY, callback=lambda *_: modal.dismiss()))
+        card.add_widget(view('ConfirmationAccept', callback=accept))
+        card.add_widget(view('ConfirmationCancel', callback=lambda *_: modal.dismiss()))
         modal.open()
 
     def notifications(self, *_):
         tasks = pending(self.data, due_only=True)
         modal, card = self.dialog("Recordatorios", 510)
-        scroll = ScrollView(do_scroll_x=False)
-        content = column(adaptive=True, spacing=12)
-        content.add_widget(Text("Avisos locales mientras la app está abierta.\nLas notificaciones push aún no están activadas.", 12, MUTED, height=50))
+        scroll = view('NotificationsScroll')
+        content = view('NotificationsContent')
         for task in tasks:
             def open_task(_, t=task):
                 modal.dismiss()
                 self.task_detail(t)
-            content.add_widget(Text(f'{self.pet_name(task["pet"])} · {task["time"]}', 12, MUTED, height=30))
-            content.add_widget(Action(task["title"], bg=MINT, fg=PRIMARY, callback=open_task))
+            content.add_widget(view('NotificationDate', text=f"{self.pet_name(task['pet'])} · {task['time']}"))
+            content.add_widget(view('NotificationOpenTask', text=task['title'], callback=open_task))
         if not tasks:
-            content.add_widget(Text("No hay recordatorios vencidos.", 14, INK, height=60))
+            content.add_widget(view('NotificationsEmpty'))
         scroll.add_widget(content)
         card.add_widget(scroll)
         modal.open()
@@ -522,24 +523,23 @@ class CareFeatures:
             return
         modal, card = self.dialog("Chapa de " + pet["name"], 690)
         modal.size_hint_y = .92
-        scroll = ScrollView(do_scroll_x=False)
-        body = column(adaptive=True, spacing=13)
-        body.size_hint_x = None
-        scroll.bind(width=body.setter("width"))
-        body.add_widget(Text("02 / TU CHAPA DIGITAL", 11, PRIMARY, bold=True, height=24))
+        scroll = view('QrInfoScroll')
+        body = view('QrInfoBody')
+        body.add_widget(view('QrTitle'))
         if trial_expired(trial):
             try:
                 (self.data_file.parent / "qr" / ("prueba-" + pet["id"] + ".png")).unlink(missing_ok=True)
             except OSError:
                 pass
-            body.add_widget(Text("La prueba terminó", 22, INK, bold=True, height=36))
-            body.add_widget(Text("El QR de prueba ya no se muestra en la app. Para una caducidad real al escanear, hace falta publicar la ficha mediante Supabase.",
-                                 13, MUTED, height=84))
+            body.add_widget(view('QrExpiredTitle'))
+            body.add_widget(view('QrExpiredDescription'))
         else:
             expires = datetime.fromisoformat(trial["expires_at"])
-            body.add_widget(Text("Pruébala con otra cámara", 21, INK, bold=True, height=36))
-            body.add_widget(Text("QR LOCAL · " + str(TRIAL_DAYS) + " DÍAS DESDE SU PRIMERA APERTURA", 10, PRIMARY,
-                                 bold=True, height=25))
+            body.add_widget(view('QrActiveTitle'))
+            body.add_widget(view(
+                'QrTrialPeriod',
+                text='QR LOCAL · ' + str(TRIAL_DAYS) + ' DÍAS DESDE SU PRIMERA APERTURA',
+            ))
             qr_path = self.data_file.parent / "qr" / ("prueba-" + pet["id"] + ".png")
             try:
                 write_preview_png(pet, trial, qr_path)
@@ -547,33 +547,29 @@ class CareFeatures:
                 modal.dismiss()
                 self.message("No se pudo crear el QR", "Revisa el almacenamiento disponible en este dispositivo.")
                 return
-            qr_frame = Card(bg=WHITE, padding=8, radius=20)
-            qr_frame.add_widget(Image(source=str(qr_path), size_hint_y=None, height=dp(240)))
+            qr_frame = view('QrInfoQrFrame', source=str(qr_path))
             body.add_widget(qr_frame)
-            body.add_widget(Text("Válido en esta app hasta " + expires.strftime("%d/%m/%Y") + ". Escanéalo con la cámara de otro móvil.",
-                                 12, INK, height=43))
-            body.add_widget(Text("Este QR de prueba muestra solo nombre y especie. No publica una web ni comparte tus datos de contacto. Una foto del código seguirá siendo legible tras el plazo.",
-                                 12, MUTED, height=80))
-            body.add_widget(Text("PNG: " + str(qr_path), 10, MUTED, height=47))
+            body.add_widget(view(
+                'QrExpiry',
+                text='Válido en esta app hasta ' + expires.strftime('%d/%m/%Y') + '. Escanéalo con la cámara de otro móvil.',
+            ))
+            body.add_widget(view('QrPrivacy'))
+            body.add_widget(view('QrFilePath', text='PNG: ' + str(qr_path)))
         assets = Path(__file__).resolve().parents[1] / "assets"
         plate_path = assets / "placa_preview.png"
         front_path = assets / "PlacaReal_Front.png"
         back_path = assets / "PlacaReal_Back.png"
-        plate = Card(bg=MINT, padding=14, spacing=8, radius=20)
-        plate.add_widget(Text("PRÓXIMAMENTE · PLACA FÍSICA", 11, PRIMARY, bold=True, height=25))
+        plate = view('QrInfoPlate')
         if front_path.exists() and back_path.exists():
             for title, path in (("Frente · nombre de la mascota", front_path),
                                 ("Reverso · QR ilustrativo", back_path)):
-                plate.add_widget(Text(title, 12, INK, bold=True, height=24))
-                plate.add_widget(Image(source=str(path), fit_mode="contain",
-                                       size_hint_y=None, height=dp(205)))
+                plate.add_widget(view('PlateSideTitle', text=title))
+                plate.add_widget(view('PlateSideImage', source=str(path)))
         elif plate_path.exists():
-            plate.add_widget(Image(source=str(plate_path), size_hint_y=None, height=dp(180)))
+            plate.add_widget(view('PlatePreview', source=str(plate_path)))
         else:
-            plate.add_widget(Text("Una placa con su nombre y un QR permanente para volver a casa.",
-                                  14, INK, height=56))
-        plate.add_widget(Text("Vista referencial: el QR del mockup no funciona. Cada placa real necesitará un código propio. Compra y envío aún no disponibles.",
-                              11, MUTED, height=70))
+            plate.add_widget(view('PlateFallback'))
+        plate.add_widget(view('PlateDisclaimer'))
         body.add_widget(plate)
         scroll.add_widget(body)
         card.add_widget(scroll)
@@ -597,15 +593,16 @@ class CareFeatures:
         user = self.cloud.user
         modal, card = self.dialog("Mi cuenta" if user else "Continúa a tu ritmo", 600)
         modal.size_hint_y = .90
-        scroll = ScrollView(do_scroll_x=False)
-        body = column(adaptive=True, spacing=12)
-        body.add_widget(Text(user.get("email", "Cuenta") if user else "Estás usando Mi Mascota como invitado.", 16, PRIMARY, height=50))
-        body.add_widget(Text("Mascotas, salud y rutinas funcionan sin cuenta.\nLa cuenta permite guardar y recuperar tu copia privada en la nube.", 13, MUTED, height=80))
+        scroll = view('AccountScroll')
+        body = view(
+            'AccountBody',
+            text=user.get('email', 'Cuenta') if user else 'Estás usando Mi Mascota como invitado.',
+        )
         def action(label, callback):
             def run(*_):
                 modal.dismiss()
                 callback()
-            body.add_widget(Action(label, callback=run))
+            body.add_widget(view('AccountAction', text=label, callback=run))
         if user:
             action("Guardar copia en la nube", self.upload)
             action("Restaurar copia de la nube", self.download)
@@ -615,7 +612,7 @@ class CareFeatures:
             action("Crear cuenta", partial(self.auth_form, True))
             action("Ya tengo cuenta", partial(self.auth_form, False))
         action("Exportar copia local", self.export_backup)
-        body.add_widget(Text("Al cerrar sesión vuelves al espacio del invitado.\nLa contraseña y los tokens no se guardan en archivos.", 12, MUTED, height=55))
+        body.add_widget(view('AccountSessionNote'))
         action("Volver a Mi Mascota", lambda: None)
         scroll.add_widget(body)
         card.add_widget(scroll)
@@ -657,11 +654,7 @@ class CareFeatures:
             return
         self.busy = True
         self.shell.disabled = True
-        wait = ModalView(size_hint=(.85, None), height=dp(130), auto_dismiss=False,
-                         background_color=(0, 0, 0, 0))
-        card = Card(adaptive=False, padding=22)
-        card.add_widget(Text("Conectando…\nTus datos locales están seguros.", 15, PRIMARY))
-        wait.add_widget(card)
+        wait = view('NetworkWait')
         wait.open()
         def run():
             try:

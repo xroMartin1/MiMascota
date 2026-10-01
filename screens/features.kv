@@ -1,0 +1,769 @@
+#:import rgba kivy.utils.get_color_from_hex
+
+<HomeFloatingTag@ViewFloatingTag>:
+    size_hint_x: None
+    width: dp(112)
+
+<HomeVectorTag@ViewTagArt>:
+    size_hint_x: None
+    width: dp(112)
+
+<RoutineImageBanner@ViewSpaBanner>:
+    size_hint_y: None
+    height: dp(220)
+
+<RoutineVectorBanner@ViewSpaArt>:
+    size_hint_y: None
+    height: dp(220)
+
+<HomeHero@ViewCard>:
+    bg: '#103D49'
+    padding: dp(20)
+    spacing: dp(10)
+    radius: 28
+    ViewRow:
+        height: dp(22)
+        spacing: dp(4)
+        ViewText:
+            text: '01 / TU CHAPA'
+            font_size: sp(10)
+            color: rgba('#DAEFA0')
+            bold: True
+        ViewText:
+            text: '14 DÍAS'
+            font_size: sp(10)
+            color: rgba('#DAEFA0')
+            bold: True
+            halign: 'right'
+            size_hint_x: 0.35
+
+<HomeHeroStory@ViewRow>:
+    height: dp(142)
+    spacing: dp(0)
+    ViewText:
+        text: 'Si se pierde,\nque vuelva\ncontigo.'
+        font_size: sp(22)
+        color: rgba('#FFFFFF')
+        bold: True
+
+<HomeQrDescription@ViewText>:
+    text: 'Su camino de vuelta comienza aquí. Prueba el QR sin crear una cuenta.'
+    font_size: sp(12)
+    color: rgba('#D8EAEC')
+    size_hint_y: None
+    height: dp(46)
+
+<HomeOpenQr@ViewAction>:
+    text: 'ABRIR MI CHAPA QR'
+    icon: 'qrcode-scan'
+    bg: '#DAEFA0'
+    fg: '#103D49'
+    height: dp(50)
+    radius: 16
+    callback: root.context['callback']
+
+<HomeOverview@ViewColumn>:
+    adaptive: True
+    spacing: dp(10)
+    ViewText:
+        text: '02 / HOY EN UN VISTAZO'
+        font_size: sp(11)
+        color: rgba('#286F83')
+        bold: True
+        size_hint_y: None
+        height: dp(24)
+
+<HomeCounts@ViewRow>:
+    height: dp(86)
+    spacing: dp(6)
+
+<HomeMetric@ViewColumn>:
+    spacing: dp(0)
+    ViewText:
+        text: root.context['number']
+        font_size: sp(29)
+        color: rgba('#193C47')
+        bold: True
+        size_hint_y: None
+        height: dp(43)
+    ViewText:
+        text: root.context['label']
+        font_size: sp(11)
+        color: rgba('#71838B')
+        size_hint_y: None
+        height: dp(38)
+
+<HomeEmptyPets@ViewText>:
+    text: 'Empieza por registrar a tu mascota.\nNo necesitas crear una cuenta.'
+    font_size: sp(13)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(44)
+
+<HomeRegisterPet@ViewAction>:
+    text: 'Registrar mi primera mascota'
+    icon: 'paw'
+    callback: root.context['callback']
+
+<HomeViewPets@ViewAction>:
+    text: 'Ver mis mascotas'
+    icon: 'paw'
+    callback: root.context['callback']
+
+<HomeNextCare@ViewCard>:
+    padding: dp(16)
+    spacing: dp(10)
+    ViewText:
+        text: 'PRÓXIMO CUIDADO'
+        font_size: sp(11)
+        color: rgba('#286F83')
+        size_hint_y: None
+        height: dp(20)
+
+<HomeCareDetails@ViewAction>:
+    text: 'Ver detalle y completar'
+    icon: 'check-circle-outline'
+    callback: root.context['callback']
+
+<HomeAccount@ViewCard>:
+    bg: '#E7F3F4'
+    padding: dp(16)
+    spacing: dp(10)
+    ViewText:
+        text: 'Tus datos, a tu manera'
+        font_size: sp(16)
+        color: rgba('#286F83')
+        bold: True
+        size_hint_y: None
+        height: dp(25)
+    ViewText:
+        text: 'Puedes usar los cuidados sin conexión.\nCon una cuenta también puedes guardar una copia en la nube.'
+        font_size: sp(12)
+        color: rgba('#71838B')
+        size_hint_y: None
+        height: dp(51)
+    ViewAction:
+        text: 'Mi cuenta y copias de seguridad'
+        icon: 'cloud-outline'
+        callback: root.context['callback']
+
+<PetsRegister@ViewAction>:
+    text: 'Registrar mascota'
+    icon: 'plus'
+    callback: root.context['callback']
+
+<PetsEmpty@ViewText>:
+    text: 'Aquí verás sus perfiles y datos de cuidado.'
+    font_size: sp(13)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(60)
+
+<PetCard@ViewCard>:
+    padding: dp(16)
+    spacing: dp(10)
+    accent: True
+    ViewRow:
+        height: dp(76)
+        spacing: dp(14)
+        ViewPetAvatar:
+            kind: root.context['kind']
+            size_hint_x: None
+            width: dp(74)
+        ViewColumn:
+            spacing: dp(4)
+            ViewText:
+                text: root.context['name']
+                font_size: sp(21)
+                color: rgba('#193C47')
+                bold: True
+                size_hint_y: None
+                height: dp(30)
+                shorten: True
+            ViewText:
+                text: root.context['summary']
+                font_size: sp(12)
+                color: rgba('#71838B')
+                size_hint_y: None
+                height: dp(30)
+                shorten: True
+    ViewText:
+        text: root.context['details']
+        font_size: sp(12)
+        color: rgba('#286F83')
+        size_hint_y: None
+        height: dp(30)
+        shorten: True
+    ViewAction:
+        text: root.context['qr_label']
+        icon: 'qrcode-scan'
+        bg: '#E7F3F4'
+        fg: '#286F83'
+        callback: root.context['open_qr']
+    ViewAction:
+        text: 'Ver perfil y editar'
+        icon: 'arrow-right'
+        bg: '#E7F3F4'
+        fg: '#286F83'
+        callback: root.context['open_profile']
+
+<PetsQrCard@ViewCard>:
+    padding: dp(16)
+    spacing: dp(10)
+
+<PetsOpenQr@ViewAction>:
+    text: 'Abrir mi chapa de prueba'
+    icon: 'qrcode-scan'
+    callback: root.context['callback']
+
+<ProfileAvatar@ViewPetAvatar>:
+    kind: root.context['kind']
+    size_hint_y: None
+    height: dp(95)
+
+<ProfileSummary@ViewText>:
+    text: root.context['text']
+    font_size: sp(14)
+    color: rgba('#193C47')
+
+<ProfileHealth@ViewAction>:
+    text: 'Ver expediente'
+    icon: 'heart-pulse'
+    callback: root.context['callback']
+
+<ProfileQr@ViewAction>:
+    text: 'Ver chapa QR'
+    icon: 'qrcode-scan'
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    callback: root.context['callback']
+
+<ProfileEdit@ViewAction>:
+    text: 'Editar perfil'
+    icon: 'pencil-outline'
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    callback: root.context['callback']
+
+<ProfileDelete@ViewAction>:
+    text: 'Eliminar mascota'
+    bg: '#FFF0E9'
+    fg: '#A44D2E'
+    callback: root.context['callback']
+
+<RoutineAdd@ViewAction>:
+    text: 'Agregar cuidado o recordatorio'
+    icon: 'plus'
+    callback: root.context['callback']
+
+<RoutineCount@ViewText>:
+    text: root.context['text']
+    font_size: sp(13)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(24)
+
+<RoutineEmpty@ViewText>:
+    text: 'Agrega un paseo, una toma o una cita.\nTe avisaremos aquí mientras la app esté abierta.'
+    font_size: sp(13)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(55)
+
+<CareTaskCard@ViewCard>:
+    padding: dp(14)
+    spacing: dp(8)
+
+<CareTaskDate@ViewText>:
+    text: root.context['text']
+    font_size: sp(12)
+    color: rgba('#286F83')
+    size_hint_y: None
+    height: dp(24)
+
+<CareTaskActions@ViewRow>:
+    height: dp(44)
+    spacing: dp(8)
+    ViewAction:
+        text: 'Ver detalles'
+        bg: '#E7F3F4'
+        fg: '#286F83'
+        callback: root.context['callback']
+
+<CareTaskToggle@ViewAction>:
+    text: root.context['text']
+    icon: 'check'
+    callback: root.context['callback']
+
+<TaskTitle@ViewText>:
+    text: root.context['text']
+    font_size: sp(20)
+    color: rgba('#193C47')
+    bold: True
+    size_hint_y: None
+    height: dp(48)
+
+<TaskSummary@ViewText>:
+    text: root.context['text']
+    font_size: sp(13)
+    color: rgba('#286F83')
+    size_hint_y: None
+    height: dp(65)
+
+<TaskDetailDetails@ViewText>:
+    text: root.context['text']
+    font_size: sp(13)
+    color: rgba('#71838B')
+    size_hint_y: None
+    wrap: True
+    height: self.texture_size[1] + dp(12)
+
+<TaskDetailScroll@ViewScrollView>:
+    do_scroll_x: False
+
+<TaskComplete@ViewAction>:
+    text: root.context['text']
+    icon: 'check'
+    callback: root.context['callback']
+
+<TaskEdit@ViewAction>:
+    text: 'Editar / reprogramar'
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    callback: root.context['callback']
+
+<TaskDelete@ViewAction>:
+    text: 'Eliminar cuidado'
+    bg: '#FFF0E9'
+    fg: '#A44D2E'
+    callback: root.context['callback']
+
+<HealthEmptyPets@ViewText>:
+    text: 'Registra tu mascota para crear su expediente.'
+    font_size: sp(13)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(55)
+
+<HealthRegisterPet@ViewAction>:
+    text: 'Registrar mascota'
+    icon: 'plus'
+    callback: root.context['callback']
+
+<HealthSelector@ViewSpinner>:
+    text: root.context['text']
+    values: root.context['values']
+    size_hint_y: None
+    height: dp(44)
+
+<HealthSummary@ViewCard>:
+    padding: dp(16)
+    spacing: dp(8)
+    accent: True
+    ViewText:
+        text: root.context['name']
+        font_size: sp(21)
+        color: rgba('#193C47')
+        bold: True
+        size_hint_y: None
+        height: dp(30)
+    ViewText:
+        text: root.context['summary']
+        font_size: sp(12)
+        color: rgba('#71838B')
+        size_hint_y: None
+        height: dp(42)
+
+<HealthAddEvent@ViewAction>:
+    text: 'Registrar evento médico'
+    icon: 'clipboard-plus-outline'
+    callback: root.context['callback']
+
+<HealthHistory@ViewAction>:
+    text: 'Consultar historial'
+    icon: 'history'
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    callback: root.context['callback']
+
+<HealthTreatmentTitle@ViewText>:
+    text: 'Tratamientos y próximas citas'
+    font_size: sp(18)
+    color: rgba('#193C47')
+    bold: True
+    size_hint_y: None
+    height: dp(30)
+
+<HealthEmptyTasks@ViewText>:
+    text: 'No hay tratamientos o citas pendientes.'
+    font_size: sp(13)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(36)
+
+<HealthAddTreatment@ViewAction>:
+    text: 'Agregar tratamiento, vacuna o cita'
+    icon: 'plus'
+    callback: root.context['callback']
+
+<HistoryScroll@ViewScrollView>:
+    do_scroll_x: False
+
+<HistoryEntries@ViewColumn>:
+    adaptive: True
+    spacing: dp(12)
+
+<HistoryEmpty@ViewText>:
+    text: 'Todavía no hay eventos registrados.'
+    font_size: sp(14)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(70)
+
+<HistoryItem@ViewCard>:
+    bg: '#E7F3F4'
+    padding: dp(12)
+    spacing: dp(6)
+    ViewText:
+        text: root.context['title']
+        font_size: sp(17)
+        color: rgba('#193C47')
+        bold: True
+        size_hint_y: None
+        height: dp(32)
+        shorten: True
+    ViewText:
+        text: root.context['date']
+        font_size: sp(11)
+        color: rgba('#71838B')
+        size_hint_y: None
+        height: dp(28)
+
+<HistoryBody@ViewText>:
+    text: root.context['text']
+    font_size: sp(13)
+    color: rgba('#193C47')
+    size_hint_y: None
+    wrap: True
+    height: self.texture_size[1] + dp(10)
+
+<HistoryEdit@ViewAction>:
+    text: 'Editar evento'
+    bg: '#FFFFFF'
+    fg: '#286F83'
+    callback: root.context['callback']
+
+<HistoryDelete@ViewAction>:
+    text: 'Eliminar evento'
+    bg: '#FFFFFF'
+    fg: '#71838B'
+    callback: root.context['callback']
+
+<FormScroll@ViewScrollView>:
+    do_scroll_x: False
+
+<FormInputs@ViewColumn>:
+    adaptive: True
+    spacing: dp(10)
+
+<FormFieldRow@ViewColumn>:
+    adaptive: True
+    spacing: dp(4)
+    ViewText:
+        text: root.context['text']
+        font_size: sp(12)
+        color: rgba('#71838B')
+        size_hint_y: None
+        height: dp(25)
+
+<FormChoice@ViewSpinner>:
+    text: root.context['text']
+    values: root.context['values']
+    size_hint_y: None
+    height: dp(44)
+
+<FormTextInput@ViewTextInput>:
+    text: root.context['text']
+    multiline: root.context['multiline']
+    password: root.context['password']
+    size_hint_y: None
+    height: dp(85 if root.context['multiline'] else 44)
+    font_size: dp(14)
+    padding: [dp(12), dp(10)]
+    background_normal: ''
+    background_active: ''
+    background_color: (0.94, 0.97, 0.98, 1)
+    foreground_color: (0.06, 0.19, 0.22, 1)
+    hint_text: root.context['hint_text']
+    input_type: root.context['input_type']
+
+<FormShortcuts@ViewRow>:
+    height: dp(36)
+    spacing: dp(6)
+
+<FormDateShortcut@ViewAction>:
+    text: root.context['text']
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    height: dp(36)
+    font_size: 10
+    callback: root.context['callback']
+
+<FormTemplateRow@ViewColumn>:
+    adaptive: True
+    spacing: dp(4)
+    ViewText:
+        text: 'EMPEZAR CON UNA IDEA · PUEDES CAMBIAR TODO'
+        font_size: sp(10)
+        color: rgba('#286F83')
+        size_hint_y: None
+        height: dp(23)
+
+<FormTemplate@ViewSpinner>:
+    text: 'Elegir idea rápida'
+    values: root.context['values']
+    size_hint_y: None
+    height: dp(44)
+
+<FormError@ViewText>:
+    text: ''
+    font_size: sp(12)
+    color: rgba('#AA4625')
+    size_hint_y: None
+    height: dp(0)
+
+<FormSubmit@ViewAction>:
+    text: root.context['text']
+    icon: 'check'
+    callback: root.context['callback']
+
+<RegistrationPrompt@ViewText>:
+    text: root.context['text']
+    font_size: sp(14)
+    color: rgba('#71838B')
+
+<RegistrationStart@ViewAction>:
+    text: 'Registrar mascota'
+    icon: 'paw'
+    callback: root.context['callback']
+
+<RegistrationCancel@ViewAction>:
+    text: 'Ahora no'
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    callback: root.context['callback']
+
+<ConfirmationBody@ViewText>:
+    text: root.context['text']
+    font_size: sp(14)
+    color: rgba('#71838B')
+
+<ConfirmationAccept@ViewAction>:
+    text: 'Confirmar'
+    callback: root.context['callback']
+
+<ConfirmationCancel@ViewAction>:
+    text: 'Cancelar'
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    callback: root.context['callback']
+
+<NotificationsScroll@ViewScrollView>:
+    do_scroll_x: False
+
+<NotificationsContent@ViewColumn>:
+    adaptive: True
+    spacing: dp(12)
+    ViewText:
+        text: 'Avisos locales mientras la app está abierta.\nLas notificaciones push aún no están activadas.'
+        font_size: sp(12)
+        color: rgba('#71838B')
+        size_hint_y: None
+        height: dp(50)
+
+<NotificationDate@ViewText>:
+    text: root.context['text']
+    font_size: sp(12)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(30)
+
+<NotificationOpenTask@ViewAction>:
+    text: root.context['text']
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    callback: root.context['callback']
+
+<NotificationsEmpty@ViewText>:
+    text: 'No hay recordatorios vencidos.'
+    font_size: sp(14)
+    color: rgba('#193C47')
+    size_hint_y: None
+    height: dp(60)
+
+<QrInfoScroll@ViewScrollView>:
+    do_scroll_x: False
+
+<QrInfoBody@ViewColumn>:
+    adaptive: True
+    spacing: dp(13)
+    size_hint_x: None
+    width: self.parent.width if self.parent else dp(100)
+
+<QrTitle@ViewText>:
+    text: '02 / TU CHAPA DIGITAL'
+    font_size: sp(11)
+    color: rgba('#286F83')
+    bold: True
+    size_hint_y: None
+    height: dp(24)
+
+<QrExpiredTitle@ViewText>:
+    text: 'La prueba terminó'
+    font_size: sp(22)
+    color: rgba('#193C47')
+    bold: True
+    size_hint_y: None
+    height: dp(36)
+
+<QrExpiredDescription@ViewText>:
+    text: 'El QR de prueba ya no se muestra en la app. Para una caducidad real al escanear, hace falta publicar la ficha mediante Supabase.'
+    font_size: sp(13)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(84)
+
+<QrActiveTitle@ViewText>:
+    text: 'Pruébala con otra cámara'
+    font_size: sp(21)
+    color: rgba('#193C47')
+    bold: True
+    size_hint_y: None
+    height: dp(36)
+
+<QrTrialPeriod@ViewText>:
+    text: root.context['text']
+    font_size: sp(10)
+    color: rgba('#286F83')
+    bold: True
+    size_hint_y: None
+    height: dp(25)
+
+<QrInfoQrFrame@ViewCard>:
+    bg: '#FFFFFF'
+    padding: dp(8)
+    radius: 20
+    ViewImage:
+        source: root.context['source']
+        size_hint_y: None
+        height: dp(240)
+
+<QrExpiry@ViewText>:
+    text: root.context['text']
+    font_size: sp(12)
+    color: rgba('#193C47')
+    size_hint_y: None
+    height: dp(43)
+
+<QrPrivacy@ViewText>:
+    text: 'Este QR de prueba muestra solo nombre y especie. No publica una web ni comparte tus datos de contacto. Una foto del código seguirá siendo legible tras el plazo.'
+    font_size: sp(12)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(80)
+
+<QrFilePath@ViewText>:
+    text: root.context['text']
+    font_size: sp(10)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(47)
+
+<QrInfoPlate@ViewCard>:
+    bg: '#E7F3F4'
+    padding: dp(14)
+    spacing: dp(8)
+    radius: 20
+    ViewText:
+        text: 'PRÓXIMAMENTE · PLACA FÍSICA'
+        font_size: sp(11)
+        color: rgba('#286F83')
+        bold: True
+        size_hint_y: None
+        height: dp(25)
+
+<PlateSideTitle@ViewText>:
+    text: root.context['text']
+    font_size: sp(12)
+    color: rgba('#193C47')
+    bold: True
+    size_hint_y: None
+    height: dp(24)
+
+<PlateSideImage@ViewImage>:
+    source: root.context['source']
+    fit_mode: 'contain'
+    size_hint_y: None
+    height: dp(205)
+
+<PlatePreview@ViewImage>:
+    source: root.context['source']
+    size_hint_y: None
+    height: dp(180)
+
+<PlateFallback@ViewText>:
+    text: 'Una placa con su nombre y un QR permanente para volver a casa.'
+    font_size: sp(14)
+    color: rgba('#193C47')
+    size_hint_y: None
+    height: dp(56)
+
+<PlateDisclaimer@ViewText>:
+    text: 'Vista referencial: el QR del mockup no funciona. Cada placa real necesitará un código propio. Compra y envío aún no disponibles.'
+    font_size: sp(11)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(70)
+
+<AccountScroll@ViewScrollView>:
+    do_scroll_x: False
+
+<AccountBody@ViewColumn>:
+    adaptive: True
+    spacing: dp(12)
+    ViewText:
+        text: root.context['text']
+        font_size: sp(16)
+        color: rgba('#286F83')
+        size_hint_y: None
+        height: dp(50)
+    ViewText:
+        text: 'Mascotas, salud y rutinas funcionan sin cuenta.\nLa cuenta permite guardar y recuperar tu copia privada en la nube.'
+        font_size: sp(13)
+        color: rgba('#71838B')
+        size_hint_y: None
+        height: dp(80)
+
+<AccountAction@ViewAction>:
+    text: root.context['text']
+    callback: root.context['callback']
+
+<AccountSessionNote@ViewText>:
+    text: 'Al cerrar sesión vuelves al espacio del invitado.\nLa contraseña y los tokens no se guardan en archivos.'
+    font_size: sp(12)
+    color: rgba('#71838B')
+    size_hint_y: None
+    height: dp(55)
+
+<NetworkWait@ViewModalView>:
+    size_hint: (0.85, None)
+    height: dp(130)
+    auto_dismiss: False
+    background_color: (0, 0, 0, 0)
+    ViewCard:
+        adaptive: False
+        padding: dp(22)
+        ViewText:
+            text: 'Conectando…\nTus datos locales están seguros.'
+            font_size: sp(15)
+            color: rgba('#286F83')

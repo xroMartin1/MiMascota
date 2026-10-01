@@ -107,6 +107,33 @@ Para ejecutar las pruebas del sistema de persistencia y validación local:
 python -m unittest discover -s tests -v
 ```
 
+Para verificar la interfaz con el event loop real de Kivy, las acciones de navegación,
+los formularios condicionales y las capturas a 390 y 320 píxeles:
+
+```bash
+python tools/check_ui.py
+```
+
+## Interfaz declarativa (KV Language)
+
+La interfaz está separada de la lógica Python:
+
+- `main.kv`: administrador de pantallas y pantalla inicial.
+- `screens/home.kv`: estructura compartida, cabecera, navegación y diálogos base.
+- `screens/features.kv`: vistas de Inicio, Mascotas, Rutina y Salud, además de
+  formularios, perfil, historial, recordatorios, QR y cuenta.
+- `screens/widgets.kv`: estilos y estructura de textos, tarjetas, botones,
+  selectores e ilustraciones con imágenes.
+- `screens/views.py`: propiedades Kivy y carga de los archivos KV una sola vez,
+  mediante rutas absolutas calculadas desde el proyecto.
+
+Los archivos `.py` siguen siendo necesarios: `home.py` controla la navegación y
+`features.py` conserva validación, persistencia, QR y operaciones de cuenta. Las
+listas y campos variables se llenan desde Python con `view("NombreDeVista", **datos)`;
+sus tamaños, colores y jerarquías se editan en las reglas KV correspondientes.
+`widgets.py` conserva el dibujo vectorial y las animaciones. `buildozer.spec` ya
+incluye la extensión `kv` para empaquetar estos archivos en Android.
+
 ---
 
 ## Estructura del Proyecto
@@ -116,8 +143,12 @@ MiMascota/
 ├── assets/                 # Recursos gráficos / iconos de la aplicación
 ├── screens/                # Vistas y componentes de la interfaz (Home, Formularios, Widgets)
 │   ├── home.py
+│   ├── home.kv
 │   ├── features.py
-│   └── widgets.py
+│   ├── features.kv
+│   ├── views.py
+│   ├── widgets.py
+│   └── widgets.kv
 ├── services/               # Lógica de negocio, persistencia local y conectores
 │   ├── store.py
 │   └── cloud.py
@@ -126,6 +157,7 @@ MiMascota/
 ├── tools/                  # Scripts auxiliares de desarrollo y verificación de UI
 ├── supabase/               # Esquemas SQL preliminares para backend
 ├── main.py                 # Punto de entrada de la aplicación
+├── main.kv                 # Estructura inicial declarativa
 ├── requirements.txt        # Dependencias del proyecto (Kivy, KivyMD, etc.)
 ├── Iniciar MiMascota.bat   # Lanzador automático para Windows
 └── README.md               # Documentación del proyecto

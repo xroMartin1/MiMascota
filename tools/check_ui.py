@@ -12,15 +12,17 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from main import MiMascotaApp
 from screens.home import HomeScreen
+from screens.views import ViewAction, ViewSpinner, ViewTextInput, load_views, view
 
 
 class CheckUI(MiMascotaApp):
     def build(self):
         self.temporary = TemporaryDirectory()
-        self.theme_cls.theme_style = "Light"
-        self.theme_cls.primary_palette = "Teal"
-        self.screen = HomeScreen(data_file=Path(self.temporary.name) / "state.json")
-        return self.screen
+        from unittest.mock import patch
+        with patch("screens.home.DATA_FILE", Path(self.temporary.name) / "state.json"):
+            manager = super().build()
+        self.screen = manager.get_screen("home")
+        return manager
 
     def on_start(self):
         from unittest.mock import patch, PropertyMock
@@ -43,9 +45,14 @@ class CheckUI(MiMascotaApp):
             Clock.schedule_once(self.capture_small_home, .5)
             return
         self.screen.show(self.page)
-        Clock.schedule_once(self.capture, .35)
+        Clock.schedule_once(self.capture, .6)
 
     def capture(self, _):
+        # Un controlador funcional también debe renderizar contenido visible.
+        assert self.screen.content.height > 0
+        assert self.screen.content.children
+        assert self.screen.content.children[-1].opacity > .95
+        assert all(child.width > 0 and child.height > 0 for child in self.screen.content.children)
         self.root.export_to_png(str(ROOT / "previews" / f"{self.page}.png"))
         Clock.schedule_once(self.next_page, .1)
 
@@ -121,13 +128,62 @@ class CheckUI(MiMascotaApp):
             if hasattr(widget, "dismiss"):
                 widget.dismiss(animation=False)
         s.form = original_form
+        self.check_declarative_views(pet, task)
         s.register_pet()
-        Clock.schedule_once(self.capture_form, .35)
+        # La apertura y su animación comienzan en el primer frame del event loop.
+        Clock.schedule_once(lambda _: Clock.schedule_once(self.capture_form, .35), 0)
+
+    @staticmethod
+    def dismiss_modals():
+        for widget in list(Window.children):
+            if hasattr(widget, "dismiss"):
+                widget.dismiss(animation=False)
+
+    @staticmethod
+    def current_modal():
+        return next(widget for widget in Window.children if hasattr(widget, "dismiss"))
+
+    def check_declarative_views(self, pet, task):
+        s = self.screen
+        # Cargar de nuevo no duplica reglas ni los hijos de las vistas.
+        load_views()
+        assert len(s.header.children) == 3
+        for title in ("Mascotas", "Rutina", "Salud", "Inicio"):
+            button = next(b for b in s.nav.children if b.text == title)
+            button.dispatch("on_release")
+            assert s.active == title and s.subtitle.text == title
+        # Las variantes sin assets siguen usando los componentes KV.
+        assert len(view("HomeVectorTag").children) == 0
+        assert len(view("RoutineVectorBanner").children) == 3
+        for open_dialog in (lambda: s.profile(pet), lambda: s.task_detail(task),
+                            s.history, s.notifications, s.account,
+                            lambda: s.message("Prueba", "Mensaje")):
+            open_dialog()
+            modal = self.current_modal()
+            assert modal.ids.card.children
+            self.dismiss_modals()
+        accepted = []
+        s.confirm("Prueba", "Confirmación", lambda: accepted.append(True))
+        modal = self.current_modal()
+        button = next(w for w in modal.walk() if isinstance(w, ViewAction) and w.text == "Confirmar")
+        button.dispatch("on_release")
+        assert accepted == [True]
+        self.dismiss_modals()
+        s.register_pet()
+        modal = self.current_modal()
+        species = next(w for w in modal.walk() if isinstance(w, ViewSpinner) and w.text == "Seleccionar especie")
+        species.text = "Otro"
+        custom = next(w for w in modal.walk() if isinstance(w, ViewTextInput) and w.hint_text == "Ej.: Tortuga")
+        assert custom.parent is not None
+        species.text = "Gato"
+        assert custom.parent.parent is None
+        self.dismiss_modals()
 
     def capture_form(self, _):
         for widget in list(Window.children):
             if hasattr(widget, "dismiss"):
-                widget.export_to_png(str(ROOT / "previews" / "formulario.png"))
+                assert widget.ids.card.width > 0 and widget.ids.card.height > 0
+                widget.ids.card.export_to_png(str(ROOT / "previews" / "formulario.png"))
                 widget.dismiss(animation=False)
         Clock.schedule_once(self.next_page, .3)
 
