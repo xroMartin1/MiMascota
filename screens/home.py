@@ -21,7 +21,7 @@ DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "petcare.json"
 class HomeScreen(CareFeatures, MDScreen):
     def __init__(self, data_file=None, **kwargs):
         super().__init__(**kwargs)
-        self.md_bg_color = get_color_from_hex("#F7F8FA")
+        self.md_bg_color = get_color_from_hex("#FFFFFF")
         if data_file is None:
             data_file = (Path(App.get_running_app().user_data_dir) / "petcare.json"
                          if platform in ("android", "ios") else DATA_FILE)
@@ -36,7 +36,7 @@ class HomeScreen(CareFeatures, MDScreen):
         self.selected_pet = self.data["pets"][0]["id"] if self.data["pets"] else None
         self.shell = column(spacing=0)
         self.add_widget(self.shell)
-        self.header = Card(bg="#F7F8FA", radius=0, orientation="horizontal", adaptive=False,
+        self.header = Card(bg="#FFFFFF", radius=0, orientation="horizontal", adaptive=False,
                            size_hint_y=None, height=dp(72), padding=[dp(18), dp(10)], spacing=10)
         self.header.add_widget(icon_tile("paw", size=40, bg=LIME))
         branding = column(spacing=0, size_hint_y=None, height=dp(46), pos_hint={"center_y": .5})

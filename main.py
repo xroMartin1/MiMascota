@@ -15,7 +15,7 @@ if platform not in ("android", "ios"):
 Window.softinput_mode = "below_target"
 
 # Fondo general de la aplicación
-Window.clearcolor = get_color_from_hex("#F7F8FA")
+Window.clearcolor = get_color_from_hex("#FFFFFF")
 
 
 class MiMascotaApp(MDApp):
