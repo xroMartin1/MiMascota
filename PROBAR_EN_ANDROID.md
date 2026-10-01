@@ -1,6 +1,6 @@
 # Probar Mi Mascota en un teléfono Android
 
-El proyecto ya tiene `buildozer.spec`. El APK **todavía no está compilado**: este equipo Windows no tiene WSL instalado. Para crear el APK usa estos pasos. El empaquetado conserva Kivy y KivyMD.
+El proyecto ya tiene `buildozer.spec`. Para generar un APK de prueba en Windows usa WSL 2 con Ubuntu. El empaquetado conserva Kivy y KivyMD.
 
 ## 1. Preparar WSL en Windows
 
@@ -19,7 +19,9 @@ Estos comandos van en la consola de **Ubuntu**, no en PowerShell:
 
 ```bash
 sudo apt update
-sudo apt install -y git zip unzip rsync openjdk-17-jdk python3-pip python3-virtualenv autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev automake autopoint gettext
+sudo apt install -y git zip unzip curl openjdk-17-jdk python3-pip python3-virtualenv autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev automake autopoint gettext
+curl https://sh.rustup.rs -sSf | sh
+. "$HOME/.cargo/env"
 virtualenv ~/buildozer-venv
 source ~/buildozer-venv/bin/activate
 pip install buildozer setuptools cython==0.29.34
@@ -32,12 +34,14 @@ La [guía de Buildozer](https://buildozer.readthedocs.io/en/latest/installation/
 Todavía en Ubuntu:
 
 ```bash
-mkdir -p ~/MiMascota
-rsync -a --exclude='venv/' --exclude='.venv/' --exclude='data/' --exclude='previews/' --exclude='.kivy/' --exclude='.buildozer/' --exclude='bin/' --exclude='__pycache__/' /mnt/c/Users/marco/OneDrive/Desktop/MiMascota/ ~/MiMascota/
+cd ~
+git clone https://github.com/xroMartin1/MiMascota.git
 cd ~/MiMascota
 source ~/buildozer-venv/bin/activate
 buildozer -v android debug
 ```
+
+La línea `cd ~` antes de clonar es importante: si Ubuntu se abrió desde PowerShell como administrador, podría empezar en `/mnt/c/WINDOWS/system32`. No compiles allí. Buildozer indica que compilar en el sistema de archivos de WSL puede ser unas cinco veces más rápido y evita problemas de paquetes bajo NTFS. Si ya clonaste en `~/MiMascota`, entra allí y usa `git pull` en lugar de repetir `git clone`.
 
 La primera compilación descarga Android SDK/NDK y puede tardar bastante. Acepta las licencias si te las pide. Si termina bien, el APK estará en `~/MiMascota/bin/`. La [guía oficial de Kivy](https://kivy.org/doc/stable/guide/packaging-android.html) describe este flujo con Buildozer.
 
