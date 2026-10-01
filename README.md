@@ -11,6 +11,13 @@ Cuidar de una o varias mascotas implica coordinar múltiples tareas: horarios de
 - Perder el seguimiento de las fechas de vacunación o desparasitación.
 - Carecer de un registro médico centralizado con antecedentes de alergias, diagnósticos, síntomas y controles de peso.
 
+A esto se suma una de las mayores preocupaciones de cualquier dueño: **la pérdida o extravío de la mascota**. Ante esta situación de emergencia, surgen dos grandes dificultades: la falta de un medio rápido y seguro para que quien encuentre al animal pueda contactar a la familia sin que el dueño tenga que exponer públicamente sus datos personales (teléfono o dirección), y el riesgo comercial de que un sistema de QR gratuito sea copiado o impreso en papel de forma casera, impidiendo la monetización del proyecto a través de las chapas físicas.
+
+**Mi Mascota** resuelve estos problemas ofreciendo:
+- Un centro de control unificado e intuitivo para gestionar los perfiles de tus mascotas, programar sus cuidados recurrentes, recibir alertas y mantener un registro de salud detallado.
+- Un **sistema de chapa digital con prueba temporal (14 días)** integrada en la app, que permite al usuario experimentar el flujo de escaneo y validación de emergencia de forma local.
+- Una solución definitiva basada en **fichas públicas dinámicas conectadas a la nube (Supabase) y placas físicas oficiales**, diseñadas para garantizar la durabilidad ante el clima, proteger la privacidad del dueño mediante un sistema de mensajería sin revelar datos sensibles, y asegurar un modelo sostenible mediante la venta de la chapa física frente a copias de uso gratuito.
+
 **Mi Mascota** resuelve estos problemas ofreciendo un centro de control unificado e intuitivo donde puedes gestionar los perfiles de tus mascotas, programar sus cuidados recurrentes, recibir alertas y mantener un registro de salud detallado.
 
 ---
@@ -124,6 +131,8 @@ MiMascota/
 └── README.md               # Documentación del proyecto
 ```
 
+---
+<img width="388" height="843" alt="Screenshot 2026-09-30 232229" src="https://github.com/user-attachments/assets/c8d8f2bc-e3d1-4bb8-a4a3-2ac61a6a6512" />
 ---
 
 ## Próximos Pasos (Roadmap)
