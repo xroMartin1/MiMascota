@@ -3,7 +3,6 @@ from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from kivy.app import App
-from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.utils import platform
@@ -39,6 +38,10 @@ class HomeScreen(CareFeatures, MDScreen):
         self.content = self.shell.ids.content
         self.nav = self.shell.ids.navigation
         self.add_widget(self.shell)
+        # Mantener la vista al tamaño real del Screen incluso cuando KivyMD
+        # omite el primer pase de layout del gestor de pantallas.
+        self.bind(size=self.shell.setter("size"))
+        self.bind(size=lambda *_: self.shell.do_layout())
         self.show("Inicio")
         self.reminder_clock = Clock.schedule_interval(self.check_reminders, 30)
         if self.store.readonly:
@@ -66,16 +69,6 @@ class HomeScreen(CareFeatures, MDScreen):
                 ))
         {"Inicio": self.home, "Mascotas": self.pets, "Rutina": self.routine, "Salud": self.health}[page]()
         self.scroll.scroll_y = 1
-        Animation.cancel_all(self.content, "opacity")
-        self.content.opacity = 1
-        for index, widget in enumerate(reversed(self.content.children)):
-            if index >= 6:
-                break
-            widget.opacity = 0
-            def reveal(_, item=widget):
-                if item.parent == self.content:
-                    Animation(opacity=1, duration=.25, t="out_quad").start(item)
-            Clock.schedule_once(reveal, index * .045)
 
 
     def heading(self, title, subtitle, badge=None):
