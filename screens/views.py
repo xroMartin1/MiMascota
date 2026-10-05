@@ -24,17 +24,11 @@ class ViewColumn(BoxLayout):
     context = DictProperty({})
     adaptive = BooleanProperty(False)
 
-    def add_widget(self, widget, *args, **kwargs):
-        super().add_widget(widget, *args, **kwargs)
-        if self.adaptive:
-            self.do_layout()
-
     def on_kv_post(self, base_widget):
         if self.adaptive:
             self.size_hint_y = None
             self.height = self.minimum_height
             self.bind(minimum_height=self.setter('height'))
-            self.do_layout()
 
 
 class ViewRow(BoxLayout):

@@ -32,7 +32,11 @@ class MiMascotaApp(MDApp):
         self.title = "Mi Mascota"
 
         load_views()
-        return Builder.load_file(str(Path(__file__).resolve().parent / 'main.kv'))
+        manager = Builder.load_file(str(Path(__file__).resolve().parent / 'main.kv'))
+        # La pantalla aplica primero sus reglas KV y el fondo de KivyMD.
+        # Después su controlador añade el contenido, por encima del fondo.
+        manager.add_widget(HomeScreen(name="home"))
+        return manager
 
     def on_stop(self):
         if self.root and hasattr(self.root, "get_screen"):

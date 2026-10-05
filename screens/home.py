@@ -38,10 +38,6 @@ class HomeScreen(CareFeatures, MDScreen):
         self.content = self.shell.ids.content
         self.nav = self.shell.ids.navigation
         self.add_widget(self.shell)
-        # Mantener la vista al tamaño real del Screen incluso cuando KivyMD
-        # omite el primer pase de layout del gestor de pantallas.
-        self.bind(size=self.shell.setter("size"))
-        self.bind(size=lambda *_: self.shell.do_layout())
         self.show("Inicio")
         self.reminder_clock = Clock.schedule_interval(self.check_reminders, 30)
         if self.store.readonly:
