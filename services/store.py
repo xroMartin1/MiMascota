@@ -1,6 +1,7 @@
 """Persistencia local atómica y validación, independiente de Kivy y de la red."""
 from copy import deepcopy
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import json
 import math
 from pathlib import Path
@@ -12,7 +13,8 @@ KINDS = ("Cuidado", "Medicamento", "Vacuna", "Desparasitación", "Cita")
 
 
 def empty_data():
-    return {"version": 2, "pets": [], "routines": [], "events": [], "qr_trials": {}, "cloud_revision": 0}
+    return {"version": 2, "pets": [], "routines": [], "events": [], "qr_trials": {}, "cloud_revision": 0,
+            "reminder_settings": {"enabled": False, "timezone": "UTC"}, "reminder_revision": 0, "reminder_dirty": False}
 
 
 def normalize(value):
@@ -69,6 +71,20 @@ def normalize(value):
                     datetime.strptime(item["due_at"], DATE_FORMAT)
     if type(data["cloud_revision"]) is not int or data["cloud_revision"] < 0:
         raise ValueError("Versión de nube inválida")
+    data.setdefault('reminder_settings', {'enabled': False, 'timezone': 'UTC'})
+    data.setdefault('reminder_revision', 0)
+    data.setdefault('reminder_dirty', False)
+    settings = data['reminder_settings']
+    if (not isinstance(settings, dict) or type(settings.get('enabled')) is not bool
+            or not isinstance(settings.get('timezone'), str) or not 1 <= len(settings['timezone']) <= 100
+            or type(data['reminder_revision']) is not int or data['reminder_revision'] < 0
+            or type(data['reminder_dirty']) is not bool):
+        raise ValueError('Configuración de recordatorios inválida')
+    if settings['enabled']:
+        try:
+            ZoneInfo(settings['timezone'])
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError('Zona horaria desconocida') from None
     data["version"] = 2
     return data
 
@@ -124,9 +140,16 @@ def pet_values(values):
     return result
 
 
+def care_now(data):
+    settings = data.get('reminder_settings', {})
+    if settings.get('enabled'):
+        return datetime.now(ZoneInfo(settings['timezone'])).replace(tzinfo=None)
+    return datetime.now()
+
+
 def complete_task(data, task, now=None):
     """Una toma completada genera historial; la recurrencia avanza sin duplicar tareas."""
-    now = now or datetime.now()
+    now = now or care_now(data)
     if task["done"]:
         task["done"] = False
         for index in range(len(data["events"]) - 1, -1, -1):
@@ -148,7 +171,7 @@ def complete_task(data, task, now=None):
 
 
 def pending(data, now=None, due_only=False):
-    now = now or datetime.now()
+    now = now or care_now(data)
     tasks = [r for r in data["routines"] if not r["done"]]
     if due_only:
         tasks = [r for r in tasks if r["due_at"] and datetime.strptime(r["due_at"], DATE_FORMAT) <= now]

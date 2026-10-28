@@ -15,11 +15,19 @@
         height: dp(72)
         padding: [dp(18), dp(10)]
         spacing: dp(10)
-        ViewIconTile:
+        ViewCard:
             id: brand_icon
-            icon: 'paw'
-            tile_size: 40
-            bg: '#DAEFA0'
+            bg: '#103D49'
+            radius: 12
+            adaptive: False
+            size_hint: None, None
+            size: dp(40), dp(40)
+            padding: dp(3)
+            pos_hint: {'center_y': 0.5}
+            ViewImage:
+                id: brand_logo
+                source: root.context['brand_logo']
+                fit_mode: 'contain'
         ViewColumn:
             id: branding
             spacing: dp(0)
@@ -48,16 +56,36 @@
             size_hint_x: None
             width: dp(88)
             pos_hint: {'center_y': 0.5}
-            ViewAction:
-                id: notifications
-                icon: 'bell-outline'
-                bg: '#E7F3F4'
-                fg: '#286F83'
+            FloatLayout:
                 size_hint_x: None
                 width: dp(40)
                 height: dp(40)
-                radius: 20
-                callback: root.context['notifications']
+                ViewAction:
+                    id: notifications
+                    icon: 'bell-outline'
+                    bg: '#E7F3F4'
+                    fg: '#286F83'
+                    radius: 20
+                    callback: root.context['notifications']
+                    size_hint: 1, 1
+                    pos_hint: {'x': 0, 'y': 0}
+                ViewText:
+                    id: qr_unread_badge
+                    text: ''
+                    opacity: 0
+                    size_hint: None, None
+                    size: dp(19), dp(19)
+                    pos_hint: {'right': 1.12, 'top': 1.12}
+                    font_size: sp(9)
+                    color: rgba('#FFFFFF')
+                    halign: 'center'
+                    bold: True
+                    canvas.before:
+                        Color:
+                            rgba: rgba('#193C47')
+                        Ellipse:
+                            pos: self.pos
+                            size: self.size
             ViewAction:
                 id: account
                 icon: 'account-outline'
@@ -94,8 +122,8 @@
     icon: root.context['icon']
     vertical: True
     font_size: 10
-    bg: '#286F83'
-    fg: '#FFFFFF'
+    bg: '#286F83' if root.context['selected'] else '#FFFFFF'
+    fg: '#FFFFFF' if root.context['selected'] else '#286F83'
     callback: root.context['callback']
 
 <NavigationTab@ViewAction>:
@@ -124,18 +152,20 @@
 
 <HeadingTitle@ViewText>:
     text: root.context['text']
+    wrap: True
     font_size: sp(23)
     color: rgba('#193C47')
     bold: True
     size_hint_y: None
-    height: dp(31)
+    height: max(dp(31), self.texture_size[1] + dp(4))
 
 <HeadingSubtitle@ViewText>:
     text: root.context['text']
+    wrap: True
     font_size: sp(12)
     color: rgba('#71838B')
     size_hint_y: None
-    height: dp(22)
+    height: max(dp(22), self.texture_size[1] + dp(4))
 
 <DetailRowLine@ViewRow>:
     height: dp(50)
@@ -189,9 +219,13 @@
         padding: dp(22)
         spacing: dp(14)
         ViewRow:
-            height: dp(36)
+            height: max(dp(36), root.ids.dialog_title.texture_size[1])
             ViewText:
+                id: dialog_title
                 text: root.context['text']
+                wrap: True
+                size_hint_y: None
+                height: self.texture_size[1]
                 font_size: sp(20)
                 color: rgba('#193C47')
                 bold: True
@@ -206,9 +240,26 @@
 
 <MessageBody@ViewText>:
     text: root.context['text']
+    wrap: True
     font_size: sp(14)
     color: rgba('#71838B')
 
 <MessageAccept@ViewAction>:
     text: 'Entendido'
     callback: root.context['callback']
+
+<SavedFeedback@ViewCard>:
+    adaptive: False
+    size_hint: (None, None)
+    width: min(dp(360), root.parent.width - dp(32)) if root.parent else dp(300)
+    height: dp(52)
+    pos_hint: {'center_x': .5}
+    y: dp(88)
+    bg: '#193C47'
+    radius: 20
+    padding: [dp(16), dp(10)]
+    ViewText:
+        text: root.context['text']
+        color: rgba('#FFFFFF')
+        font_size: sp(14)
+        bold: True

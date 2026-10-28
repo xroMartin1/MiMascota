@@ -1,0 +1,33 @@
+#:import rgba kivy.utils.get_color_from_hex
+
+<QrInboxLabel@ViewText>:
+    wrap: True
+    markup: False
+    size_hint_y: None
+    height: max(dp(24), self.texture_size[1] + dp(8))
+
+<QrInboxText@QrInboxLabel>:
+    text: root.context.get('text', '')
+
+<QrInboxEntry@ViewAction>:
+    text: root.context['text']
+    callback: root.context['callback']
+    bg: '#E7F3F4'
+    fg: '#193C47'
+    height: dp(52)
+
+<QrInboxConversation@ViewCard>:
+    bg: '#DAEFA0' if root.context['sender'] == 'visitor' else '#E7F3F4'
+    padding: dp(12)
+    radius: 16
+    QrInboxLabel:
+        text: root.context['label']
+        font_size: sp(11)
+        bold: True
+        color: rgba('#286F83')
+    QrInboxLabel:
+        text: root.context['text']
+    QrInboxLabel:
+        text: root.context['date']
+        font_size: sp(10)
+        color: rgba('#526A74')

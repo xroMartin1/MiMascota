@@ -171,6 +171,14 @@
         size_hint: 1, 1
         pos_hint: {'x': 0, 'y': 0}
     ViewCard:
+        bg: '#103D49'
+        radius: 0
+        padding: 0
+        adaptive: False
+        size_hint: 1, None
+        height: dp(44)
+        pos_hint: {'x': 0, 'y': 0}
+    ViewCard:
         bg: '#FFFFFF'
         radius: 15
         padding: [dp(10), 0]
@@ -184,17 +192,11 @@
             color: rgba('#286F83')
             bold: True
     ViewText:
-        text: 'Un respiro para compartir'
-        font_size: sp(11)
-        color: rgba('#D9EFF0')
-        size_hint: .9, None
-        height: dp(18)
-        pos_hint: {'x': .05, 'y': .22}
-    ViewText:
         text: 'Su momento de mimos'
         font_size: sp(19)
         color: rgba('#FFFFFF')
         bold: True
         size_hint: .9, None
         height: dp(31)
-        pos_hint: {'x': .05, 'y': .07}
+        x: self.parent.x + dp(16)
+        y: self.parent.y + dp(7)

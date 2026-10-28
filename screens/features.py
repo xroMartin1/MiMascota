@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from functools import partial
 import json
 import re
+import webbrowser
+from kivy.utils import platform
 from threading import Thread
 import uuid
 
@@ -11,15 +13,41 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 from pathlib import Path
 from screens.views import view
-from services.store import LocalStore, normalize, pet_values, complete_task, pending, import_guest, DATE_FORMAT, KINDS
+from services.store import LocalStore, normalize, pet_values, complete_task, pending, import_guest, DATE_FORMAT, KINDS, care_now
 from services.cloud import CloudError
+from services.push import PushClient
+from services.reminders import zone_label
+from services.profile import contact_values, registration_values
 from services.qr import start_trial, trial_expired, write_preview_png, TRIAL_DAYS
+from screens.public_tag import PublicTagFeatures
+from screens.reminders import ReminderFeatures
+from screens.date_field import DateField
 
 
-class CareFeatures:
+def readable_date(value, now=None):
+    try:
+        date = datetime.strptime(value, DATE_FORMAT)
+    except (ValueError, TypeError):
+        return value
+    now = now or datetime.now()
+    days = (date.date() - now.date()).days
+    if days == 0:
+        day = 'Hoy'
+    elif days == 1:
+        day = 'Mañana'
+    else:
+        months = ('ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic')
+        day = f'{date.day} {months[date.month-1]}' + (f' {date.year}' if date.year != now.year else '')
+    return day + date.strftime(' · %H:%M')
+
+
+class CareFeatures(ReminderFeatures, PublicTagFeatures):
     def save(self):
         try:
             self.store.save(self.data)
+            self.queue_reminders()
+            if hasattr(self, "queue_backup"):
+                self.queue_backup()
             return True
         except (OSError, ValueError, TypeError) as exc:
             self.data = deepcopy(self.store.data)
@@ -30,19 +58,20 @@ class CareFeatures:
         tasks = pending(self.data)
         late = pending(self.data, due_only=True)
         self.heading("Siempre cerca.", "Su cuidado diario, en un solo lugar.",
-                     "TU ESPACIO" if self.cloud.user else "SIN CUENTA · DATOS LOCALES")
+                     "TU ESPACIO" if self.cloud.user else "EN ESTE TELÉFONO")
         hero = view('HomeHero')
         hero_story = view('HomeHeroStory')
         tag_path = Path(__file__).resolve().parents[1] / "assets" / "Placa_Icon.png"
         hero_story.add_widget(view('HomeFloatingTag' if tag_path.exists() else 'HomeVectorTag'))
         hero.add_widget(hero_story)
         hero.add_widget(view('HomeQrDescription'))
-        hero.add_widget(view('HomeOpenQr', callback=self.qr_info))
+        hero.add_widget(view('HomeOpenQr', callback=partial(self.show, 'Chapa')))
         self.content.add_widget(hero)
+        self.content.add_widget(self.care_tip())
         card = view('HomeOverview')
         counts = view('HomeCounts')
         for number, label in ((len(self.data["pets"]), "Mascotas"),
-                              (len(tasks), "Cuidados\npendientes"),
+                              (len(tasks) - len(late), "Cuidados\npendientes"),
                               (len(late), "Cuidados\natrasados")):
             metric = view('HomeMetric', number=str(number).zfill(2), label=label)
             counts.add_widget(metric)
@@ -57,15 +86,14 @@ class CareFeatures:
             task = tasks[0]
             card = view('HomeNextCare')
             card.add_widget(self.detail_row(task["icon"] if task["icon"] in ("paw", "walk", "creation", "bathtub-outline") else "calendar-clock",
-                                           task["title"], f'{self.pet_name(task["pet"])} · {task["time"]}'))
+                                           task["title"], f'{self.pet_name(task["pet"])} · {readable_date(task["due_at"] or task["time"], care_now(self.data))}'))
             card.add_widget(view('HomeCareDetails', callback=partial(self.task_detail, task)))
             self.content.add_widget(card)
         else:
             self.content.add_widget(self.link_card("calendar-clock", "Todo a tu ritmo", "Agrega tu próximo cuidado en Rutina", "Rutina"))
-        self.content.add_widget(self.link_card("bathtub-outline", "Rutina & Mimos", "Paseos, higiene y recordatorios", "Rutina"))
         self.content.add_widget(self.link_card("heart-pulse", "Salud y bienestar", "Vacunas, tratamientos e historial", "Salud"))
-        card = view('HomeAccount', callback=self.account)
-        self.content.add_widget(card)
+        if not self.cloud.user:
+            self.content.add_widget(view('HomeAccount', callback=self.account))
 
     def pet_name(self, pet_id):
         return next((p["name"] for p in self.data["pets"] if p["id"] == pet_id), "General")
@@ -167,13 +195,18 @@ class CareFeatures:
                     pass
                 self.selected_pet = self.data["pets"][0]["id"] if self.data["pets"] else None
                 self.show("Mascotas")
-        self.confirm("Eliminar mascota", f'Se eliminará {pet["name"]} y sus cuidados e historial de este espacio. Se conserva la copia local anterior (.bak).', remove)
+        shared = ' Al guardarse en tu cuenta, se retirarán sus accesos compartidos e invitaciones.' if self.cloud.user else ''
+        self.confirm("Eliminar mascota", f'Se eliminará {pet["name"]} y sus cuidados e historial.' + shared, remove)
 
     def routine(self):
-        self.heading("Rutina & Mimos", "Cuidados que se adaptan a su día a día")
+        self.heading("Sus cuidados", "Paseos, medicamentos y próximas citas")
         banner_path = Path(__file__).resolve().parents[1] / "assets" / "MascotsBanner.png"
         self.content.add_widget(view('RoutineImageBanner' if banner_path.exists() else 'RoutineVectorBanner'))
         self.content.add_widget(view('RoutineAdd', callback=self.add_routine))
+        if self.cloud.user and self.mobile.configured:
+            status = ('Avisos pendientes de actualizar' if self.data.get('reminder_dirty') else
+                      getattr(self, 'reminder_status', '') or ('Avisos automáticos activos' if self.data.get('reminder_settings', {}).get('enabled') else 'Avisos automáticos desactivados'))
+            self.content.add_widget(view('UxRow', title='Recordatorios', detail=status, icon='bell-outline', callback=lambda *_: self.reminder_panel()))
         tasks = sorted(self.data["routines"], key=lambda t: (t["done"], t["due_at"] or "9999"))
         self.content.add_widget(view(
             'RoutineCount',
@@ -190,7 +223,7 @@ class CareFeatures:
         actions = view('CareTaskActions', callback=partial(self.task_detail, task))
         card.add_widget(view(
             'CareTaskDate',
-            text=('Completado · ' if task['done'] else '') + (task['due_at'] or task['time']),
+            text=('Completado · ' if task['done'] else '') + readable_date(task['due_at'] or task['time'], care_now(self.data)),
         ))
         if task["kind"] == "Cuidado":
             actions.add_widget(view(
@@ -209,7 +242,7 @@ class CareFeatures:
         selected = selected or self.data["pets"][0]["id"]
         pet_options = {f'{i + 1}. {p["name"]}': p["id"] for i, p in enumerate(self.data["pets"])}
         current = next((label for label, pid in pet_options.items() if pid == selected), next(iter(pet_options)))
-        default_time = (datetime.now() + timedelta(hours=1)).strftime(DATE_FORMAT)
+        default_time = (care_now(self.data) + timedelta(hours=1)).strftime(DATE_FORMAT)
         def submit(v):
             if not v["title"].strip():
                 raise ValueError("Escribe el nombre de la actividad.")
@@ -227,7 +260,7 @@ class CareFeatures:
         fields = [("pet", "Mascota", current), ("kind", "Tipo de cuidado", source.get("kind", kind)),
                   ("title", "Actividad o medicamento *", source.get("title", "")),
                   ("detail", "Detalles / pauta indicada por tu veterinario", source.get("detail", "")),
-                  ("due_at", "Fecha y hora local (AAAA-MM-DD HH:MM)", source.get("due_at") or default_time),
+                  ("due_at", ("Fecha y hora · " + zone_label(self.data["reminder_settings"]["timezone"]) if self.data.get("reminder_settings", {}).get("enabled") else "Fecha y hora"), source.get("due_at") or default_time),
                   ("repeat", "Repetición", source.get("repeat", "No"))]
         self.form("Editar cuidado" if task else "Nuevo cuidado", fields, submit,
                   choices={"pet": list(pet_options), "kind": KINDS, "repeat": ("No", "Diaria", "Semanal")},
@@ -275,12 +308,14 @@ class CareFeatures:
 
     def toggle_routine(self, task_id, *_):
         task = next(r for r in self.data["routines"] if r["id"] == task_id)
+        was_done = task['done']
         complete_task(self.data, task)
         if self.save():
             self.show(self.active)
+            self.saved_feedback('Cuidado pendiente' if was_done else 'Cuidado realizado')
 
     def health(self):
-        self.heading("Salud y Bienestar", "Expediente y cuidados de cada mascota")
+        self.heading("Su salud", "Vacunas, tratamientos e historial")
         if not self.data["pets"]:
             self.content.add_widget(view('HealthEmptyPets'))
             self.content.add_widget(view('HealthRegisterPet', callback=self.register_pet))
@@ -299,7 +334,8 @@ class CareFeatures:
         card = view(
             'HealthSummary',
             name=self.pet_name(self.selected_pet),
-            summary=f'{len(events)} eventos en el historial\nSin evaluación automática del estado de salud.',
+            summary=f'{len(events)} registros en el historial\nÚltimas consultas y cuidados de tu mascota.',
+            export=lambda *_: self.export_health_report(),
         )
         self.content.add_widget(card)
         self.content.add_widget(view('HealthAddEvent', callback=self.add_event))
@@ -332,7 +368,7 @@ class CareFeatures:
                 self.data["events"].append(dict(v, id=uuid.uuid4().hex, pet=self.selected_pet))
         self.form("Editar evento" if event else "Evento médico", [
             ("kind", "Tipo", source.get("kind", "Control")), ("title", "Título *", source.get("title", "")),
-            ("date", "Fecha y hora (AAAA-MM-DD HH:MM)", source.get("date", datetime.now().strftime(DATE_FORMAT))),
+            ("date", "Fecha y hora", source.get("date", care_now(self.data).strftime(DATE_FORMAT))),
             ("detail", "Detalles (opcional)", source.get("detail", ""))], submit,
             choices={"kind": ("Control", "Vacuna", "Medicamento", "Alergia", "Enfermedad", "Síntoma", "Desparasitación", "Cita", "Cuidado")},
             date_shortcuts={"date": (("Ahora", timedelta()),
@@ -352,7 +388,7 @@ class CareFeatures:
             item = view(
                 'HistoryItem',
                 title=event['title'],
-                date=event.get('date', 'Sin fecha') + ' · ' + event.get('kind', 'Evento'),
+                date=readable_date(event.get('date', 'Sin fecha'), care_now(self.data)) + ' · ' + event.get('kind', 'Evento'),
             )
             body = view('HistoryBody', text=event['detail'] or 'Sin detalles adicionales')
             item.add_widget(body)
@@ -374,11 +410,12 @@ class CareFeatures:
         modal.open()
 
     def form(self, title, fields, submit, choices=None, password=False, persist=True,
-             visible_when=None, hints=None, input_types=None, templates=None, date_shortcuts=None):
+             visible_when=None, hints=None, input_types=None, templates=None, date_shortcuts=None, description=None, submit_text=None):
         modal, card = self.dialog(title)
         modal.size_hint_y = .88
         scroll = view('FormScroll')
         inputs = view('FormInputs')
+        intro = view('AccountNote', text=description) if description else None
         entries = {}
         field_rows = {}
         visible_when = visible_when or {}
@@ -387,7 +424,9 @@ class CareFeatures:
         date_shortcuts = date_shortcuts or {}
         for key, caption, value in fields:
             field_row = view('FormFieldRow', text=caption)
-            if choices and key in choices:
+            if key in ("due_at", "date"):
+                entry = DateField(text=value)
+            elif choices and key in choices:
                 entry = view('FormChoice', text=value, values=list(choices[key]))
             else:
                 multiline = key == "detail"
@@ -395,17 +434,26 @@ class CareFeatures:
                     'FormTextInput',
                     text=value,
                     multiline=multiline,
-                    password=password and key == 'password',
+                    password=password and 'password' in key,
                     hint_text=hints.get(key, ''),
                     input_type=input_types.get(key, 'text'),
                 )
             entries[key] = entry
-            field_row.add_widget(entry)
+            if password and 'password' in key:
+                password_row = view('PasswordRow')
+                password_row.add_widget(entry)
+                def toggle(button, target=entry):
+                    target.password = not target.password
+                    button.icon = 'eye-outline' if target.password else 'eye-off-outline'
+                password_row.add_widget(view('PasswordEye', callback=toggle))
+                field_row.add_widget(password_row)
+            else:
+                field_row.add_widget(entry)
             if key in date_shortcuts:
                 shortcuts = view('FormShortcuts')
                 for label, offset in date_shortcuts[key]:
                     def set_date(_, target=entry, delta=offset):
-                        target.text = (datetime.now() + delta).strftime(DATE_FORMAT)
+                        target.text = (care_now(self.data) + delta).strftime(DATE_FORMAT)
                     shortcuts.add_widget(view('FormDateShortcut', text=label, callback=set_date))
                 field_row.add_widget(shortcuts)
             field_rows[key] = field_row
@@ -421,6 +469,8 @@ class CareFeatures:
         def update_visible(*_):
             scroll_position = scroll.scroll_y
             inputs.clear_widgets()
+            if intro is not None:
+                inputs.add_widget(intro)
             if template_row is not None:
                 inputs.add_widget(template_row)
             for key, _, _ in fields:
@@ -441,7 +491,7 @@ class CareFeatures:
         for entry in entries.values():
             entry.bind(text=clear_error)
         def save(*_):
-            values = {key: field.text if key == "password" else field.text.strip() for key, field in entries.items()}
+            values = {key: field.text if "password" in key else field.text.strip() for key, field in entries.items()}
             try:
                 reason = submit(values)
                 if reason:
@@ -457,8 +507,10 @@ class CareFeatures:
             modal.dismiss()
             if persist:
                 self.show(self.active)
-        card.add_widget(view('FormSubmit', text='Continuar' if not persist else 'Guardar', callback=save))
+                self.saved_feedback('Cambios guardados')
+        card.add_widget(view('FormSubmit', text=submit_text or ('Continuar' if not persist else 'Guardar'), callback=save))
         modal.open()
+        return modal, entries
 
     def prompt_register_pet(self, purpose):
         modal, card = self.dialog("Primero, tu mascota", 330)
@@ -509,13 +561,16 @@ class CareFeatures:
             self.notified.update(fresh)
             self.message("Tienes cuidados pendientes", f"Hay {len(due)} recordatorios vencidos. Abre la campana para revisarlos.")
 
-    def qr_info(self, pet=None, *_):
+    def qr_info(self, pet=None, *_, local=False):
         if not self.data["pets"]:
             self.prompt_register_pet("Crear su chapa QR de prueba")
             return
         if not isinstance(pet, dict):
             pet = next((p for p in self.data["pets"] if p["id"] == self.selected_pet), self.data["pets"][0])
         self.selected_pet = pet["id"]
+        if self.cloud.user and not local:
+            self.open_public_tag(pet)
+            return
         trials = self.data["qr_trials"]
         is_new = pet["id"] not in trials
         trial = start_trial(trials, pet["id"])
@@ -525,7 +580,21 @@ class CareFeatures:
         modal.size_hint_y = .92
         scroll = view('QrInfoScroll')
         body = view('QrInfoBody')
+        if not self.cloud.user:
+            def web_account(*_):
+                modal.dismiss()
+                self.account()
+            body.add_widget(view('AccountAction', text='Crear chapa web con mi cuenta', callback=web_account))
         body.add_widget(view('QrTitle'))
+        contact = pet.get('qr_contact', {})
+        has_contact = isinstance(contact, dict) and contact.get('share_phone') is True
+        body.add_widget(view('AccountNote', text=(
+            'Contacto incluido: ' + contact.get('name', '') + ' · ' + contact.get('phone', '')
+            if has_contact else 'Sin teléfono de contacto. Añádelo para que quien escanee pueda llamar a tu familia.')))
+        def configure(*_):
+            modal.dismiss()
+            self.qr_contact_form(pet)
+        body.add_widget(view('AccountAction', text='Editar contacto y privacidad del QR', callback=configure))
         if trial_expired(trial):
             try:
                 (self.data_file.parent / "qr" / ("prueba-" + pet["id"] + ".png")).unlink(missing_ok=True)
@@ -548,13 +617,13 @@ class CareFeatures:
                 self.message("No se pudo crear el QR", "Revisa el almacenamiento disponible en este dispositivo.")
                 return
             qr_frame = view('QrInfoQrFrame', source=str(qr_path))
+            qr_frame.children[0].reload()
             body.add_widget(qr_frame)
             body.add_widget(view(
                 'QrExpiry',
-                text='Válido en esta app hasta ' + expires.strftime('%d/%m/%Y') + '. Escanéalo con la cámara de otro móvil.',
+                text='Visible en esta app hasta ' + expires.strftime('%d/%m/%Y') + '. Al escanear se muestra un texto de prueba.',
             ))
             body.add_widget(view('QrPrivacy'))
-            body.add_widget(view('QrFilePath', text='PNG: ' + str(qr_path)))
         assets = Path(__file__).resolve().parents[1] / "assets"
         plate_path = assets / "placa_preview.png"
         front_path = assets / "PlacaReal_Front.png"
@@ -604,52 +673,280 @@ class CareFeatures:
                 callback()
             body.add_widget(view('AccountAction', text=label, callback=run))
         if user:
-            action("Guardar copia en la nube", self.upload)
-            action("Restaurar copia de la nube", self.download)
-            action("Importar datos del invitado", self.import_local)
-            action("Cerrar sesión", self.logout)
+            profile = self.contact_profile()
+            body.add_widget(view('AccountProfile', name=profile.get('name') or 'Completa tu perfil',
+                                 detail=profile.get('phone') or 'Añade un teléfono de contacto'))
+            action('Editar perfil', self.edit_contact_profile)
+            action('Mis datos', partial(self.account_options, 'data'))
+            action('Seguridad', partial(self.account_options, 'security'))
+            if self.mobile.configured:
+                action('Notificaciones y privacidad', self.mobile_preferences)
+                action('Probar notificaciones', self.push_panel)
+                action('Recordatorios automáticos', self.reminder_panel)
         else:
+            if platform == 'android' and self.cloud.config.get('GOOGLE_SIGN_IN_ENABLED') is True:
+                action('Continuar con Google', self.signin_google)
             action("Crear cuenta", partial(self.auth_form, True))
             action("Ya tengo cuenta", partial(self.auth_form, False))
-        action("Exportar copia local", self.export_backup)
-        body.add_widget(view('AccountSessionNote'))
-        action("Volver a Mi Mascota", lambda: None)
+            action('Mis datos', partial(self.account_options, 'data'))
         scroll.add_widget(body)
         card.add_widget(scroll)
         modal.open()
 
+    def mobile_preferences(self):
+        prefs = self.mobile.preferences()
+        def submit(values):
+            self.mobile.configure(values['notifications'] == 'Sí', values['analytics'] == 'Sí')
+            if values['notifications'] == 'No' and self.cloud.user:
+                self.network(lambda: PushClient(self.cloud, self.mobile).unregister(), lambda _: None)
+        self.form('Notificaciones y privacidad', [
+            ('notifications', '¿Recibir avisos de cuidados?', 'Sí' if prefs['notifications'] else 'No'),
+            ('analytics', '¿Compartir estadísticas de uso?', 'Sí' if prefs['analytics'] else 'No')],
+            submit, choices={'notifications': ('No', 'Sí'), 'analytics': ('No', 'Sí')}, persist=False,
+            submit_text='Guardar preferencias',
+            description='Son opcionales. Las estadísticas no incluyen nombres, teléfonos ni datos de tus mascotas.')
+
+    def push_panel(self):
+        modal, card = self.dialog('Avisos en este teléfono', 480)
+        card.add_widget(view('AccountNote', text='Primero activa los avisos y acepta el permiso de Android. Luego envía una prueba, espera la confirmación y minimiza la app: el servidor la enviará 30 segundos después. El servidor permite una prueba por minuto. Activa tus cuidados desde Mi cuenta → Recordatorios automáticos.'))
+        def act(operation, message):
+            modal.dismiss()
+            self.network(operation, lambda _: self.message('Avisos', message))
+        push = PushClient(self.cloud, self.mobile)
+        card.add_widget(view('AccountAction', text='Registrar este teléfono', callback=lambda *_: act(push.register, 'Teléfono vinculado a tu cuenta. Ya puedes enviar una prueba.')))
+        card.add_widget(view('AccountPrimary', text='Probar en 30 segundos', callback=lambda *_: act(push.test, 'Prueba aceptada. Ahora minimiza la app o bloquea la pantalla. El servidor intentará enviarla en 30 segundos. Mantén internet y no fuerces la detención de la app.')))
+        card.add_widget(view('AccountAction', text='Retirar este teléfono', callback=lambda *_: act(push.unregister, 'Este teléfono ya no recibirá avisos de tu cuenta.')))
+        modal.open()
+
+    def signin_google(self):
+        try:
+            url = self.google_auth.begin()
+            if platform == 'android':
+                from jnius import autoclass
+                intent = autoclass('android.content.Intent')('android.intent.action.VIEW',
+                                                            autoclass('android.net.Uri').parse(url))
+                autoclass('org.kivy.android.PythonActivity').mActivity.startActivity(intent)
+            else:
+                webbrowser.open(url)
+        except CloudError as exc:
+            self.message('No se pudo acceder', str(exc))
+
+    def google_intent(self, intent):
+        uri = str(intent.getDataString() or '')
+        if not uri.startswith('mimascota://auth/callback'):
+            return
+        Clock.schedule_once(lambda _: self.network(lambda: self.google_auth.finish(uri), self.auth_link_finished), 0)
+
+    def auth_link_finished(self, result):
+        self.authenticated(result)
+        if self.google_auth.completed_flow == 'recovery':
+            Clock.schedule_once(lambda _: self.recovered_password_form(), .2)
+
+    def forgot_password(self, email=''):
+        def submit(values):
+            if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", values['email']):
+                raise ValueError('Escribe un correo válido.')
+            self.network(lambda: self.google_auth.recover(values['email']),
+                lambda _: self.message('Revisa tu correo', 'Si existe una cuenta con ese correo, recibirás un enlace. Ábrelo en este teléfono y vuelve a la app para elegir tu nueva contraseña.'))
+        self.form('Recuperar contraseña', [('email', 'Correo electrónico', email)], submit,
+                  persist=False, input_types={'email': 'mail'}, submit_text='Enviar enlace',
+                  description='Abre el enlace en el mismo teléfono donde lo solicitas.')
+
+    def recovered_password_form(self):
+        def submit(values):
+            if len(values['password']) < 8:
+                raise ValueError('Usa una contraseña de al menos 8 caracteres.')
+            if values['password'] != values['password_confirm']:
+                raise ValueError('Las contraseñas no coinciden.')
+            self.network(lambda: self.cloud.change_password(values['password']),
+                lambda _: self.message('Contraseña actualizada', 'Tu nueva contraseña ya está lista.'))
+        self.form('Tu nueva contraseña', [('password', 'Nueva contraseña', ''),
+                  ('password_confirm', 'Repite la contraseña', '')], submit,
+                  password=True, persist=False, submit_text='Guardar contraseña')
+
+    def account_options(self, section):
+        modal, card = self.dialog('Mis datos' if section == 'data' else 'Seguridad', 490)
+        def action(label, callback):
+            def run(*_):
+                modal.dismiss()
+                callback()
+            card.add_widget(view('AccountAction', text=label, callback=run))
+        if section == 'data':
+            if self.cloud.user:
+                action('Reintentar guardado', self.upload)
+                action('Recuperar copia guardada', self.download)
+                action('Traer mascotas del invitado', self.import_local)
+            action('Exportar copia', self.export_backup)
+        else:
+            action('Cambiar contraseña', self.password_form)
+            action('Cerrar sesión', self.logout)
+        modal.open()
+
+    def contact_profile(self):
+        if not self.cloud.user:
+            return {}
+        metadata = self.cloud.user.get('user_metadata') or {}
+        profile = metadata.get('contact_profile', {})
+        if isinstance(profile, dict) and profile:
+            return profile
+        return {'name': metadata.get('full_name') or metadata.get('name') or ''}
+
+    def edit_contact_profile(self):
+        source = self.contact_profile()
+        def submit(values):
+            clean = contact_values(values)
+            if not clean['name']:
+                raise ValueError('Escribe tu nombre o el de la persona de contacto.')
+            self.network(lambda: self.cloud.update_profile(clean), lambda _: self.account())
+        self.form('Tu perfil', [('name', 'Nombre de contacto *', source.get('name', '')),
+                  ('phone', 'Teléfono con código de país', source.get('phone', '')),
+                  ('city', 'Comuna / ciudad (opcional, privada)', source.get('city', ''))], submit,
+                  persist=False, submit_text='Guardar perfil', input_types={'phone': 'tel'}, hints={'phone': '+56 9 1234 5678'},
+                  description='Se guarda en tu cuenta. Editar este perfil no cambia los QR ya generados; configura el contacto de cada mascota por separado.')
+
+    def choose_qr_contact(self):
+        if not self.data['pets']:
+            self.prompt_register_pet('Configurar el contacto de su chapa')
+            return
+        options = {f'{i + 1}. {p["name"]}': p for i, p in enumerate(self.data['pets'])}
+        self.form('¿Para qué mascota?', [('pet', 'Mascota', next(iter(options)))],
+                  lambda values: self.qr_contact_form(options[values['pet']]),
+                  choices={'pet': list(options)}, persist=False)
+
+    def qr_contact_form(self, pet):
+        source = pet.get('qr_contact', {}) or self.contact_profile()
+        if not isinstance(source, dict):
+            source = {}
+        def submit(values):
+            share = values['share_phone'] == 'Sí, incluir contacto'
+            clean = contact_values(values, required=share)
+            pet['qr_contact'] = dict(clean, share_phone=share)
+        self.form('Contacto de ' + pet['name'], [
+            ('share_phone', '¿Mostrar nombre y teléfono al escanear?', 'Sí, incluir contacto' if source.get('share_phone') else 'No, solo mascota'),
+            ('name', 'Persona de contacto', source.get('name', '')),
+            ('phone', 'Teléfono con código de país', source.get('phone', ''))], submit,
+            choices={'share_phone': ('No, solo mascota', 'Sí, incluir contacto')},
+            visible_when={'name': ('share_phone', 'Sí, incluir contacto'), 'phone': ('share_phone', 'Sí, incluir contacto')},
+            input_types={'phone': 'tel'}, hints={'phone': '+56 9 1234 5678'},
+            description='Elige quién puede llamar a tu familia. Para publicar cambios, abre Chapa → Más opciones → Actualizar ficha. Tu correo y dirección nunca aparecen en la ficha.')
+
+    def password_form(self):
+        def submit(values):
+            if not values['current_password']:
+                raise ValueError('Escribe tu contraseña actual.')
+            if len(values['password']) < 8:
+                raise ValueError('Usa una contraseña de al menos 8 caracteres.')
+            if values['password'] != values['password_confirm']:
+                raise ValueError('Las contraseñas no coinciden.')
+            email = self.cloud.user['email']
+            def change():
+                if not self.cloud.authenticate(email, values['current_password']):
+                    raise CloudError('No se pudo verificar tu contraseña actual.')
+                return self.cloud.change_password(values['password'])
+            self.network(change, lambda _: self.message('Contraseña actualizada', 'Usa la nueva contraseña la próxima vez que inicies sesión.'))
+        self.form('Cambiar contraseña', [('current_password', 'Contraseña actual', ''),
+                  ('password', 'Nueva contraseña', ''), ('password_confirm', 'Repite la nueva contraseña', '')],
+                  submit, password=True, persist=False, submit_text='Actualizar contraseña')
+
     def auth_form(self, signup):
         if not self.cloud.configured:
-            self.message("Conexión pendiente", "Puedes seguir usando Mi Mascota sin cuenta. Para activar el registro, configura Supabase con config.example.json y supabase/schema.sql.")
+            self.message("Conexión pendiente", "No podemos conectar tu cuenta ahora. Puedes seguir usando la app como invitado.")
             return
         def submit(v):
             if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", v["email"]):
                 raise ValueError("Escribe un correo válido.")
             if len(v["password"]) < (8 if signup else 1):
                 raise ValueError("Usa una contraseña de al menos 8 caracteres.")
-            self.network(lambda: self.cloud.authenticate(v["email"], v["password"], signup), self.authenticated)
-        self.form("Crear cuenta" if signup else "Iniciar sesión", [("email", "Correo electrónico", ""),
-                  ("password", "Contraseña", "")], submit, password=True, persist=False)
+            profile = registration_values(v) if signup else None
+            def finished(signed_in):
+                if signup and not signed_in:
+                    self.confirm_signup_email(v['email'], v['password'])
+                else:
+                    self.authenticated(signed_in)
+            self.network(lambda: self.cloud.authenticate(v["email"], v["password"], signup, profile=profile), finished)
+        fields = [('name', 'Tu nombre *', '')] if signup else []
+        fields += [("email", "Correo electrónico *", ""), ("password", "Contraseña *", "")]
+        if signup:
+            fields.append(('password_confirm', 'Repite la contraseña *', ''))
+        modal, entries = self.form("Crear cuenta" if signup else "Iniciar sesión", fields, submit, password=True, persist=False,
+                  submit_text='Crear cuenta' if signup else 'Iniciar sesión',
+                  input_types={'email': 'mail'}, description='Crea tu cuenta para guardar tus mascotas y probar su chapa.' if signup else 'Continúa con tus mascotas y sus cuidados.')
+        if not signup:
+            def recover(*_):
+                email = entries['email'].text.strip()
+                modal.dismiss()
+                self.forgot_password(email)
+            modal.children[0].add_widget(view('AccountAction', text='Olvidé mi contraseña', callback=recover))
 
-    def authenticated(self, signed_in):
+    def confirm_signup_email(self, email, password):
+        modal, card = self.dialog('Confirma tu correo', 340)
+        card.children[-1].size_hint_y = None
+        pending = {'email': email, 'password': password}
+        modal.bind(on_dismiss=lambda *_: pending.clear())
+        card.add_widget(view('AccountNote', text='Abre el mensaje de verificación que enviamos a '
+                             + email + '. Después vuelve aquí para continuar.'))
+        def continue_signin(*_):
+            if self.busy or not pending:
+                return
+            def done(signed_in):
+                if signed_in:
+                    modal.dismiss()
+                    self.authenticated(True)
+            credentials = dict(pending)
+            def signin():
+                try:
+                    return self.cloud.authenticate(credentials['email'], credentials['password'])
+                finally:
+                    credentials.clear()
+            self.network(signin, done)
+        def resend(*_):
+            if self.busy or not pending:
+                return
+            email_to_resend = pending['email']
+            self.network(lambda: self.cloud.resend_signup(email_to_resend),
+                         lambda _: self.message('Revisa tu correo', 'Solicitamos un nuevo mensaje. Revisa también la carpeta de spam.'))
+        card.add_widget(view('AccountPrimary', text='Ya confirmé mi correo', callback=continue_signin))
+        card.add_widget(view('AccountAction', text='Reenviar mensaje', callback=resend))
+        modal.open()
+
+    def authenticated(self, signed_in, resumed=False):
         if not signed_in:
             self.message("Revisa tu correo", "Si el registro fue aceptado, recibirás un enlace para confirmar tu correo. Después vuelve a Mi Mascota e inicia sesión.")
             return
         user_id = str(uuid.UUID(self.cloud.user["id"]))
+        has_guest_pets = self.data_file == self.guest_file and bool(self.data['pets'])
         self.switch_store(self.guest_file.parent / "accounts" / (user_id + ".json"))
-        self.message("Tu cuenta está lista", "Tus datos de invitado siguen guardados por separado. En Mi cuenta puedes importarlos o restaurar una copia de nube.")
+        self.queue_backup()
+        if not self.cloud.session_persisted:
+            self.message("No se guardó el acceso", "Puedes usar tu cuenta ahora, pero no pudimos guardar la sesión en este dispositivo. Revisa el espacio disponible antes de cerrar la app.")
+        if not resumed and self.mobile.configured and self.mobile.preferences()['notifications']:
+            self.network(lambda: PushClient(self.cloud, self.mobile).register(), lambda _: None)
+        if not resumed and has_guest_pets and not self.data['pets']:
+            self.message("Tus mascotas siguen contigo", "Para traerlas a esta cuenta, abre Mi cuenta → Ajustes de cuenta → Datos y respaldos → Traer mascotas del invitado.")
 
     def switch_store(self, path):
+        self._backup_blocked = False
+        self.backup_status = "Guardado en este teléfono"
         self.store = LocalStore(path)
         self.data_file = self.store.path
         self.data = deepcopy(self.store.data)
         self.selected_pet = self.data["pets"][0]["id"] if self.data["pets"] else None
         self.notified.clear()
+        self._reminder_accepted = None
+        self._reminder_conflict = False
+        self.reminder_status = "Cambios pendientes de sincronizar" if self.data.get("reminder_dirty") else ""
+        if not self.cloud.user:
+            self.queue_reminders()
         self.show("Inicio")
+        if hasattr(self, '_qr_owner'):
+            self.refresh_qr_badge()
         if self.store.readonly:
             self.message("Archivo protegido", "No se pudo leer este espacio local. No se sobrescribirá. Revisa el archivo y su copia .bak.")
 
     def network(self, operation, callback):
+        if getattr(self, "_reminder_running", False) or getattr(self, "_backup_running", False):
+            Clock.schedule_once(lambda _: self.network(operation, callback), .5)
+            return
         if self.busy:
             return
         self.busy = True
@@ -686,12 +983,7 @@ class CareFeatures:
     def upload(self):
         if not self.require_account():
             return
-        snapshot = deepcopy(self.data)
-        def done(result):
-            self.data["cloud_revision"] = result["revision"]
-            if self.save():
-                self.message("Copia guardada", "Tu copia privada está en Supabase. Los nuevos cambios seguirán guardándose localmente hasta que vuelvas a guardar una copia.")
-        self.network(lambda: self.cloud.upload(snapshot), done)
+        self.retry_backup()
 
     def download(self):
         if not self.require_account():
@@ -706,10 +998,13 @@ class CareFeatures:
                 try:
                     self.backup_file("antes-de-restaurar")
                     self.store.save(incoming)
+                    from services.backup_sync import SyncJournal
+                    SyncJournal(self.data_file).accept(incoming)
                 except (OSError, ValueError):
                     self.message("No se pudo restaurar", "La copia de seguridad o el guardado fallaron. No se reemplazó tu estado local.")
                     return
                 self.switch_store(self.data_file)
+                self.queue_backup()
             self.confirm("Restaurar copia", f'La copia contiene {len(incoming["pets"])} mascotas. Reemplazará los datos de esta cuenta en el dispositivo. Antes se guardará un respaldo local.', restore)
         self.network(self.cloud.download, received)
 
@@ -724,13 +1019,13 @@ class CareFeatures:
             self.data = import_guest(self.data, guest.data)
             if self.save():
                 self.show("Inicio")
-                self.message("Importación local lista", "Los registros se copiaron a tu cuenta en este dispositivo. Para subirlos, elige Guardar copia en la nube. El original del invitado se conserva.")
+                self.message("Importación local lista", "Los registros se copiaron a tu cuenta. Se guardarán automáticamente cuando tengas internet. El original del invitado se conserva.")
         self.confirm("Importar invitado", "Copia las mascotas, rutinas e historial de este dispositivo a tu cuenta. Hazlo sólo si esos datos son tuyos. Los registros ya importados no se duplican.", transfer)
 
     def backup_file(self, prefix="copia"):
         folder = self.data_file.parent / "exports"
         folder.mkdir(parents=True, exist_ok=True)
-        path = folder / f'{prefix}-{datetime.now():%Y%m%d-%H%M%S-%f}.json'
+        path = folder / f'{prefix}-{care_now(self.data):%Y%m%d-%H%M%S-%f}.json'
         path.write_text(json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8")
         return path
 
@@ -743,13 +1038,25 @@ class CareFeatures:
 
     def logout(self):
         def leave():
+            revoked = True
+            try:
+                PushClient(self.cloud, self.mobile).unregister()
+            except CloudError:
+                revoked = False
+            finally:
+                if self.mobile.configured:
+                    try:
+                        self.mobile.initialize().notifications(False)
+                    except Exception:
+                        revoked = False
             try:
                 self.cloud.logout()
-                return True
+                return revoked
             except CloudError:
                 return False
         def done(revoked):
+            self.google_auth.cancel()
             self.switch_store(self.guest_file)
             if not revoked:
-                self.message("Sesión local cerrada", "Se borraron los tokens de esta sesión, pero no se pudo revocar la sesión remota por falta de conexión.")
+                self.message("Sesión cerrada en este equipo", "No pudimos cerrar la sesión en línea. Cuando tengas conexión, revisa tu cuenta.")
         self.network(leave, done)

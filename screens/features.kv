@@ -10,11 +10,11 @@
 
 <RoutineImageBanner@ViewSpaBanner>:
     size_hint_y: None
-    height: dp(220)
+    height: dp(150)
 
 <RoutineVectorBanner@ViewSpaArt>:
     size_hint_y: None
-    height: dp(220)
+    height: dp(150)
 
 <HomeHero@ViewCard>:
     bg: '#103D49'
@@ -25,7 +25,7 @@
         height: dp(22)
         spacing: dp(4)
         ViewText:
-            text: '01 / TU CHAPA'
+            text: 'SU CHAPA QR'
             font_size: sp(10)
             color: rgba('#DAEFA0')
             bold: True
@@ -47,14 +47,14 @@
         bold: True
 
 <HomeQrDescription@ViewText>:
-    text: 'Su camino de vuelta comienza aquí. Prueba el QR sin crear una cuenta.'
+    text: 'Si alguien la encuentra, podrá escanear su chapa y escribirte. Actívala con tu cuenta.'
     font_size: sp(12)
     color: rgba('#D8EAEC')
     size_hint_y: None
     height: dp(46)
 
 <HomeOpenQr@ViewAction>:
-    text: 'ABRIR MI CHAPA QR'
+    text: 'Ver su chapa QR'
     icon: 'qrcode-scan'
     bg: '#DAEFA0'
     fg: '#103D49'
@@ -66,7 +66,7 @@
     adaptive: True
     spacing: dp(10)
     ViewText:
-        text: '02 / HOY EN UN VISTAZO'
+        text: 'HOY EN UN VISTAZO'
         font_size: sp(11)
         color: rgba('#286F83')
         bold: True
@@ -130,20 +130,20 @@
     padding: dp(16)
     spacing: dp(10)
     ViewText:
-        text: 'Tus datos, a tu manera'
+        text: 'Guarda tus mascotas en tu cuenta'
         font_size: sp(16)
         color: rgba('#286F83')
         bold: True
         size_hint_y: None
         height: dp(25)
     ViewText:
-        text: 'Puedes usar los cuidados sin conexión.\nCon una cuenta también puedes guardar una copia en la nube.'
+        text: 'Tus datos ya se guardan en este teléfono. Con una cuenta puedes recuperarlos en otro.'
         font_size: sp(12)
         color: rgba('#71838B')
         size_hint_y: None
         height: dp(51)
     ViewAction:
-        text: 'Mi cuenta y copias de seguridad'
+        text: 'Guardar en mi cuenta'
         icon: 'cloud-outline'
         callback: root.context['callback']
 
@@ -212,7 +212,7 @@
     spacing: dp(10)
 
 <PetsOpenQr@ViewAction>:
-    text: 'Abrir mi chapa de prueba'
+    text: 'Abrir mi chapa QR'
     icon: 'qrcode-scan'
     callback: root.context['callback']
 
@@ -252,7 +252,7 @@
     callback: root.context['callback']
 
 <RoutineAdd@ViewAction>:
-    text: 'Agregar cuidado o recordatorio'
+    text: 'Añadir cuidado'
     icon: 'plus'
     callback: root.context['callback']
 
@@ -264,7 +264,8 @@
     height: dp(24)
 
 <RoutineEmpty@ViewText>:
-    text: 'Agrega un paseo, una toma o una cita.\nTe avisaremos aquí mientras la app esté abierta.'
+    wrap: True
+    text: 'Empieza con un paseo, un medicamento o una cita. Puedes activar sus avisos desde tu cuenta.'
     font_size: sp(13)
     color: rgba('#71838B')
     size_hint_y: None
@@ -297,11 +298,12 @@
 
 <TaskTitle@ViewText>:
     text: root.context['text']
+    wrap: True
     font_size: sp(20)
     color: rgba('#193C47')
     bold: True
     size_hint_y: None
-    height: dp(48)
+    height: max(dp(32), self.texture_size[1] + dp(4))
 
 <TaskSummary@ViewText>:
     text: root.context['text']
@@ -327,7 +329,7 @@
     callback: root.context['callback']
 
 <TaskEdit@ViewAction>:
-    text: 'Editar / reprogramar'
+    text: 'Editar cuidado'
     bg: '#E7F3F4'
     fg: '#286F83'
     callback: root.context['callback']
@@ -360,22 +362,34 @@
     padding: dp(16)
     spacing: dp(8)
     accent: True
-    ViewText:
-        text: root.context['name']
-        font_size: sp(21)
-        color: rgba('#193C47')
-        bold: True
-        size_hint_y: None
-        height: dp(30)
+    ViewRow:
+        height: max(dp(48), root.ids.pet_title.texture_size[1] + dp(4))
+        ViewText:
+            id: pet_title
+            text: root.context['name']
+            wrap: True
+            font_size: sp(21)
+            color: rgba('#193C47')
+            bold: True
+        ViewAction:
+            icon: 'file-export-outline'
+            text: 'PDF'
+            font_size: sp(12)
+            callback: root.context.get('export')
+            bg: '#FFFFFF'
+            fg: '#286F83'
+            size_hint_x: None
+            width: dp(70)
     ViewText:
         text: root.context['summary']
+        wrap: True
         font_size: sp(12)
         color: rgba('#71838B')
         size_hint_y: None
-        height: dp(42)
+        height: self.texture_size[1] + dp(8)
 
 <HealthAddEvent@ViewAction>:
-    text: 'Registrar evento médico'
+    text: 'Añadir al historial'
     icon: 'clipboard-plus-outline'
     callback: root.context['callback']
 
@@ -387,12 +401,13 @@
     callback: root.context['callback']
 
 <HealthTreatmentTitle@ViewText>:
+    wrap: True
     text: 'Tratamientos y próximas citas'
     font_size: sp(18)
     color: rgba('#193C47')
     bold: True
     size_hint_y: None
-    height: dp(30)
+    height: max(dp(30), self.texture_size[1] + dp(4))
 
 <HealthEmptyTasks@ViewText>:
     text: 'No hay tratamientos o citas pendientes.'
@@ -402,7 +417,7 @@
     height: dp(36)
 
 <HealthAddTreatment@ViewAction>:
-    text: 'Agregar tratamiento, vacuna o cita'
+    text: 'Añadir tratamiento o cita'
     icon: 'plus'
     callback: root.context['callback']
 
@@ -471,10 +486,11 @@
     spacing: dp(4)
     ViewText:
         text: root.context['text']
+        wrap: True
         font_size: sp(12)
         color: rgba('#71838B')
         size_hint_y: None
-        height: dp(25)
+        height: max(dp(25), self.texture_size[1] + dp(4))
 
 <FormChoice@ViewSpinner>:
     text: root.context['text']
@@ -488,7 +504,7 @@
     password: root.context['password']
     size_hint_y: None
     height: dp(85 if root.context['multiline'] else 44)
-    font_size: dp(14)
+    font_size: sp(14)
     padding: [dp(12), dp(10)]
     background_normal: ''
     background_active: ''
@@ -627,7 +643,7 @@
     height: dp(36)
 
 <QrExpiredDescription@ViewText>:
-    text: 'El QR de prueba ya no se muestra en la app. Para una caducidad real al escanear, hace falta publicar la ficha mediante Supabase.'
+    text: 'Esta prueba de texto terminó. Con tu cuenta puedes crear una chapa con ficha web.'
     font_size: sp(13)
     color: rgba('#71838B')
     size_hint_y: None
@@ -666,7 +682,7 @@
     height: dp(43)
 
 <QrPrivacy@ViewText>:
-    text: 'Este QR de prueba muestra solo nombre y especie. No publica una web ni comparte tus datos de contacto. Una foto del código seguirá siendo legible tras el plazo.'
+    text: 'El QR muestra nombre y especie, y contacto solo si lo autorizaste. No publica una web. Una foto conserva el texto y los datos aunque cambies el contacto o termine la prueba.'
     font_size: sp(12)
     color: rgba('#71838B')
     size_hint_y: None
@@ -738,32 +754,117 @@
         size_hint_y: None
         height: dp(50)
     ViewText:
-        text: 'Mascotas, salud y rutinas funcionan sin cuenta.\nLa cuenta permite guardar y recuperar tu copia privada en la nube.'
+        text: 'Tu perfil y los datos de tus mascotas.'
         font_size: sp(13)
         color: rgba('#71838B')
         size_hint_y: None
-        height: dp(80)
+        height: dp(42)
 
 <AccountAction@ViewAction>:
     text: root.context['text']
+    bg: '#E7F3F4'
+    fg: '#193C47'
+    callback: root.context['callback']
+
+<AccountPrimary@ViewAction>:
+    text: root.context['text']
+    bg: '#286F83'
+    fg: '#FFFFFF'
+    callback: root.context['callback']
+
+<AccountSection@ViewText>:
+    text: root.context['text']
+    bold: True
+    font_size: sp(11)
+    color: rgba('#286F83')
+    size_hint_y: None
+    height: dp(30)
+
+<AccountNote@ViewText>:
+    text: root.context['text']
+    wrap: True
+    font_size: sp(13)
+    color: rgba('#52676F')
+    size_hint_y: None
+    height: self.texture_size[1] + dp(18)
+
+<AccountProfile@ViewCard>:
+    bg: '#E7F3F4'
+    ViewIconTile:
+        icon: 'account-heart-outline'
+    ViewText:
+        text: root.context['name']
+        font_size: sp(22)
+        bold: True
+        wrap: True
+        size_hint_y: None
+        height: self.texture_size[1] + dp(8)
+    ViewText:
+        text: root.context['detail']
+        font_size: sp(14)
+        wrap: True
+        size_hint_y: None
+        height: self.texture_size[1] + dp(8)
+
+<PasswordRow@ViewRow>:
+    height: dp(44)
+    spacing: dp(4)
+
+<PasswordEye@ViewAction>:
+    icon: 'eye-outline'
+    bg: '#E7F3F4'
+    fg: '#286F83'
+    size_hint_x: None
+    width: dp(44)
     callback: root.context['callback']
 
 <AccountSessionNote@ViewText>:
-    text: 'Al cerrar sesión vuelves al espacio del invitado.\nLa contraseña y los tokens no se guardan en archivos.'
+    text: 'Al cerrar sesión vuelves al espacio del invitado.'
     font_size: sp(12)
     color: rgba('#71838B')
     size_hint_y: None
     height: dp(55)
 
 <NetworkWait@ViewModalView>:
-    size_hint: (0.85, None)
-    height: dp(130)
+    size_hint: (None, None)
+    size: dp(68), dp(68)
     auto_dismiss: False
     background_color: (0, 0, 0, 0)
     ViewCard:
         adaptive: False
-        padding: dp(22)
-        ViewText:
-            text: 'Conectando…\nTus datos locales están seguros.'
-            font_size: sp(15)
+        padding: dp(16)
+        MDSpinner:
+            size_hint: None, None
+            size: dp(36), dp(36)
             color: rgba('#286F83')
+            active: root.opacity > 0
+
+
+<HomeCareTip@ViewCard>:
+    bg: '#E7F3F4'
+    radius: 16
+    padding: dp(16)
+    spacing: dp(6)
+    ViewText:
+        text: 'Un consejo para su cuidado'
+        bold: True
+        font_size: sp(16)
+        wrap: True
+        size_hint_y: None
+        height: self.texture_size[1] + dp(4)
+    ViewText:
+        id: tip_text
+        text: root.context['message']
+        markup: False
+        wrap: True
+        font_size: sp(14)
+        size_hint_y: None
+        height: self.texture_size[1] + dp(6)
+    ViewText:
+        id: tip_status
+        text: root.context['status']
+        color: rgba('#42616A')
+        font_size: sp(12)
+        wrap: True
+        size_hint_y: None
+        height: self.texture_size[1] + dp(4)

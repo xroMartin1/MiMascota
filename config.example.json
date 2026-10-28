@@ -1,4 +1,13 @@
 {
-  "SUPABASE_URL": "https://TU-PROYECTO.supabase.co",
-  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_REEMPLAZAR"
+  "SUPABASE_URL": "https://thkzrjwalcxfiucqppfv.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_TTPQeCJ6McHOFZYMMb2jPA_DmYsIOhy",
+  "MIMASCOTA_SITE_URL": "https://mi-mascota-web.vercel.app",
+  "GOOGLE_SIGN_IN_ENABLED": false,
+  "FIREBASE_ENABLED": true,
+  "FIREBASE_ANDROID": {
+    "app_id": "1:858827319897:android:121a47d736bf950a201f48",
+    "api_key": "AIzaSyBm4qjHDE9RdA2jfdb_kxS9aGQTzpYIs2s",
+    "project_id": "mi-mascota-2e9d4",
+    "sender_id": "858827319897"
+  }
 }

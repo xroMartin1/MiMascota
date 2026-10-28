@@ -1,5 +1,6 @@
 """Smoke test real con el event loop de Kivy y capturas de las cuatro pantallas."""
 import os
+os.environ['MIMASCOTA_DISABLE_SAVED_SESSION']='1'
 os.environ["KIVY_NO_ARGS"] = "1"
 import sys
 from pathlib import Path
@@ -28,7 +29,12 @@ class CheckUI(MiMascotaApp):
         from unittest.mock import patch, PropertyMock
         with patch("screens.home.platform", "android"), patch.object(type(self), "user_data_dir", new_callable=PropertyMock) as data_dir:
             data_dir.return_value = self.temporary.name
-            mobile = HomeScreen()
+            import types
+            from unittest.mock import Mock
+            activity = types.ModuleType("android.activity")
+            activity.bind = Mock()
+            with patch.dict("sys.modules", {"android.activity": activity, "jnius": Mock()}):
+                mobile = HomeScreen()
             assert mobile.data_file == Path(self.temporary.name) / "petcare.json"
             mobile.reminder_clock.cancel()
         self.pages = iter(["Inicio", "Mascotas", "Rutina", "Salud"])
@@ -169,12 +175,14 @@ class CheckUI(MiMascotaApp):
         assert len(view("HomeVectorTag").children) == 0
         assert len(view("RoutineVectorBanner").children) == 3
         for open_dialog in (lambda: s.profile(pet), lambda: s.task_detail(task),
-                            s.history, s.notifications, s.account,
+                            s.history, s.notifications,
                             lambda: s.message("Prueba", "Mensaje")):
             open_dialog()
             modal = self.current_modal()
             assert modal.ids.card.children
             self.dismiss_modals()
+        s.account()
+        assert s.active == 'Cuenta' and s.content.children
         accepted = []
         s.confirm("Prueba", "Confirmación", lambda: accepted.append(True))
         modal = self.current_modal()

@@ -1,175 +1,81 @@
 # Mi Mascota
 
-   **Mi Mascota** es una aplicación móvil y de escritorio desarrollada con **Python, Kivy y KivyMD**, diseñada para facilitar el seguimiento integral, la gestión médica y la rutina diaria de tus mascotas.
+Mi Mascota es una aplicación desarrollada con Python, Kivy y KivyMD para organizar mascotas, cuidados e historial de salud. Ayuda a recordar tareas y ofrece una chapa QR: al escanear una ficha pública activa, quien encuentra una mascota puede contactar a su familia mediante las opciones autorizadas por el propietario.
 
----
+Puede usarse sin cuenta para guardar información en el dispositivo. La cuenta habilita funciones en la nube. La venta y el envío de chapas físicas todavía no están implementados.
 
-## Problema que resuelve
+## Requisitos
 
-Cuidar de una o varias mascotas implica coordinar múltiples tareas: horarios de alimentación, paseos, desparasitación, administración de medicamentos, vacunación y consultas veterinarias. Al confiar en la memoria o en notas dispersas, es habitual:
-- Olvidar dosis o momentos exactos de administración de medicamentos.
-- Perder el seguimiento de las fechas de vacunación o desparasitación.
-- Carecer de un registro médico centralizado con antecedentes de alergias, diagnósticos, síntomas y controles de peso.
+- Windows 10/11 con Python 3.11 o 3.12 y Git. Internet es necesario para instalar dependencias y utilizar servicios remotos.
+- Para Android: teléfono arm64-v8a con Android 7 o superior. Para compilar, Linux o WSL 2 con Ubuntu, Java y Buildozer; ver [PROBAR_EN_ANDROID.md](PROBAR_EN_ANDROID.md).
+- Para probar la nube se usa el proyecto de Supabase configurado para la evaluación. El ejemplo contiene solo configuración publicable del cliente; no debe incluir contraseñas, claves de servidor ni archivos de cuenta de servicio.
 
-A esto se suma una de las mayores preocupaciones de cualquier dueño: **la pérdida o extravío de la mascota**. Ante esta situación de emergencia, surgen dos grandes dificultades: la falta de un medio rápido y seguro para que quien encuentre al animal pueda contactar a la familia sin que el dueño tenga que exponer públicamente sus datos personales (teléfono o dirección), y el riesgo comercial de que un sistema de QR gratuito sea copiado o impreso en papel de forma casera, impidiendo la monetización del proyecto a través de las chapas físicas.
+## Instalación y ejecución en Windows
 
-**Mi Mascota** resuelve estos problemas ofreciendo:
-- Un centro de control unificado e intuitivo para gestionar los perfiles de tus mascotas, programar sus cuidados recurrentes, recibir alertas y mantener un registro de salud detallado.
-- Un **sistema de chapa digital con prueba temporal (14 días)** integrada en la app, que permite al usuario experimentar el flujo de escaneo y validación de emergencia de forma local.
-- Una solución definitiva basada en **fichas públicas dinámicas conectadas a la nube (Supabase) y placas físicas oficiales**, diseñadas para garantizar la durabilidad ante el clima, proteger la privacidad del dueño mediante un sistema de mensajería sin revelar datos sensibles, y asegurar un modelo sostenible mediante la venta de la chapa física frente a copias de uso gratuito.
+1. Instala Python 3.12 o 3.11, incluyendo el lanzador `py`, y Git.
+2. En PowerShell:
 
-**Mi Mascota** resuelve estos problemas ofreciendo un centro de control unificado e intuitivo donde puedes gestionar los perfiles de tus mascotas, programar sus cuidados recurrentes, recibir alertas y mantener un registro de salud detallado.
-
----
-
-## Usuario Objetivo
-
-- **Dueños de mascotas** (perros, gatos, etc.) que buscan una herramienta visual y organizada para asegurar el bienestar de sus animales.
-- **Familias y cuidadores (Pet Sitters)** que comparten la responsabilidad de atender la rutina de una o múltiples mascotas.
-- **Hogares de tránsito y rescatistas** que manejan fichas de salud e historiales médicos para varios animales de forma temporal.
-
----
-
-## Características Principales
-
-- **Gestión de Mascotas**: Creación, edición y eliminación de perfiles (nombre, especie, raza, peso, chip).
-- **Rutinas y Tareas Recurrentes**: Programación de paseos, comidas, medicamentos, citas y vacunas con repetición (diaria, semanal, etc.).
-- **Recordatorios Locales**: Alertas dentro de la app con avisos visuales según fecha y hora.
-- **Historial Médico y de Salud**: Registro organizado por evento (vacunas, alergias, enfermedades, síntomas y controles veterinarios).
-- **Almacenamiento Local de Datos**: Guardado atómico con respaldos automáticos `.bak` para evitar pérdida de información.
-- **Chapa QR de Prueba**: Código escaneable por mascota, sin cuenta y sin datos privados.
-- **Soporte Multiplataforma**: Funciona en PC (Windows) y está preparada para Android.
-
-## Chapa digital QR
-
-La chapa de **prueba local** ya funciona sin registro: crea una mascota, toca «Abrir mi chapa QR» y escanéala con otra cámara. El PNG contiene solo nombre, especie e identificador de prueba. Se guarda un período de 14 días por mascota y volver a abrir la pantalla no lo reinicia. La app oculta el QR cuando termina el período.
-
-Esta prueba **no es una ficha pública ni un sistema de rescate**: una foto del QR seguirá siendo legible después del plazo y no permite contactar a la familia. Para la versión pública se necesita una URL por chapa, una página web de emergencia y caducidad comprobada en Supabase, nunca dentro del QR. Esa página debe mostrar solo los datos que el dueño elija y permitir enviar un mensaje sin publicar su correo ni teléfono. La compra y el envío de la placa física aún no están implementados.
-
-La ilustración de Inicio se carga desde `assets/Placa_Icon.png`; las vistas de la placa física usan `assets/PlacaReal_Front.png` y `assets/PlacaReal_Back.png`. `assets/placa_preview.png` queda como alternativa cuando faltan las dos vistas. El QR de esos mockups es solo ilustrativo. Las decisiones visuales están en [DISENO_Y_QR.md](DISENO_Y_QR.md).
-
-La ilustración de Rutina se carga desde `assets/MascotsBanner.png` y mantiene el texto como elemento editable de Kivy. Si falta el archivo, se usa la ilustración vectorial integrada.
-
----
-
-## Instrucciones para Ejecutar
-
-### Requisitos previos
-
-- **Python 3.11** o **3.12** instalado.
-- **Git** (opcional, para clonar el repositorio).
-
----
-
-### Paso a paso desde consola (`python main.py`)
-
-1. **Clonar el repositorio** (o descargar el código fuente):
-   ```bash
+   ```powershell
    git clone https://github.com/xroMartin1/MiMascota.git
    cd MiMascota
+   Copy-Item config.example.json config.json
    ```
 
-2. **Crear y activar un entorno virtual** (recomendado):
-   - **En Windows (PowerShell / CMD):**
-     ```powershell
-     python -m venv .venv
-     .venv\Scripts\activate
-     ```
-   - **En Linux / macOS:**
-     ```bash
-     python3 -m venv .venv
-     source .venv/bin/activate
-     ```
+3. Abre `Iniciar MiMascota.bat`. La primera vez crea un entorno propio e instala los paquetes; puede tardar varios minutos. Las siguientes veces reutiliza el entorno.
 
-3. **Instalar dependencias**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+Alternativamente, ejecuta manualmente:
 
-4. **Ejecutar la aplicación**:
-   ```bash
-   python main.py
-   ```
-
----
-
-### Opción alternativa en Windows (`Iniciar MiMascota.bat`)
-
-En Windows puedes hacer **doble clic** en `Iniciar MiMascota.bat`. Este script verifica el entorno de Python, crea automáticamente el entorno virtual local si no existe, instala las dependencias necesarias y ejecuta la app sin configuraciones adicionales.
-
----
-
-## Pruebas Unitarias (Tests)
-
-Para ejecutar las pruebas del sistema de persistencia y validación local:
-
-```bash
-python -m unittest discover -s tests -v
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe main.py
 ```
 
-Para verificar la interfaz con el event loop real de Kivy, las acciones de navegación,
-los formularios condicionales y las capturas a 390 y 320 píxeles:
+Si utilizas Python 3.11, sustituye `-3.12` por `-3.11`. Para ejecutar solo el modo invitado, la app también abre sin `config.json`, pero autenticación, QR público y configuración remota necesitan una configuración válida y conexión.
 
-```bash
-python tools/check_ui.py
+Si se usa otro proyecto de Supabase, reemplaza URL y clave publicable en `config.json` y prepara el backend con la documentación de `supabase/`. La conexión al proyecto de evaluación depende de que siga disponible y configurado; copiar el ejemplo no instala ni despliega un servidor nuevo.
+
+## Demostración de los servicios
+
+1. **Autenticación:** en Cuenta, crear una cuenta o iniciar sesión. La verificación de correo depende de la configuración de Supabase. El regreso automático desde Google está preparado para Android.
+2. **JSON:** sin cuenta, registrar una mascota y un cuidado, cerrar y reabrir. Los registros se recuperan desde el dispositivo. En escritorio el archivo del invitado es `data/petcare.json`; Android usa el almacenamiento privado de la app.
+3. **Notificaciones:** con la app abierta, un cuidado vencido dispara un diálogo local; el sistema revisa cada 30 segundos. En Android también existen push opcionales mediante Firebase y el servidor, sujetos a cuenta, permisos, configuración y conexión. El diálogo local no es una notificación de Android programada para cuando la app está cerrada.
+4. **Configuración remota:** en Inicio, esperar el consejo con «Actualizado en línea». Llega desde Supabase sin iniciar sesión y se guarda en JSON. Sin conexión se muestra el último valor guardado o un valor predeterminado. Consulta [CONFIGURACION-REMOTA.md](CONFIGURACION-REMOTA.md).
+
+Para la demo QR público, iniciar sesión, crear una mascota y activar su chapa desde la app. La ficha web permite el contacto según las opciones elegidas; el historial médico no es público. La vista de prueba local no sustituye la ficha pública.
+
+## Estructura y servicios
+
+| Ruta | Función |
+| --- | --- |
+| `main.py`, `main.kv` | Arranque y ciclo de vida. |
+| `screens/home.py`, `screens/*.kv` | Navegación, estructura visual y componentes. |
+| `screens/features.py` | Formularios, cuidados y comprobación del aviso local. |
+| `services/store.py` | Validación, lectura y guardado JSON con copia `.bak`. |
+| `services/cloud.py`, `services/google_auth.py` | Registro, login, sesión y Google mediante Supabase Auth. |
+| `screens/sync.py`, `services/backup_sync.py` | Copias y resolución de cambios de cuenta. |
+| `screens/remote_config.py`, `services/remote_config.py` | Consejo remoto, actualización de UI y caché local. |
+| `screens/reminders.py`, `services/reminders.py`, `services/push.py` | Calendario remoto y registro de notificaciones push. |
+| `services/public_qr.py`, `services/qr_inbox.py`, `screens/qr_inbox.py` | Chapa pública y mensajes protegidos. |
+| `android/` | Integraciones nativas Android. |
+| `supabase/` | SQL, funciones y documentación del backend. |
+| `assets/`, `tests/`, `tools/` | Recursos, pruebas y herramientas de desarrollo. |
+| `buildozer.spec`, `requirements.txt` | Configuración Android y dependencias. |
+
+## Pruebas y compilación
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-## Interfaz declarativa (KV Language)
+Las pruebas de interfaz Kivy incluyen `tools/check_ui.py` y `tools/check_remote_config_ui.py`; esta última necesita acceso al proyecto configurado. El APK de prueba también está disponible en [la web de Mi Mascota](https://mi-mascota-web.vercel.app). Para compilar uno nuevo sigue [PROBAR_EN_ANDROID.md](PROBAR_EN_ANDROID.md). Es una compilación de prueba, no una publicación en una tienda.
 
-La interfaz está separada de la lógica Python:
+## Dificultades y soluciones
 
-- `main.kv`: administrador de pantallas y pantalla inicial.
-- `screens/home.kv`: estructura compartida, cabecera, navegación y diálogos base.
-- `screens/features.kv`: vistas de Inicio, Mascotas, Rutina y Salud, además de
-  formularios, perfil, historial, recordatorios, QR y cuenta.
-- `screens/widgets.kv`: estilos y estructura de textos, tarjetas, botones,
-  selectores e ilustraciones con imágenes.
-- `screens/views.py`: propiedades Kivy y carga de los archivos KV una sola vez,
-  mediante rutas absolutas calculadas desde el proyecto.
+- **Pantalla blanca al migrar a KV:** se revisó el orden de carga y la adición de contenido en `main.py` y `screens/home.py`; se verificó con la interfaz real de Kivy.
+- **Persistencia y pérdida de sesión:** se separaron los datos locales de las cuentas, se añadieron escrituras temporales y respaldo, y se protege la sesión con almacenamiento específico del sistema. Los fallos temporales de red no deberían borrar la sesión.
+- **Avisos en segundo plano:** los temporizadores de Kivy no garantizan ejecución con la app cerrada; se integraron Firebase y el backend para push. El aviso local dentro de la app tiene un alcance distinto.
+- **Configuración remota sin internet:** el consejo se consulta en segundo plano, se valida y conserva una copia local; si nunca se obtuvo usa un valor predeterminado.
+- **QR y privacidad:** la ficha pública se separó de los registros privados y el propietario elige las opciones de contacto. La disponibilidad y caducidad de la ficha pública dependen del servidor.
 
-Los archivos `.py` siguen siendo necesarios: `home.py` controla la navegación y
-`features.py` conserva validación, persistencia, QR y operaciones de cuenta. Las
-listas y campos variables se llenan desde Python con `view("NombreDeVista", **datos)`;
-sus tamaños, colores y jerarquías se editan en las reglas KV correspondientes.
-`widgets.py` conserva el dibujo vectorial y las animaciones. `buildozer.spec` ya
-incluye la extensión `kv` para empaquetar estos archivos en Android.
-
----
-
-## Estructura del Proyecto
-
-```text
-MiMascota/
-├── assets/                 # Recursos gráficos / iconos de la aplicación
-├── screens/                # Vistas y componentes de la interfaz (Home, Formularios, Widgets)
-│   ├── home.py
-│   ├── home.kv
-│   ├── features.py
-│   ├── features.kv
-│   ├── views.py
-│   ├── widgets.py
-│   └── widgets.kv
-├── services/               # Lógica de negocio, persistencia local y conectores
-│   ├── store.py
-│   └── cloud.py
-├── tests/                  # Pruebas unitarias automatizadas
-│   └── test_core.py
-├── tools/                  # Scripts auxiliares de desarrollo y verificación de UI
-├── supabase/               # Esquemas SQL preliminares para backend
-├── main.py                 # Punto de entrada de la aplicación
-├── main.kv                 # Estructura inicial declarativa
-├── requirements.txt        # Dependencias del proyecto (Kivy, KivyMD, etc.)
-├── Iniciar MiMascota.bat   # Lanzador automático para Windows
-└── README.md               # Documentación del proyecto
-```
-
----
-<img width="388" height="843" alt="Screenshot 2026-09-30 232229" src="https://github.com/user-attachments/assets/c8d8f2bc-e3d1-4bb8-a4a3-2ac61a6a6512" />
----
-
-## Próximos Pasos (Roadmap)
-
-- **Integración de Backend Completo**: Completar el flujo público de la chapa y la mensajería con Supabase; el registro y la copia privada ya tienen una base funcional cuando se configura el proyecto.
-- **QR público con Supabase**: Publicar una ficha de emergencia, comprobar la caducidad en el servidor y recibir avisos de personas que encuentren a la mascota sin revelar los datos privados del dueño.
-- **Notificaciones Push en Segundo Plano**: Integración con Firebase Cloud Messaging (FCM) para avisos en móviles sin requerir que la app esté abierta.
-- **Publicación de APK Android**: Compilación oficial vía Buildozer / Docker para distribución en Android.
+La guía de defensa del equipo está en [GUIA-EQUIPO.md](GUIA-EQUIPO.md), y la declaración de herramientas en [USO_IA.md](USO_IA.md).
