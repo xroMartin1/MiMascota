@@ -1,6 +1,6 @@
 # Declaración de uso de inteligencia artificial
 
-Este documento recoge lo que consta en el trabajo realizado con Codex. El equipo debe revisar y completar los apartados personales antes de entregar; no se afirma que todos los integrantes hayan usado las mismas herramientas o realizado los mismos cambios.
+Este documento describe el uso de inteligencia artificial durante el desarrollo de Mi Mascota, las decisiones del equipo y su reflexión sobre el proceso.
 
 ## 1. IA usada
 
@@ -30,7 +30,11 @@ La IA entregó propuestas de código Python, KV, SQL y Java, pruebas, diagnósti
 
 ## 5. Ajustes
 
-En el intercambio se pidieron cambios concretos: pasar de un fondo crema a blanco, corregir textos ambiguos sobre cuidados pendientes, mejorar el alineamiento de navegación, hacer los formularios más fáciles y ajustar el diseño de la chapa. Se comprobó el código con pruebas y en teléfonos, y se corrigieron problemas detectados, como la pantalla blanca y la sesión que se perdía. El equipo debe añadir aquí **qué archivos o cambios modificó directamente cada integrante y por qué**; no debe atribuirse una edición manual no realizada.
+Al comienzo del proyecto realizamos ajustes nosotros mismos. Más adelante utilizamos principalmente la IA para implementar los cambios y correcciones: le indicábamos qué queríamos cambiar, revisábamos el resultado y le pedíamos nuevas modificaciones cuando algo no nos convencía o no funcionaba como esperábamos.
+
+Por ejemplo, pedimos pasar del fondo crema a blanco, aclarar los textos sobre cuidados pendientes, corregir la alineación de la navegación, facilitar los formularios y cambiar el diseño de la chapa. También informamos problemas observados al probar la app, como la pantalla blanca y la pérdida de sesión, para que la IA investigara y aplicara correcciones.
+
+Por lo tanto, los ajustes posteriores no se presentan como cambios de código escritos manualmente por cada integrante: nuestras aportaciones consistieron en decidir qué cambiar, dar indicaciones y revisar los resultados. Para la defensa debemos estudiar y comprender el código que finalmente se entrega.
 
 ## 6. Reflexión en el uso de IA
 
