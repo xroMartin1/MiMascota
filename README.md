@@ -8,7 +8,7 @@ Puede usarse sin cuenta para guardar información en el dispositivo. La cuenta h
 
 - Windows 10/11 con Python 3.11 o 3.12 y Git. Internet es necesario para instalar dependencias y utilizar servicios remotos.
 - Para Android: teléfono arm64-v8a con Android 7 o superior. Para compilar, Linux o WSL 2 con Ubuntu, Java y Buildozer; ver [PROBAR_EN_ANDROID.md](PROBAR_EN_ANDROID.md).
-- Para probar la nube se usa el proyecto de Supabase configurado para la evaluación. El ejemplo contiene solo configuración publicable del cliente; no debe incluir contraseñas, claves de servidor ni archivos de cuenta de servicio.
+- Para probar la nube se necesita la URL y la clave publicable del proyecto de Supabase de evaluación. El ejemplo contiene marcadores que deben completarse; nunca incluyas claves de servidor ni archivos de cuenta de servicio.
 
 ## Instalación y ejecución en Windows
 
@@ -21,7 +21,8 @@ Puede usarse sin cuenta para guardar información en el dispositivo. La cuenta h
    Copy-Item config.example.json config.json
    ```
 
-3. Abre `Iniciar MiMascota.bat`. La primera vez crea un entorno propio e instala los paquetes; puede tardar varios minutos. Las siguientes veces reutiliza el entorno.
+3. Abre `config.json` y reemplaza los marcadores de Supabase con la URL y la clave publicable proporcionadas por el equipo. Para Firebase en Android, sigue [ANDROID-SERVICIOS.md](ANDROID-SERVICIOS.md).
+4. Abre `Iniciar MiMascota.bat`. La primera vez crea un entorno propio e instala los paquetes; puede tardar varios minutos. Las siguientes veces reutiliza el entorno.
 
 Alternativamente, ejecuta manualmente:
 
@@ -33,7 +34,7 @@ py -3.12 -m venv .venv
 
 Si utilizas Python 3.11, sustituye `-3.12` por `-3.11`. Para ejecutar solo el modo invitado, la app también abre sin `config.json`, pero autenticación, QR público y configuración remota necesitan una configuración válida y conexión.
 
-Si se usa otro proyecto de Supabase, reemplaza URL y clave publicable en `config.json` y prepara el backend con la documentación de `supabase/`. La conexión al proyecto de evaluación depende de que siga disponible y configurado; copiar el ejemplo no instala ni despliega un servidor nuevo.
+Si se usa otro proyecto de Supabase, reemplaza URL y clave publicable en `config.json` y prepara el backend con la documentación de `supabase/`. La conexión al proyecto de evaluación depende de que siga disponible y configurado; copiar el ejemplo no instala ni despliega un servidor nuevo ni proporciona las claves del equipo.
 
 ## Demostración de los servicios
 
