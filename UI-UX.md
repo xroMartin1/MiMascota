@@ -18,3 +18,7 @@ Estas referencias orientan decisiones de diseño; no constituyen una investigaci
 ## Verificación
 
 `tools/check_home_layout.py` usa registros ficticios y temporales: sin mascotas, con perro y gato, nombres largos, anchos de 390 y 320 píxeles, notificaciones, ajustes y formulario de mascota. Las comprobaciones de escritorio no sustituyen la revisión final en un teléfono Android.
+
+## Continuación · 0.2.11
+
+Mascotas reutiliza las filas con retratos del inicio; peso, microchip y acciones se consultan desde el perfil. Se conserva un acceso al QR en la lista y en la navegación. Rutina presenta las tareas antes de la ilustración y mantiene el botón Hecho. Los títulos y fechas de cuidados admiten varias líneas. Salud distingue registros guardados de cuidados pendientes sin inferir un estado médico. `tools/check_sections.py` comprueba estas pantallas en 390 y 320 píxeles con datos temporales.

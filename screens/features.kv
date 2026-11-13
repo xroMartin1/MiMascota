@@ -1,4 +1,6 @@
 #:import rgba kivy.utils.get_color_from_hex
+#:import md_icons kivymd.icon_definitions.md_icons
+#:import fonts_path kivymd.fonts_path
 
 <HomeFloatingTag@ViewFloatingTag>:
     size_hint_x: None
@@ -65,6 +67,22 @@
             color: rgba('#526A74')
             size_hint_y: None
             height: self.texture_size[1]
+
+    ViewText:
+        text: md_icons['chevron-right']
+        font_name: fonts_path + 'materialdesignicons-webfont.ttf'
+        font_size: sp(20)
+        color: rgba('#526A74')
+        size_hint_x: None
+        width: dp(18)
+
+<CareTaskTitle@ViewText>:
+    text: root.context['text']
+    wrap: True
+    bold: True
+    font_size: sp(17)
+    size_hint_y: None
+    height: self.texture_size[1] + dp(4)
 
 <HomeNote@ViewText>:
     text: root.context['text']
@@ -244,9 +262,10 @@
 <RoutineCount@ViewText>:
     text: root.context['text']
     font_size: sp(13)
-    color: rgba('#71838B')
+    color: rgba('#526A74')
+    wrap: True
     size_hint_y: None
-    height: dp(24)
+    height: self.texture_size[1] + dp(4)
 
 <RoutineEmpty@ViewText>:
     wrap: True
@@ -257,22 +276,26 @@
     height: dp(55)
 
 <CareTaskCard@ViewCard>:
+    bg: '#F3F6F7'
+    radius: 16
+    shadow: False
     padding: dp(14)
     spacing: dp(8)
 
 <CareTaskDate@ViewText>:
     text: root.context['text']
+    wrap: True
     font_size: sp(12)
     color: rgba('#286F83')
     size_hint_y: None
-    height: dp(24)
+    height: self.texture_size[1] + dp(4)
 
 <CareTaskActions@ViewRow>:
     height: dp(44)
     spacing: dp(8)
     ViewAction:
         text: 'Ver detalles'
-        bg: '#E7F3F4'
+        bg: '#FFFFFF'
         fg: '#286F83'
         callback: root.context['callback']
 
@@ -344,9 +367,10 @@
     height: dp(44)
 
 <HealthSummary@ViewCard>:
+    bg: '#F3F6F7'
+    shadow: False
     padding: dp(16)
     spacing: dp(8)
-    accent: True
     ViewRow:
         height: max(dp(48), root.ids.pet_title.texture_size[1] + dp(4))
         ViewText:
@@ -379,7 +403,7 @@
     callback: root.context['callback']
 
 <HealthHistory@ViewAction>:
-    text: 'Consultar historial'
+    text: 'Ver historial'
     icon: 'history'
     bg: '#E7F3F4'
     fg: '#286F83'
@@ -387,7 +411,7 @@
 
 <HealthTreatmentTitle@ViewText>:
     wrap: True
-    text: 'Tratamientos y próximas citas'
+    text: 'Cuidados de salud pendientes'
     font_size: sp(18)
     color: rgba('#193C47')
     bold: True
@@ -395,7 +419,7 @@
     height: max(dp(30), self.texture_size[1] + dp(4))
 
 <HealthEmptyTasks@ViewText>:
-    text: 'No hay tratamientos o citas pendientes.'
+    text: 'No hay cuidados de salud pendientes.'
     font_size: sp(13)
     color: rgba('#71838B')
     size_hint_y: None

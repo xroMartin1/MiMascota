@@ -102,22 +102,13 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         self.content.add_widget(view('PetsRegister', callback=self.register_pet))
         if not self.data["pets"]:
             self.content.add_widget(view('PetsEmpty'))
-        for pet in self.data["pets"]:
-            card = view(
-                'PetCard',
-                kind=pet['kind'],
-                name=pet['name'],
-                summary=f"{pet['breed']} · {pet['age']}",
-                details=f'Peso: {self.weight_text(pet)}   ·   Chip: {self.chip_text(pet)}',
-                qr_label='Ver chapa QR',
-                open_qr=partial(self.qr_info, pet),
-                open_profile=partial(self.profile, pet),
-            )
-            self.content.add_widget(card)
-        card = view('PetsQrCard')
-        card.add_widget(self.detail_row("qrcode-scan", "Chapa digital QR", "Escanea una prueba sin crear cuenta"))
-        card.add_widget(view('PetsOpenQr', callback=self.qr_info))
-        self.content.add_widget(card)
+        for pet in self.data['pets']:
+            detail = ' · '.join(v for v in (pet['breed'], pet['age']) if v and v != 'Sin registrar')
+            self.content.add_widget(view('HomePetRow', name=pet['name'], kind=pet['kind'], detail=detail,
+                                         callback=partial(self.profile, pet)))
+        if self.data['pets']:
+            self.content.add_widget(view('UxRow', title='Chapa QR', detail='Ficha pública y contacto',
+                                         icon='qrcode-scan', bg='#FFFFFF', callback=partial(self.show, 'Chapa')))
 
     def register_pet(self, *_, pet=None):
         species = ("Perro", "Gato", "Conejo", "Ave", "Pez", "Reptil", "Hámster", "Otro")
@@ -190,9 +181,8 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         self.confirm("Eliminar mascota", f'Se eliminará {pet["name"]} y sus cuidados e historial.' + shared, remove)
 
     def routine(self):
-        self.heading("Sus cuidados", "Paseos, medicamentos y próximas citas")
+        self.heading("Rutina", "Paseos, medicamentos y citas")
         banner_path = Path(__file__).resolve().parents[1] / "assets" / "MascotsBanner.png"
-        self.content.add_widget(view('RoutineImageBanner' if banner_path.exists() else 'RoutineVectorBanner'))
         self.content.add_widget(view('RoutineAdd', callback=self.add_routine))
         if self.cloud.user and self.mobile.configured:
             status = ('Avisos pendientes de actualizar' if self.data.get('reminder_dirty') else
@@ -207,10 +197,12 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
             self.content.add_widget(self.task_card(task))
         if not tasks:
             self.content.add_widget(view('RoutineEmpty'))
+        self.content.add_widget(view('RoutineImageBanner' if banner_path.exists() else 'RoutineVectorBanner'))
 
     def task_card(self, task):
         card = view('CareTaskCard')
-        card.add_widget(self.detail_row("check-circle-outline" if task["done"] else "calendar-clock", task["title"], self.pet_name(task["pet"]) + " · " + task["kind"]))
+        card.add_widget(view('CareTaskTitle', text=task['title']))
+        card.add_widget(view('HomeNote', text=self.pet_name(task['pet']) + ' · ' + task['kind']))
         actions = view('CareTaskActions', callback=partial(self.task_detail, task))
         card.add_widget(view(
             'CareTaskDate',
@@ -306,7 +298,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
             self.saved_feedback('Cuidado pendiente' if was_done else 'Cuidado realizado')
 
     def health(self):
-        self.heading("Su salud", "Vacunas, tratamientos e historial")
+        self.heading("Salud", "Vacunas, tratamientos e historial")
         if not self.data["pets"]:
             self.content.add_widget(view('HealthEmptyPets'))
             self.content.add_widget(view('HealthRegisterPet', callback=self.register_pet))
@@ -325,7 +317,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         card = view(
             'HealthSummary',
             name=self.pet_name(self.selected_pet),
-            summary=f'{len(events)} registros en el historial\nÚltimas consultas y cuidados de tu mascota.',
+            summary=('1 registro en su historial' if len(events) == 1 else f'{len(events)} registros en su historial') if events else 'Todavía no hay registros en su historial.',
             export=lambda *_: self.export_health_report(),
         )
         self.content.add_widget(card)
