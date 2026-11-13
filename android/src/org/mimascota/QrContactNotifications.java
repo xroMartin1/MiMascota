@@ -25,8 +25,10 @@ public final class QrContactNotifications {
         Notification.Builder builder = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(context, channel) : new Notification.Builder(context);
         builder.setSmallIcon(Branding.notificationIcon(context))
             .setContentTitle("Mi Mascota")
-            .setContentText("Tienes un nuevo aviso. Abre la app para revisarlo.")
+            .setContentText("scan".equals(message.getData().get("event"))
+                ? "Alguien escaneó la chapa de tu mascota."
+                : "Recibiste un mensaje desde la chapa de tu mascota.")
             .setContentIntent(open).setAutoCancel(true).setVisibility(Notification.VISIBILITY_PRIVATE);
-        manager.notify(201, builder.build());
+        manager.notify("scan".equals(message.getData().get("event")) ? 202 : 201, builder.build());
     }
 }

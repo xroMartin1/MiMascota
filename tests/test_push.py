@@ -46,3 +46,32 @@ class PushTests(unittest.TestCase):
         bridge.canNotify.return_value = False
         push.unregister()
         self.assertEqual(push.cloud.request.call_args.args[2]['action'], 'unregister')
+
+    def test_registration_refresh_is_independent_of_care_calendar(self):
+        push, bridge = self.client()
+        self.assertTrue(push.refresh_registration())
+        self.assertFalse(push.refresh_registration())
+        self.assertEqual(push.cloud.request.call_count, 1)
+        bridge.token.return_value = 'new-fixture-token'
+        self.assertTrue(push.refresh_registration())
+        push.cloud.user = {'id': 'another-owner'}
+        self.assertTrue(push.refresh_registration())
+
+    def test_refresh_respects_consent_and_retries_failed_registration(self):
+        push, bridge = self.client()
+        bridge.canNotify.return_value = False
+        self.assertFalse(push.refresh_registration())
+        push.cloud.request.assert_not_called()
+        bridge.canNotify.return_value = True
+        push.cloud.request.side_effect = CloudError('offline')
+        with self.assertRaises(CloudError): push.refresh_registration()
+        push.cloud.request.side_effect = None
+        self.assertTrue(push.refresh_registration())
+
+    @patch('services.push.time.monotonic')
+    def test_registration_renews_after_one_day(self, now):
+        now.return_value = 1
+        push, _ = self.client()
+        push.refresh_registration()
+        now.return_value = 86402
+        self.assertTrue(push.refresh_registration())

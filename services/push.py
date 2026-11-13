@@ -23,10 +23,26 @@ class PushClient:
         for _ in range(32):
             token = str(bridge.token(activity))
             if token:
-                return self.cloud.request('POST', '/functions/v1/push-device',
-                                          dict(action='register', device_id=device, token=token), authorized=True)
+                result = self.cloud.request('POST', '/functions/v1/push-device',
+                                            dict(action='register', device_id=device, token=token), authorized=True)
+                self.mobile._push_registration = (self.cloud.user['id'], token, time.monotonic())
+                return result
             time.sleep(.25)
         raise CloudError('Firebase todavía está preparando el teléfono. Revisa internet y vuelve a intentarlo en unos segundos.')
+
+    def refresh_registration(self):
+        if not self.cloud.user or not self.mobile.configured:
+            return False
+        bridge, activity = self.mobile.native()
+        if not bridge.canNotify(activity):
+            return False
+        token = str(bridge.token(activity))
+        previous = self.mobile.__dict__.get('_push_registration')
+        if (token and previous and previous[:2] == (self.cloud.user['id'], token)
+                and time.monotonic() - previous[2] < 86400):
+            return False
+        self.register()
+        return True
 
     def test(self):
         self.register()
@@ -37,6 +53,7 @@ class PushClient:
     def unregister(self):
         if not self.cloud.user or not self.mobile.configured:
             return
+        self.mobile.__dict__.pop('_push_registration', None)
         _, _, device = self.identity()
         return self.cloud.request('POST', '/functions/v1/push-device',
                                   dict(action='unregister', device_id=device), authorized=True)

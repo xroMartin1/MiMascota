@@ -5,6 +5,7 @@ from kivy.clock import Clock
 from screens.views import view
 from services.reminders import ReminderClient, plan_payload, suggested_zone, ZONES, zone_label
 from services.cloud import CloudError
+from services.push import PushClient
 
 class ReminderFeatures:
     def queue_reminders(self, *_):
@@ -98,6 +99,20 @@ class ReminderFeatures:
             description='Te avisaremos aunque minimices la app. Confirma la zona horaria de tus cuidados. Al guardar, se usarán los cuidados de este teléfono para los avisos de tu cuenta, reemplazando los de otro teléfono si los hubiera. Necesitas internet para actualizar los cambios.')
 
     def retry_reminders(self, *_):
+        # QR messages need a registered phone even without a care calendar.
+        if (self.cloud.user and self.mobile.configured and not self.busy
+                and not getattr(self, '_backup_running', False)
+                and not getattr(self, '_reminder_running', False)
+                and not getattr(self, '_push_registering', False)):
+            self._push_registering = True
+            def register():
+                try:
+                    PushClient(self.cloud, self.mobile).refresh_registration()
+                except CloudError:
+                    pass  # Retry on the next tick or resume, without losing local data.
+                finally:
+                    self._push_registering = False
+            Thread(target=register, daemon=True).start()
         if (self.cloud.user and self.mobile.configured and self.data.get('reminder_settings',{}).get('enabled')
                 and self.mobile.preferences()['notifications']):
             bridge, activity = self.mobile.native()
