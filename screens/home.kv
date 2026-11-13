@@ -37,7 +37,7 @@
             ViewText:
                 id: brand_title
                 text: 'Mi Mascota'
-                font_size: sp(22)
+                font_size: sp(20)
                 color: rgba('#193C47')
                 bold: True
                 size_hint_y: None
@@ -51,21 +51,21 @@
                 height: dp(18)
         ViewRow:
             id: header_actions
-            height: dp(40)
+            height: dp(48)
             spacing: dp(8)
             size_hint_x: None
-            width: dp(88)
+            width: dp(104)
             pos_hint: {'center_y': 0.5}
             FloatLayout:
                 size_hint_x: None
-                width: dp(40)
-                height: dp(40)
+                width: dp(48)
+                height: dp(48)
                 ViewAction:
                     id: notifications
                     icon: 'bell-outline'
                     bg: '#E7F3F4'
                     fg: '#286F83'
-                    radius: 20
+                    radius: 24
                     callback: root.context['notifications']
                     size_hint: 1, 1
                     pos_hint: {'x': 0, 'y': 0}
@@ -92,9 +92,9 @@
                 bg: '#E7F3F4'
                 fg: '#286F83'
                 size_hint_x: None
-                width: dp(40)
-                height: dp(40)
-                radius: 20
+                width: dp(48)
+                height: dp(48)
+                radius: 24
                 callback: root.context['account']
     ViewScrollView:
         id: scroll

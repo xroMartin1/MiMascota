@@ -81,7 +81,7 @@ class UxFeatures:
             self.heading('Tu cuenta', 'Regístrate o inicia sesión para guardar tus mascotas y sus cuidados.')
             if self.google_available:
                 self.content.add_widget(view('AccountPrimary', text='Continuar con Google', callback=lambda *_: self.signin_google()))
-            self.content.add_widget(view('AccountPrimary', text='Crear cuenta', callback=lambda *_: self.auth_form(True)))
+            self.content.add_widget(view('AccountAction' if self.google_available else 'AccountPrimary', text='Crear cuenta', callback=lambda *_: self.auth_form(True)))
             self.content.add_widget(view('UxRow', title='Iniciar sesión', detail='Ya tengo una cuenta', icon='login', callback=lambda *_: self.auth_form(False)))
             return
         self.heading('Mi cuenta', '')

@@ -2,6 +2,7 @@
 from pathlib import Path
 import math
 from kivy.clock import Clock
+from kivy.core.image import Image as CoreImage
 from kivy.graphics import Color, RoundedRectangle, Ellipse, Line, Triangle, Rectangle, PushMatrix, PopMatrix, Rotate
 from kivy.metrics import dp
 from kivy.properties import StringProperty
@@ -43,6 +44,7 @@ def pet_face(x, y, size, cat=False):
 
 class PetAvatar(Widget):
     kind = StringProperty("Perro")
+    portrait_source = StringProperty("")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -50,9 +52,17 @@ class PetAvatar(Widget):
 
     def draw(self, *_):
         self.canvas.clear()
+        kind = self.kind.strip().casefold()
+        portrait = Path(__file__).resolve().parents[1] / 'assets' / 'avatars' / ('gato.png' if kind == 'gato' else 'perro.png')
+        self.portrait_source = str(portrait) if kind in ('perro', 'gato') and portrait.is_file() else ''
+        size = min(self.width, self.height)
+        x, y = self.center_x - size / 2, self.center_y - size / 2
         with self.canvas:
-            size = min(self.width, self.height)
-            pet_face(self.center_x - size / 2, self.center_y - size / 2, size, self.kind.casefold() == "gato")
+            if self.portrait_source:
+                Color(1, 1, 1, 1)
+                Ellipse(pos=(x, y), size=(size, size), texture=CoreImage(self.portrait_source).texture)
+            else:
+                pet_face(x, y, size, kind == 'gato')
 
 
 class TagArt(Widget):

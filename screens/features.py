@@ -107,7 +107,8 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         return f'{pet["weight"]} kg' if pet["weight"] != "—" else "Sin registrar"
 
     def pets(self):
-        self.heading("Mis Compañeros", f'{len(self.data["pets"])} mascotas en este espacio')
+        count = len(self.data["pets"])
+        self.heading("Mis mascotas", f'{count} {"mascota registrada" if count == 1 else "mascotas registradas"}')
         self.content.add_widget(view('PetsRegister', callback=self.register_pet))
         if not self.data["pets"]:
             self.content.add_widget(view('PetsEmpty'))
@@ -118,7 +119,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
                 name=pet['name'],
                 summary=f"{pet['breed']} · {pet['age']}",
                 details=f'Peso: {self.weight_text(pet)}   ·   Chip: {self.chip_text(pet)}',
-                qr_label='Abrir QR de ' + pet['name'],
+                qr_label='Ver chapa QR',
                 open_qr=partial(self.qr_info, pet),
                 open_profile=partial(self.profile, pet),
             )
@@ -210,7 +211,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         tasks = sorted(self.data["routines"], key=lambda t: (t["done"], t["due_at"] or "9999"))
         self.content.add_widget(view(
             'RoutineCount',
-            text=f'{len(pending(self.data))} pendientes · {len(tasks)} en total',
+            text=f'{len(pending(self.data))} {"cuidado pendiente" if len(pending(self.data)) == 1 else "cuidados pendientes"} · {len(tasks)} en total',
         ))
         for task in tasks:
             self.content.add_widget(self.task_card(task))
