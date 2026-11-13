@@ -9,7 +9,7 @@ La app ahora intenta registrar el teléfono desde su ciclo de reintento incluso 
 - Al abrir la ficha pública de una chapa vigente se guarda un aviso de escaneo, como máximo uno cada diez minutos por chapa. Una recarga, vista previa o apertura del propio dueño también puede contar como apertura: no demuestra que se haya encontrado la mascota ni identifica quién abrió el enlace.
 - Al enviar un mensaje se mantiene el aviso de mensaje. Si ya fue leído o la conversación se cerró, el servidor puede omitirlo.
 - Android muestra textos distintos para escaneo y mensaje, sin nombres, teléfonos o información médica en el push.
-- La cola existente del servidor revisa los avisos cada minuto y reintenta fallos. Internet, permisos y restricciones del teléfono afectan la entrega; no se promete recepción inmediata.
+- El servidor intenta enviar inmediatamente los avisos nuevos; la cola existente revisa cada minuto los trabajos pendientes y reintenta fallos. Internet, permisos y restricciones del teléfono afectan la entrega; no se promete recepción inmediata.
 
 ## Prueba física pendiente
 
