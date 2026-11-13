@@ -25,7 +25,7 @@
     spacing: dp(10)
     canvas.before:
         Color:
-            rgba: .05, .16, .14, .04
+            rgba: (.05, .16, .14, .04) if self.shadow else (0, 0, 0, 0)
         RoundedRectangle:
             pos: self.x, self.y - dp(3)
             size: self.size
@@ -44,6 +44,7 @@
             radius: [dp(2)]
 
 <ViewAction>:
+    shadow: False
     bg: '#286F83'
     radius: 14
     adaptive: False

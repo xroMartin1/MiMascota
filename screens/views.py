@@ -41,6 +41,7 @@ class ViewText(Label):
 
 
 class ViewCard(ViewColumn):
+    shadow = BooleanProperty(True)
     bg = StringProperty("#FFFFFF")
     radius = NumericProperty(23)
     accent = BooleanProperty(False)

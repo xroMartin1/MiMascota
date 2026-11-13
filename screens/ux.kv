@@ -41,6 +41,7 @@
         width: dp(46)
 
 <UxRow@UxPress>:
+    shadow: False
     callback: root.context['callback']
     orientation: 'horizontal'
     adaptive: False
@@ -48,7 +49,7 @@
     height: max(dp(72), self.ids.row_copy.minimum_height + dp(24))
     padding: dp(12)
     spacing: dp(12)
-    bg: '#E1ECEE' if self.state == 'down' else '#F1F6F6'
+    bg: '#E1ECEE' if self.state == 'down' else root.context.get('bg', '#F1F6F6')
     radius: 16
     ViewText:
         text: md_icons.get(root.context['icon'], '')
@@ -74,9 +75,9 @@
             text: root.context['detail']
             font_size: sp(12)
             color: rgba('#526A74')
-            shorten: True
+            wrap: True
             size_hint_y: None
-            height: dp(18) if self.text else 0
+            height: self.texture_size[1] if self.text else 0
     ViewText:
         text: md_icons['chevron-right']
         font_name: fonts_path + 'materialdesignicons-webfont.ttf'

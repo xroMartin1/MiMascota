@@ -16,114 +16,99 @@
     size_hint_y: None
     height: dp(150)
 
-<HomeHero@ViewCard>:
-    bg: '#103D49'
-    padding: dp(20)
-    spacing: dp(10)
-    radius: 28
-    ViewRow:
-        height: dp(22)
-        spacing: dp(4)
-        ViewText:
-            text: 'SU CHAPA QR'
-            font_size: sp(10)
-            color: rgba('#DAEFA0')
-            bold: True
-        ViewText:
-            text: '14 DÍAS'
-            font_size: sp(10)
-            color: rgba('#DAEFA0')
-            bold: True
-            halign: 'right'
-            size_hint_x: 0.35
-
-<HomeHeroStory@ViewRow>:
-    height: dp(142)
-    spacing: dp(0)
+<HomeSection@ViewRow>:
+    height: dp(48)
     ViewText:
-        text: 'Si se pierde,\nque vuelva\ncontigo.'
-        font_size: sp(22)
-        color: rgba('#FFFFFF')
+        text: root.context['title']
         bold: True
+        font_size: sp(21)
+    ViewAction:
+        text: root.context['action']
+        callback: root.context['callback']
+        bg: '#FFFFFF'
+        fg: '#286F83'
+        size_hint_x: None
+        width: dp(94)
+        height: dp(48)
 
-<HomeQrDescription@ViewText>:
-    text: 'Si alguien la encuentra, podrá escanear su chapa y escribirte. Actívala con tu cuenta.'
-    font_size: sp(12)
-    color: rgba('#D8EAEC')
-    size_hint_y: None
-    height: dp(46)
-
-<HomeOpenQr@ViewAction>:
-    text: 'Ver su chapa QR'
-    icon: 'qrcode-scan'
-    bg: '#DAEFA0'
-    fg: '#103D49'
-    height: dp(50)
-    radius: 16
+<HomePetRow@UxPress>:
     callback: root.context['callback']
-
-<HomeOverview@ViewColumn>:
-    adaptive: True
-    spacing: dp(10)
-    ViewText:
-        text: 'HOY EN UN VISTAZO'
-        font_size: sp(11)
-        color: rgba('#286F83')
-        bold: True
-        size_hint_y: None
-        height: dp(24)
-
-<HomeCounts@ViewRow>:
-    height: dp(86)
-    spacing: dp(6)
-
-<HomeMetric@ViewColumn>:
-    spacing: dp(0)
-    ViewText:
-        text: root.context['number']
-        font_size: sp(29)
-        color: rgba('#193C47')
-        bold: True
-        size_hint_y: None
-        height: dp(43)
-    ViewText:
-        text: root.context['label']
-        font_size: sp(11)
-        color: rgba('#71838B')
-        size_hint_y: None
-        height: dp(38)
-
-<HomeEmptyPets@ViewText>:
-    text: 'Empieza por registrar a tu mascota.\nNo necesitas crear una cuenta.'
-    font_size: sp(13)
-    color: rgba('#71838B')
+    adaptive: False
+    orientation: 'horizontal'
     size_hint_y: None
-    height: dp(44)
+    height: max(dp(100), self.ids.pet_copy.minimum_height + dp(28))
+    padding: dp(14)
+    spacing: dp(14)
+    radius: 16
+    bg: '#E7F3F4' if self.state == 'down' else '#F3F6F7'
+    ViewPetAvatar:
+        kind: root.context['kind']
+        size_hint: None, None
+        size: dp(70), dp(70)
+        pos_hint: {'center_y': .5}
+    ViewColumn:
+        id: pet_copy
+        adaptive: True
+        spacing: dp(4)
+        pos_hint: {'center_y': .5}
+        ViewText:
+            text: root.context['name']
+            wrap: True
+            bold: True
+            font_size: sp(20)
+            size_hint_y: None
+            height: self.texture_size[1]
+        ViewText:
+            text: root.context['detail']
+            wrap: True
+            font_size: sp(13)
+            color: rgba('#526A74')
+            size_hint_y: None
+            height: self.texture_size[1]
+
+<HomeNote@ViewText>:
+    text: root.context['text']
+    wrap: True
+    font_size: sp(14)
+    color: rgba('#526A74')
+    size_hint_y: None
+    height: self.texture_size[1] + dp(4)
+
+<HomeEmptyPets@ViewColumn>:
+    adaptive: True
+    spacing: dp(14)
+    ViewPetAvatar:
+        kind: 'Perro'
+        size_hint: None, None
+        size: dp(96), dp(96)
+    ViewText:
+        text: 'Añade tu primera mascota'
+        bold: True
+        wrap: True
+        font_size: sp(24)
+        size_hint_y: None
+        height: self.texture_size[1] + dp(6)
+    ViewText:
+        text: 'Crea su perfil para registrar sus cuidados, vacunas y citas. Puedes empezar sin una cuenta.'
+        wrap: True
+        font_size: sp(14)
+        color: rgba('#526A74')
+        size_hint_y: None
+        height: self.texture_size[1] + dp(8)
 
 <HomeRegisterPet@ViewAction>:
-    text: 'Registrar mi primera mascota'
-    icon: 'paw'
+    text: 'Añadir mascota'
+    icon: 'plus'
+    height: dp(48)
     callback: root.context['callback']
 
 <HomeViewPets@ViewAction>:
-    text: 'Ver mis mascotas'
-    icon: 'paw'
+    text: 'Ver todas mis mascotas'
+    bg: '#FFFFFF'
+    fg: '#286F83'
+    height: dp(48)
     callback: root.context['callback']
 
-<HomeNextCare@ViewCard>:
-    padding: dp(16)
-    spacing: dp(10)
-    ViewText:
-        text: 'PRÓXIMO CUIDADO'
-        font_size: sp(11)
-        color: rgba('#286F83')
-        size_hint_y: None
-        height: dp(20)
-
-<HomeCareDetails@ViewAction>:
-    text: 'Ver detalle y completar'
-    icon: 'check-circle-outline'
-    callback: root.context['callback']
 
 <HomeAccount@ViewCard>:
     bg: '#E7F3F4'
@@ -840,13 +825,12 @@
             active: root.opacity > 0
 
 
-<HomeCareTip@ViewCard>:
-    bg: '#E7F3F4'
-    radius: 16
-    padding: dp(16)
+<HomeCareTip@ViewColumn>:
+    adaptive: True
+    padding: [0, dp(12)]
     spacing: dp(6)
     ViewText:
-        text: 'Un consejo para su cuidado'
+        text: 'Consejo de cuidado'
         bold: True
         font_size: sp(16)
         wrap: True

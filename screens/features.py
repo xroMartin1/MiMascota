@@ -55,45 +55,35 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
             return False
 
     def home(self):
+        pets = self.data['pets']
         tasks = pending(self.data)
         late = pending(self.data, due_only=True)
-        self.heading("Siempre cerca.", "Su cuidado diario, en un solo lugar.",
-                     "TU ESPACIO" if self.cloud.user else "EN ESTE TELÉFONO")
-        hero = view('HomeHero')
-        hero_story = view('HomeHeroStory')
-        tag_path = Path(__file__).resolve().parents[1] / "assets" / "Placa_Icon.png"
-        hero_story.add_widget(view('HomeFloatingTag' if tag_path.exists() else 'HomeVectorTag'))
-        hero.add_widget(hero_story)
-        hero.add_widget(view('HomeQrDescription'))
-        hero.add_widget(view('HomeOpenQr', callback=partial(self.show, 'Chapa')))
-        self.content.add_widget(hero)
+        if not pets:
+            self.content.add_widget(view('HomeEmptyPets'))
+            self.content.add_widget(view('HomeRegisterPet', callback=self.register_pet))
+        else:
+            self.content.add_widget(view('HomeSection', title='Mis mascotas', action='Añadir', callback=self.register_pet))
+            for pet in pets[:3]:
+                detail = ' · '.join(v for v in (pet['breed'], pet['age']) if v and v != 'Sin registrar')
+                self.content.add_widget(view('HomePetRow', name=pet['name'], kind=pet['kind'], detail=detail,
+                                             callback=partial(self.profile, pet)))
+            if len(pets) > 3:
+                self.content.add_widget(view('HomeViewPets', callback=partial(self.show, 'Mascotas')))
+            self.content.add_widget(view('HomeSection', title='Cuidados', action='Ver todos', callback=partial(self.show, 'Rutina')))
+            if late:
+                self.content.add_widget(view('HomeNote', text=f'{len(late)} cuidado pendiente de completar' if len(late) == 1 else f'{len(late)} cuidados pendientes de completar'))
+            if tasks:
+                for task in tasks[:3]:
+                    when = readable_date(task['due_at'], care_now(self.data)) if task['due_at'] else 'Sin fecha'
+                    self.content.add_widget(view('UxRow', title=task['title'], bg='#E7F3F4',
+                        detail=self.pet_name(task['pet']) + ' · ' + when, icon='calendar-clock',
+                        callback=partial(self.task_detail, task)))
+            else:
+                self.content.add_widget(view('HomeNote', text='No tienes cuidados pendientes. Puedes añadir un paseo, una vacuna o una cita.'))
+                self.content.add_widget(view('AccountAction', text='Añadir cuidado', callback=self.add_routine))
+        self.content.add_widget(view('UxRow', title='Chapa QR', bg='#FFFFFF',
+            detail='Ficha pública y contacto', icon='qrcode-scan', callback=partial(self.show, 'Chapa')))
         self.content.add_widget(self.care_tip())
-        card = view('HomeOverview')
-        counts = view('HomeCounts')
-        for number, label in ((len(self.data["pets"]), "Mascotas"),
-                              (len(tasks) - len(late), "Cuidados\npendientes"),
-                              (len(late), "Cuidados\natrasados")):
-            metric = view('HomeMetric', number=str(number).zfill(2), label=label)
-            counts.add_widget(metric)
-        card.add_widget(counts)
-        if not self.data["pets"]:
-            card.add_widget(view('HomeEmptyPets'))
-            card.add_widget(view('HomeRegisterPet', callback=self.register_pet))
-        else:
-            card.add_widget(view('HomeViewPets', callback=partial(self.show, 'Mascotas')))
-        self.content.add_widget(card)
-        if tasks:
-            task = tasks[0]
-            card = view('HomeNextCare')
-            card.add_widget(self.detail_row(task["icon"] if task["icon"] in ("paw", "walk", "creation", "bathtub-outline") else "calendar-clock",
-                                           task["title"], f'{self.pet_name(task["pet"])} · {readable_date(task["due_at"] or task["time"], care_now(self.data))}'))
-            card.add_widget(view('HomeCareDetails', callback=partial(self.task_detail, task)))
-            self.content.add_widget(card)
-        else:
-            self.content.add_widget(self.link_card("calendar-clock", "Todo a tu ritmo", "Agrega tu próximo cuidado en Rutina", "Rutina"))
-        self.content.add_widget(self.link_card("heart-pulse", "Salud y bienestar", "Vacunas, tratamientos e historial", "Salud"))
-        if not self.cloud.user:
-            self.content.add_widget(view('HomeAccount', callback=self.account))
 
     def pet_name(self, pet_id):
         return next((p["name"] for p in self.data["pets"] if p["id"] == pet_id), "General")

@@ -219,7 +219,7 @@
         padding: dp(22)
         spacing: dp(14)
         ViewRow:
-            height: max(dp(36), root.ids.dialog_title.texture_size[1])
+            height: max(dp(48), root.ids.dialog_title.texture_size[1])
             ViewText:
                 id: dialog_title
                 text: root.context['text']
@@ -232,8 +232,8 @@
             ViewAction:
                 icon: 'close'
                 size_hint_x: None
-                width: dp(36)
-                height: dp(36)
+                width: dp(48)
+                height: dp(48)
                 bg: '#E7F3F4'
                 fg: '#286F83'
                 callback: root.context['callback']

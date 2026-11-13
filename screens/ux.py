@@ -95,14 +95,11 @@ class UxFeatures(BillingFeatures):
         if self.mobile.configured:
             self.content.add_widget(view('UxRow', title='Notificaciones', detail='Permisos y recordatorios', icon='bell-outline', callback=lambda *_: self.notice_preferences()))
         self.content.add_widget(view('UxRow', title='Cuidados compartidos', detail='Invita a alguien de confianza', icon='account-group-outline', callback=lambda *_: self.open_care_sharing()))
+        self.content.add_widget(view('UxRow', title='Chapa y suscripción', detail='Ficha QR y plan mensual', icon='qrcode-scan', callback=lambda *_: self.plan_info()))
         self.content.add_widget(view('UxRow', title='Ajustes de cuenta', detail='Seguridad y opciones de datos', icon='cog-outline', callback=lambda *_: self.account_settings()))
 
     def account_settings(self):
-        modal, outer = self.dialog('Ajustes de cuenta', 430)
-        modal.size_hint_y = .85
-        scroll, card = view('AccountScroll'), view('QrInfoBody')
-        scroll.add_widget(card)
-        outer.add_widget(scroll)
+        modal, card = self.dialog('Ajustes de cuenta', 430)
         def action(title, icon, callback):
             def run(*_):
                 modal.dismiss()
@@ -111,7 +108,6 @@ class UxFeatures(BillingFeatures):
         action('Cambiar contraseña', 'lock-outline', self.password_form)
         action('Recuperar contraseña por correo', 'email-outline', lambda: self.forgot_password(self.cloud.user.get('email', '')))
         action('Datos y respaldos', 'database-outline', partial(self.account_options, 'data'))
-        action('Chapa y suscripción', 'qrcode', self.plan_info)
         action('Cerrar sesión', 'logout', self.logout)
         modal.open()
 

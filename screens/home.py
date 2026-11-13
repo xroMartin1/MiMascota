@@ -3,6 +3,7 @@ from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from kivy.app import App
+from kivy.core.window import Window
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.metrics import dp
@@ -154,6 +155,15 @@ class HomeScreen(RemoteConfigFeatures, BackupFeatures, UxFeatures, QrInboxFeatur
     def dialog(self, title, height=360):
         modal = view('CareDialog', height=height, text=title, callback=lambda *_: modal.dismiss())
         card = modal.ids.card
+        def fit(*_):
+            if modal.size_hint_y is not None:
+                return
+            fixed = all(child.size_hint_y is None for child in card.children)
+            modal.height = min(Window.height - dp(48), card.minimum_height if fixed else dp(height))
+        # Wait for wrapped text to settle before resizing its dialog.
+        resize = Clock.create_trigger(fit, 0)
+        card.bind(minimum_height=resize)
+        modal.bind(on_open=resize)
         return modal, card
 
     def saved_feedback(self, text):
