@@ -16,6 +16,7 @@ from services.qr_inbox import QrInbox
 from services.store import pending
 from services.public_qr import PublicChapas, write_public_png
 from services.care_share import CareShare
+from screens.billing import BillingFeatures
 import webbrowser
 
 
@@ -29,7 +30,7 @@ Factory.register('UxPress', cls=UxPress)
 _loaded = False
 
 
-class UxFeatures:
+class UxFeatures(BillingFeatures):
     def start_ux(self):
         global _loaded
         if not _loaded:
@@ -356,13 +357,6 @@ class UxFeatures:
             action('Desactivar chapa', 'cancel', partial(self.revoke_public_tag, pet))
         else:
             card.add_widget(view('UxCaption', text='La prueba incluye una sola chapa durante 14 días por cuenta.'))
-        modal.open()
-
-    def plan_info(self):
-        modal, card = self.dialog('Chapa y suscripción', 460)
-        card.add_widget(view('UxCaption', text='La chapa circular llevará el QR delante y el nombre de tu mascota detrás.'))
-        card.add_widget(view('UxCaption', text='Al terminar el periodo pagado, la ficha se pausará. Al renovar, volverá a funcionar el mismo QR. Tus registros locales seguirán disponibles.'))
-        card.add_widget(view('UxCaption', text='El plan incluirá cuidados compartidos y resumen de salud. Estamos probando estas funciones sin cobros; la suscripción y la chapa física todavía no están a la venta.'))
         modal.open()
 
     def open_care_sharing(self):

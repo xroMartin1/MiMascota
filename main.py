@@ -66,6 +66,7 @@ class MiMascotaApp(MDApp):
         Clock.schedule_once(self.root.get_screen("home").retry_backup, 1)
         Clock.schedule_once(self.root.get_screen("home").refresh_care_tip, 1.2)
         Clock.schedule_once(self.root.get_screen("home").check_google_provider, 1)
+        Clock.schedule_once(self.root.get_screen("home").refresh_subscription, 1.5)
 
     def build(self):
 

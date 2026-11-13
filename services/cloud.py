@@ -74,6 +74,14 @@ class Supabase:
                 'invalid_plan': 'Revisa la zona horaria y las fechas del calendario (máximo 500 cuidados).',
                 'device_limit': 'Esta cuenta ya tiene cinco teléfonos registrados.',
             }
+            if path == '/functions/v1/subscription-payments':
+                raise CloudError({
+                    'billing_not_configured': 'El pago de prueba todavía no está configurado.',
+                    'test_account_required': 'Necesitamos las credenciales de prueba de Mercado Pago Chile. No se creó ningún cobro.',
+                    'invalid_payer_email': 'Revisa el correo del comprador de prueba de Mercado Pago.',
+                    'tag_not_found': 'Activa primero la chapa de prueba de esta mascota desde Chapa.',
+                    'payment_not_verified': 'El pago todavía no pudo verificarse. No se activó un nuevo periodo.',
+                }.get(code, 'Mercado Pago no confirmó la operación. Comprueba el estado antes de volver a pagar.'))
             if path == '/functions/v1/push-device' and isinstance(code, str) and code in push_errors:
                 raise CloudError(push_errors[code])
             if code == 'email_not_confirmed':
