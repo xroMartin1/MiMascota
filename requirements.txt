@@ -2,3 +2,6 @@ Kivy==2.3.1
 kivymd==1.2.0
 requests>=2.32,<3
 segno>=1.6,<2
+tzdata==2026.5
+reportlab==4.4.10
+pypdf>=5,<7

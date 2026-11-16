@@ -1,5 +1,6 @@
 """Smoke test real con el event loop de Kivy y capturas de las cuatro pantallas."""
 import os
+os.environ['MIMASCOTA_DISABLE_SAVED_SESSION']='1'
 os.environ["KIVY_NO_ARGS"] = "1"
 import sys
 from pathlib import Path
@@ -28,11 +29,17 @@ class CheckUI(MiMascotaApp):
         from unittest.mock import patch, PropertyMock
         with patch("screens.home.platform", "android"), patch.object(type(self), "user_data_dir", new_callable=PropertyMock) as data_dir:
             data_dir.return_value = self.temporary.name
-            mobile = HomeScreen()
+            import types
+            from unittest.mock import Mock
+            activity = types.ModuleType("android.activity")
+            activity.bind = Mock()
+            with patch.dict("sys.modules", {"android.activity": activity, "jnius": Mock()}):
+                mobile = HomeScreen()
             assert mobile.data_file == Path(self.temporary.name) / "petcare.json"
             mobile.reminder_clock.cancel()
         self.pages = iter(["Inicio", "Mascotas", "Rutina", "Salud"])
-        (ROOT / "previews").mkdir(exist_ok=True)
+        self.preview_dir = Path(os.environ.get("MIMASCOTA_PREVIEW_DIR", str(ROOT / "previews")))
+        self.preview_dir.mkdir(parents=True, exist_ok=True)
         assert self.screen.data["pets"] == []
         self.check_actions()
 
@@ -53,11 +60,23 @@ class CheckUI(MiMascotaApp):
         assert self.screen.content.children
         assert self.screen.content.children[-1].opacity > .95
         assert all(child.width > 0 and child.height > 0 for child in self.screen.content.children)
-        self.root.export_to_png(str(ROOT / "previews" / f"{self.page}.png"))
+        screenshot = self.preview_dir / f"{self.page}.png"
+        self.root.export_to_png(str(screenshot))
+        self.assert_visible_pixels(screenshot)
         Clock.schedule_once(self.next_page, .1)
 
+    @staticmethod
+    def assert_visible_pixels(path):
+        # Un árbol con tamaños correctos puede quedar tapado por un canvas blanco.
+        from PIL import Image
+        with Image.open(path) as image:
+            pixels = image.convert("RGBA")
+            visible = sum(1 for r, g, b, a in pixels.getdata()
+                          if a > 200 and min(r, g, b) < 200)
+            assert visible > pixels.width * pixels.height * .02, f"Vista vacía: {path.name}"
+
     def capture_small_home(self, _):
-        self.root.export_to_png(str(ROOT / "previews" / "compacta-inicio.png"))
+        self.root.export_to_png(str(self.preview_dir / "compacta-inicio.png"))
         self.screen.show("Mascotas")
         Clock.schedule_once(self.finish, .4)
 
@@ -156,12 +175,14 @@ class CheckUI(MiMascotaApp):
         assert len(view("HomeVectorTag").children) == 0
         assert len(view("RoutineVectorBanner").children) == 3
         for open_dialog in (lambda: s.profile(pet), lambda: s.task_detail(task),
-                            s.history, s.notifications, s.account,
+                            s.history, s.notifications,
                             lambda: s.message("Prueba", "Mensaje")):
             open_dialog()
             modal = self.current_modal()
             assert modal.ids.card.children
             self.dismiss_modals()
+        s.account()
+        assert s.active == 'Cuenta' and s.content.children
         accepted = []
         s.confirm("Prueba", "Confirmación", lambda: accepted.append(True))
         modal = self.current_modal()
@@ -183,12 +204,12 @@ class CheckUI(MiMascotaApp):
         for widget in list(Window.children):
             if hasattr(widget, "dismiss"):
                 assert widget.ids.card.width > 0 and widget.ids.card.height > 0
-                widget.ids.card.export_to_png(str(ROOT / "previews" / "formulario.png"))
+                widget.ids.card.export_to_png(str(self.preview_dir / "formulario.png"))
                 widget.dismiss(animation=False)
         Clock.schedule_once(self.next_page, .3)
 
     def finish(self, _):
-        self.root.export_to_png(str(ROOT / "previews" / "compacta.png"))
+        self.root.export_to_png(str(self.preview_dir / "compacta.png"))
         print("PASS: guest, registration, care completion, medical history, persistence, four screens and 320px.")
         self.stop()
         self.temporary.cleanup()

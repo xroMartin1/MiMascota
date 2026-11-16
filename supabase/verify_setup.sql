@@ -1,25 +1,48 @@
--- Comprobaciones de configuracion. Ejecutar en SQL Editor despues de los dos scripts.
--- Esto comprueba RLS y permisos, no sustituye una prueba con dos cuentas reales.
-select c.relname as tabla, c.relrowsecurity as rls_activo
-from pg_class c
-where c.oid in ('public.petcare_state'::regclass,
-                'public.pet_tags'::regclass,
-                'public.pet_tag_messages'::regclass)
-order by c.relname;
-
-select
-  has_table_privilege('anon', 'public.petcare_state', 'SELECT') as anon_lee_copia,
-  has_table_privilege('authenticated', 'public.petcare_state', 'SELECT') as usuario_lee_copia,
-  has_function_privilege('anon', 'public.save_petcare_state(bigint,jsonb)', 'EXECUTE') as anon_guarda_copia,
-  has_function_privilege('authenticated', 'public.save_petcare_state(bigint,jsonb)', 'EXECUTE') as usuario_guarda_copia,
-  has_table_privilege('anon', 'public.pet_tags', 'SELECT') as anon_enumera_chapas,
-  has_table_privilege('authenticated', 'public.pet_tags', 'SELECT') as usuario_lee_chapas,
-  has_table_privilege('authenticated', 'public.pet_tags', 'INSERT') as usuario_crea_chapas_directo,
-  has_table_privilege('anon', 'public.pet_tag_messages', 'INSERT') as anon_envia_mensaje_directo,
-  has_table_privilege('authenticated', 'public.pet_tag_messages', 'SELECT') as usuario_lee_mensajes;
-
-select tablename, policyname, cmd, roles
-from pg_policies
-where schemaname = 'public'
-  and tablename in ('petcare_state', 'pet_tags', 'pet_tag_messages')
-order by tablename, policyname;
+-- Ejecutar TODO el archivo en SQL Editor. Hay un solo SELECT y una sola tabla
+-- de resultados: cada fila debe terminar en OK. No modifica ningun dato.
+-- Comprobar tambien el acceso real con dos cuentas; SQL Editor usa privilegios elevados.
+with checks (comprobacion, esperado, actual) as (
+  values
+    ('RLS: petcare_state', true,
+      coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.petcare_state')), false)),
+    ('RLS: pet_tags', true,
+      coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.pet_tags')), false)),
+    ('RLS: pet_tag_messages', true,
+      coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.pet_tag_messages')), false)),
+    ('Anonimo NO lee copias', false,
+      has_table_privilege('anon', 'public.petcare_state', 'SELECT')),
+    ('Usuario lee sus copias', true,
+      has_table_privilege('authenticated', 'public.petcare_state', 'SELECT')),
+    ('Usuario puede crear copias', true,
+      has_table_privilege('authenticated', 'public.petcare_state', 'INSERT')),
+    ('Usuario puede actualizar copias', true,
+      has_table_privilege('authenticated', 'public.petcare_state', 'UPDATE')),
+    ('Anonimo NO ejecuta guardado', false,
+      has_function_privilege('anon', 'public.save_petcare_state(bigint,jsonb)', 'EXECUTE')),
+    ('Usuario ejecuta guardado', true,
+      has_function_privilege('authenticated', 'public.save_petcare_state(bigint,jsonb)', 'EXECUTE')),
+    ('Anonimo NO enumera chapas', false,
+      has_table_privilege('anon', 'public.pet_tags', 'SELECT')),
+    ('Usuario lee sus chapas', true,
+      has_table_privilege('authenticated', 'public.pet_tags', 'SELECT')),
+    ('Usuario NO crea chapas directamente', false,
+      has_table_privilege('authenticated', 'public.pet_tags', 'INSERT')),
+    ('Anonimo NO inserta mensajes directamente', false,
+      has_table_privilege('anon', 'public.pet_tag_messages', 'INSERT')),
+    ('Usuario lee sus mensajes', true,
+      has_table_privilege('authenticated', 'public.pet_tag_messages', 'SELECT')),
+    ('Existen las 5 politicas previstas', true,
+      (select count(*) = 5 from pg_policies
+       where schemaname = 'public'
+         and (tablename, policyname) in (
+           ('petcare_state', 'petcare_state_select'),
+           ('petcare_state', 'petcare_state_insert'),
+           ('petcare_state', 'petcare_state_update'),
+           ('pet_tags', 'pet_tags_owner_select'),
+           ('pet_tag_messages', 'pet_tag_messages_owner_select')
+         )))
+)
+select comprobacion, esperado, actual,
+  case when actual = esperado then 'OK' else 'REVISAR' end as resultado
+from checks
+order by comprobacion;

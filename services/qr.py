@@ -4,6 +4,7 @@ from pathlib import Path
 import uuid
 
 import segno
+from services.profile import contact_values
 
 TRIAL_DAYS = 14
 
@@ -28,14 +29,19 @@ def trial_expired(trial, now=None):
 
 
 def preview_payload(pet, trial):
-    """Solo datos inocuos. Nunca incluir teléfono, correo, dirección o ficha médica."""
+    """Contacto solo si la familia autorizó esta copia para esta mascota."""
     name = " ".join(pet["name"].split())[:48]
     species = " ".join(pet["kind"].split())[:32]
+    contact = pet.get("qr_contact", {})
+    public = "Esta es una prueba local. No permite contactar a la familia."
+    if isinstance(contact, dict) and contact.get("share_phone") is True:
+        clean = contact_values(contact, required=True)
+        public = f"Contacto: {clean['name']}\nTeléfono: {clean['phone']}\nSi me encontraste, llama a mi familia."
     return ("MI MASCOTA | CHAPA DE PRUEBA\n"
             f"Mascota: {name}\n"
             f"Especie: {species}\n"
             f"Identificador: {trial['code'][:10].upper()}\n"
-            "Esta es una prueba local. No permite contactar a la familia.")
+            + public)
 
 
 def write_preview_png(pet, trial, path):

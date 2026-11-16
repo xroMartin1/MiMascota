@@ -24,8 +24,13 @@
     padding: dp(18)
     spacing: dp(10)
     canvas.before:
+        PushMatrix:
+        Scale:
+            x: self.visual_scale
+            y: self.visual_scale
+            origin: self.center
         Color:
-            rgba: .05, .16, .14, .04
+            rgba: (.05, .16, .14, .04) if self.shadow else (0, 0, 0, 0)
         RoundedRectangle:
             pos: self.x, self.y - dp(3)
             size: self.size
@@ -42,17 +47,25 @@
             pos: self.x + dp(13), self.top - dp(3)
             size: max(0, self.width - dp(26)), dp(3)
             radius: [dp(2)]
+    canvas.after:
+        Color:
+            rgba: .03, .12, .14, self.press_amount * .1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(self.radius)]
+        PopMatrix:
 
 <ViewAction>:
-    bg: '#286F83'
-    radius: 14
+    shadow: False
+    bg: '#103D49'
+    radius: 16
     adaptive: False
     orientation: 'vertical' if self.vertical else 'horizontal'
     size_hint_y: 1 if self.vertical else None
-    height: dp(44)
+    height: dp(48)
     padding: [dp(4 if self.vertical else 9), dp(5)]
     spacing: dp(4) if self.icon and self.text else 0
-    opacity: .68 if self.state == 'down' else 1
     ViewText:
         text: md_icons.get(root.icon, '')
         font_name: fonts_path + 'materialdesignicons-webfont.ttf'
@@ -60,7 +73,8 @@
         color: rgba(root.fg)
         halign: 'center'
         size_hint_x: 1 if root.icon and (root.vertical or not root.text) else None
-        size_hint_y: 1 if root.icon else None
+        size_hint_y: 1 if root.vertical and root.icon else None
+        pos_hint: {} if root.vertical else {'center_y': .5}
         width: dp(22) if root.icon else 0
         height: dp(22) if root.icon else 0
         opacity: 1 if root.icon else 0
@@ -72,9 +86,10 @@
         bold: not root.vertical
         shorten: True
         size_hint_x: 1 if root.text else None
-        size_hint_y: 1 if root.text else None
+        size_hint_y: 1 if root.vertical and root.text else None
+        pos_hint: {} if root.vertical else {'center_y': .5}
         width: 0
-        height: 0
+        height: self.texture_size[1] if root.text else 0
 
 <ViewSpinnerOption>:
     background_normal: ''
@@ -91,6 +106,7 @@
     color: rgba(self.fg)
     font_size: sp(14)
     option_cls: 'ViewSpinnerOption'
+    padding: dp(12), 0
     canvas.before:
         Color:
             rgba: rgba(self.bg)
@@ -98,6 +114,11 @@
             pos: self.pos
             size: self.size
             radius: [dp(14)]
+        Color:
+            rgba: rgba('#286F83') if self.is_open else (0, 0, 0, 0)
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(14))
+            width: 1.2
 
 <ViewPill>:
     bg: '#FBEAE1' if self.warm else '#E7F3F4'
@@ -137,6 +158,20 @@
         color: rgba('#A44D2E' if root.bg == '#FBEAE1' else '#286F83')
         halign: 'center'
 
+<PetPortrait>:
+    size_hint: None, None
+    size: dp(80), dp(96)
+    padding: [dp(5), dp(8), dp(5), dp(4)]
+    canvas.before:
+        Color:
+            rgba: rgba('#F4F6F6' if root.kind == 'Gato' else '#D9EAE1')
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.width / 2, self.width / 2, dp(12), dp(12)]
+    ViewPetAvatar:
+        kind: root.kind
+
 <FloatingTag>:
     Image:
         id: image
@@ -171,6 +206,14 @@
         size_hint: 1, 1
         pos_hint: {'x': 0, 'y': 0}
     ViewCard:
+        bg: '#103D49'
+        radius: 0
+        padding: 0
+        adaptive: False
+        size_hint: 1, None
+        height: dp(44)
+        pos_hint: {'x': 0, 'y': 0}
+    ViewCard:
         bg: '#FFFFFF'
         radius: 15
         padding: [dp(10), 0]
@@ -184,17 +227,11 @@
             color: rgba('#286F83')
             bold: True
     ViewText:
-        text: 'Un respiro para compartir'
-        font_size: sp(11)
-        color: rgba('#D9EFF0')
-        size_hint: .9, None
-        height: dp(18)
-        pos_hint: {'x': .05, 'y': .22}
-    ViewText:
         text: 'Su momento de mimos'
         font_size: sp(19)
         color: rgba('#FFFFFF')
         bold: True
         size_hint: .9, None
         height: dp(31)
-        pos_hint: {'x': .05, 'y': .07}
+        x: self.parent.x + dp(16)
+        y: self.parent.y + dp(7)

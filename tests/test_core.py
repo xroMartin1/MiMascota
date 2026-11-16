@@ -8,6 +8,7 @@ from unittest.mock import patch, Mock
 
 from services.store import LocalStore, empty_data, normalize, pet_values, complete_task, pending, import_guest
 from services.cloud import Supabase, CloudError
+from services.profile import contact_values, registration_values
 from services.qr import start_trial, trial_expired, preview_payload, write_preview_png
 from datetime import timezone, timedelta
 
@@ -22,6 +23,30 @@ def task():
 
 
 class StorageTests(unittest.TestCase):
+    def test_qr_contact_requires_explicit_consent_and_excludes_private_data(self):
+        p = pet()
+        trial = start_trial({}, p['id'])
+        p['qr_contact'] = dict(name='Familia Nube', phone='+56912345678', city='Privada', share_phone=False)
+        self.assertNotIn('+56912345678', preview_payload(p, trial))
+        p['qr_contact']['share_phone'] = True
+        payload = preview_payload(p, trial)
+        self.assertIn('Familia Nube', payload)
+        self.assertIn('+56912345678', payload)
+        self.assertNotIn('Privada', payload)
+        p['qr_contact']['phone'] = '123'
+        with self.assertRaises(ValueError):
+            preview_payload(p, trial)
+
+    def test_contact_and_registration_validation(self):
+        self.assertEqual(contact_values(dict(phone='+56 9 1234 5678'))['phone'], '+56912345678')
+        with self.assertRaises(ValueError):
+            contact_values(dict(phone='1234'))
+        values = dict(name='Mar', email='mar@example.com', password=' secret12 ', password_confirm='secret12')
+        with self.assertRaisesRegex(ValueError, 'no coinciden'):
+            registration_values(values)
+        values['password_confirm'] = values['password']
+        self.assertEqual(registration_values(values)['name'], 'Mar')
+
     def test_qr_trial_is_stable_expires_and_keeps_private_fields_out(self):
         data = empty_data()
         pet_data = dict(pet(), email="owner@example.com", phone="555-222")
@@ -138,6 +163,21 @@ class StorageTests(unittest.TestCase):
 
 
 class CloudTests(unittest.TestCase):
+    @patch('services.cloud.requests.request')
+    def test_contact_metadata_saved_without_public_table_or_password(self, request):
+        client = self.client()
+        profile = dict(name='Mar', phone='+56912345678', city='Santiago')
+        request.return_value = Mock(ok=True, content=b'{}', json=lambda: {'user': {'id': 'abc'}})
+        client.authenticate('mar@example.com', 'password', True, profile=profile)
+        self.assertEqual(request.call_args.kwargs['json']['data'], {'contact_profile': profile})
+        client.set_session(dict(access_token='jwt', refresh_token='r', user={'id': 'abc'}))
+        request.return_value.json = lambda: {'id': 'abc', 'user_metadata': {'contact_profile': profile}}
+        client.update_profile(profile)
+        self.assertEqual(request.call_args.args[0], 'PUT')
+        self.assertTrue(request.call_args.args[1].endswith('/auth/v1/user'))
+        self.assertNotIn('password', request.call_args.kwargs['json'])
+        self.assertEqual(client.user['user_metadata']['contact_profile'], profile)
+
     def client(self):
         client = Supabase(config_path="no-config.json")
         client.url, client.key = "https://test.supabase.co", "sb_publishable_test"

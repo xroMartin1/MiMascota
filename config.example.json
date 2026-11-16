@@ -1,0 +1,13 @@
+{
+  "SUPABASE_URL": "https://TU-PROYECTO.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_REEMPLAZAR",
+  "MIMASCOTA_SITE_URL": "https://mi-mascota-web.vercel.app",
+  "GOOGLE_SIGN_IN_ENABLED": false,
+  "FIREBASE_ENABLED": false,
+  "FIREBASE_ANDROID": {
+    "app_id": "",
+    "api_key": "",
+    "project_id": "",
+    "sender_id": ""
+  }
+}
