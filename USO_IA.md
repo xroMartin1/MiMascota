@@ -2,13 +2,15 @@
 
 Este documento describe el uso de inteligencia artificial durante el desarrollo de Mi Mascota, las decisiones del equipo y su reflexión sobre el proceso.
 
+La entrega de medición MJV y Webpay Plus también tuvo asistencia de un agente de programación con IA para diseño técnico, código, pruebas, revisión y documentación. El equipo eligió Firebase gratuito y pago mensual con renovación manual, y proporcionó la rúbrica y la definición del método MJV. Las pruebas automatizadas son evidencia técnica con datos ficticios; no son entrevistas, uso de participantes ni resultados de impacto creados por la IA. La muestra y las conclusiones de evaluación deben ser recogidas y contrastadas por el equipo.
+
 ## 1. IA usada
 
-Se utilizó Codex, asistente de programación de OpenAI, para apoyar el desarrollo y la documentación. También se utilizó ChatGPT para generar imágenes para la interfaz a partir de prompts.
+Se utilizó un asistente de programación de OpenAI para apoyar el desarrollo y la documentación. También se utilizó ChatGPT para generar imágenes para la interfaz a partir de prompts.
 
 ## 2. Modelo
 
-Se utilizaron modelos de OpenAI a través de Codex; la conversación incluye una sesión identificada como GPT-6. No se dispone de un registro completo de las versiones usadas en todas las sesiones. Para las imágenes se utilizó ChatGPT; no se confirmó el nombre ni la versión del modelo de generación de imágenes.
+Se utilizaron modelos de OpenAI mediante un asistente de programación; la conversación incluye una sesión identificada como GPT-6. No se dispone de un registro completo de las versiones usadas en todas las sesiones. Para las imágenes se utilizó ChatGPT; no se confirmó el nombre ni la versión del modelo de generación de imágenes.
 
 ## 3. Prompts realizados
 

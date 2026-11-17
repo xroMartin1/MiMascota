@@ -19,11 +19,12 @@ from screens.qr_inbox import QrInboxFeatures
 from screens.ux import UxFeatures
 from screens.sync import BackupFeatures
 from screens.remote_config import RemoteConfigFeatures
+from screens.measurement import MeasurementFeatures
 
 DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "petcare.json"
 
 
-class HomeScreen(RemoteConfigFeatures, BackupFeatures, UxFeatures, QrInboxFeatures, CareFeatures, MDScreen):
+class HomeScreen(MeasurementFeatures, RemoteConfigFeatures, BackupFeatures, UxFeatures, QrInboxFeatures, CareFeatures, MDScreen):
     def __init__(self, data_file=None, **kwargs):
         load_views()
         super().__init__(**kwargs)
@@ -37,6 +38,8 @@ class HomeScreen(RemoteConfigFeatures, BackupFeatures, UxFeatures, QrInboxFeatur
         self.cloud = Supabase()
         self.google_auth = GoogleAuth(self.cloud)
         self.mobile = MobileServices(self.cloud.config)
+        self.start_measurement()
+        Window.bind(on_touch_down=self.measurement_touch, on_key_down=self.measurement_touch)
         if platform == 'android':
             from android import activity
             activity.bind(on_new_intent=self.google_intent)
@@ -75,10 +78,7 @@ class HomeScreen(RemoteConfigFeatures, BackupFeatures, UxFeatures, QrInboxFeatur
         Animation.cancel_all(self.content, 'opacity')
         self.content.opacity = 1
         self.active = page
-        try:
-            self.mobile.screen(page)
-        except Exception:
-            pass  # La telemetría opcional nunca bloquea el cuidado local.
+        self.measurement_screen(page)
         self.content.spacing = dp(14)
         self.subtitle.text = page
         self.content.clear_widgets()

@@ -83,6 +83,12 @@ La guía de defensa del equipo está en [GUIA-EQUIPO.md](GUIA-EQUIPO.md), y la d
 
 ## Suscripción de prueba
 
-En **Cuenta → Ver Premium**, o desde **Chapa → Ver Premium**, está el checkout mensual ficticio de $3.990 CLP por mascota. Usa el correo y la tarjeta del comprador de prueba de Mercado Pago Chile; nunca una tarjeta personal. La app consulta al servidor antes de confirmar el periodo. Preparación, código del backend y límites en [PAGOS-DE-PRUEBA.md](PAGOS-DE-PRUEBA.md).
+En **Cuenta → Ver Premium**, o desde **Chapa → Ver Premium**, está el checkout de prueba de **Webpay Plus**: $3.990 CLP por un mes por mascota, con renovación manual. Solo usar tarjetas de integración de Transbank; nunca tarjetas personales. La app consulta al servidor antes de confirmar el periodo. Preparación, código del backend y límites en [PAGOS-DE-PRUEBA.md](PAGOS-DE-PRUEBA.md).
 
-`services/subscription.py` realiza las solicitudes autenticadas; `screens/billing.py` muestra el estado, abre Mercado Pago y permite cancelar la renovación. La integración aún requiere validar una operación completa con el comprador de prueba del equipo.
+`services/subscription.py` realiza solicitudes autenticadas a `webpay-payments`; `screens/billing.py` muestra el estado y abre el checkout del sitio propio. No pide correo de comprador ni autoriza cobros automáticos. El backend y las rutas web se entregan en la rama correspondiente de MiMascotaWeb; requieren configurar y desplegar antes de usar este cliente.
+
+## Medición y evaluación MJV
+
+En **Cuenta → Privacidad y estadísticas**, también disponible para invitado, se puede elegir compartir estadísticas, confirmar la zona horaria, participar en una prueba de uso y exportar los datos mínimos. Es opcional: rechazarlo no deshabilita el cuidado local. Firebase Analytics recibe solo eventos y parámetros permitidos; el registro local permite calcular KPIs reproducibles sin BigQuery ni otro servicio de pago.
+
+Protocolo, fórmulas, diccionario y comandos de informes: [MEDICION-MJV.md](MEDICION-MJV.md). Arquitectura, evidencia y límites para la defensa: [DOCUMENTATION.md](DOCUMENTATION.md). Los informes necesitan datos realmente recogidos; no se incluyen resultados inventados.

@@ -53,5 +53,28 @@ class MobileAuthTests(unittest.TestCase):
         self.assertEqual(mobile.preferences(), {'notifications': False, 'analytics': False})
         mobile.native.assert_not_called()
 
+    @patch('services.mobile.platform', 'android')
+    def test_mobile_event_schema_consent_and_screen_allowlist(self):
+        mobile = MobileServices({'FIREBASE_ENABLED': True, 'FIREBASE_ANDROID':
+                                dict(app_id='public', api_key='public', project_id='test', sender_id='1')})
+        bridge = Mock()
+        mobile.native = Mock(return_value=(bridge, object()))
+        bridge.allowed.return_value = False
+        mobile.event('pet_saved', {})
+        bridge.event.assert_not_called()
+        bridge.allowed.return_value = True
+        mobile.event('pet_saved', {'email': 'private@example.com'})
+        mobile.event('unknown', {})
+        mobile.screen('private name')
+        bridge.event.assert_not_called()
+        bridge.screen.assert_not_called()
+        mobile.event('save_result', {'operation': 'pet', 'result': 'success'})
+        bridge.event.assert_called_once_with('save_result', '{"operation": "pet", "result": "success"}')
+        mobile.screen('Premium')
+        bridge.screen.assert_called_once_with('Premium')
+        mobile.native.side_effect = RuntimeError('SDK unavailable')
+        mobile.event('pet_saved', {})
+        mobile.screen('Inicio')
+
 
 if __name__ == '__main__': unittest.main()

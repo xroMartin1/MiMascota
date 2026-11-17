@@ -8,6 +8,8 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.messaging.FirebaseMessaging;
 import java.util.EnumMap;
 import java.util.UUID;
+import org.json.JSONObject;
+import java.util.Iterator;
 
 /** SDK móvil; configuración pública y consentimiento, nunca credenciales de servidor. */
 public final class FirebaseBridge {
@@ -65,10 +67,61 @@ public final class FirebaseBridge {
         }
     }
     public static void screen(String name) {
-        if (!allowed(context, "analytics")) return;
-        if (!(name.equals("Inicio") || name.equals("Mascotas") || name.equals("Rutina") || name.equals("Salud"))) return;
+        if (context == null || !allowed(context, "analytics") || !isScreen(name)) return;
         Bundle data = new Bundle();
         data.putString(FirebaseAnalytics.Param.SCREEN_NAME, name);
         FirebaseAnalytics.getInstance(context).logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, data);
+    }
+    private static boolean oneOf(String value, String... choices) {
+        for (String choice : choices) if (choice.equals(value)) return true;
+        return false;
+    }
+    private static boolean isScreen(String value) {
+        return oneOf(value, "Inicio", "Mascotas", "Chapa", "Rutina", "Salud", "Cuenta", "Avisos", "Premium");
+    }
+    public static void event(String name, String parameters) {
+        if (context == null || !allowed(context, "analytics") || parameters == null || parameters.length() > 1024) return;
+        try {
+            JSONObject values = new JSONObject(parameters);
+            int expected;
+            if (oneOf(name, "screen_view", "interaction")) expected = 1;
+            else if ("screen_time".equals(name)) expected = 3;
+            else if ("save_attempt".equals(name)) expected = 1;
+            else if ("save_result".equals(name)) expected = 2;
+            else if (oneOf(name, "care_complete", "payment_result", "usage_error")) expected = 1;
+            else if ("pet_saved".equals(name)) expected = 0;
+            else return;
+            if (values.length() != expected) return;
+            Bundle data = new Bundle();
+            Iterator<String> keys = values.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                Object raw = values.get(key);
+                if ("screen_time".equals(name) && oneOf(key, "active_seconds", "idle_seconds")) {
+                    if (!(raw instanceof Number)) return;
+                    double value = ((Number) raw).doubleValue();
+                    if (Double.isNaN(value) || Double.isInfinite(value) || value < 0 || value > 2147483647) return;
+                    data.putDouble(key, value);
+                    continue;
+                }
+                if (!(raw instanceof String)) return;
+                String value = (String) raw;
+                boolean valid = (oneOf(name, "screen_view", "interaction", "screen_time") && "screen".equals(key) && isScreen(value))
+                    || (oneOf(name, "save_attempt", "save_result") && "operation".equals(key) && oneOf(value, "pet", "care", "health", "account"))
+                    || ("save_result".equals(name) && "result".equals(key) && oneOf(value, "success", "validation", "failed", "abandoned"))
+                    || ("care_complete".equals(name) && "result".equals(key) && oneOf(value, "completed", "undo"))
+                    || ("payment_result".equals(name) && "result".equals(key) && oneOf(value, "approved", "rejected", "cancelled", "pending", "expired", "failed"))
+                    || ("usage_error".equals(name) && "code".equals(key) && oneOf(value, "storage", "network", "validation", "auth", "payment"));
+                if (!valid) return;
+                data.putString(key, value);
+            }
+            if ("screen_view".equals(name)) {
+                data.putString(FirebaseAnalytics.Param.SCREEN_NAME, data.getString("screen"));
+                data.remove("screen");
+            }
+            FirebaseAnalytics.getInstance(context).logEvent(name, data);
+        } catch (Exception ignored) {
+            // Optional analytics must not interrupt the app.
+        }
     }
 }

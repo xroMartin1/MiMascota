@@ -116,11 +116,12 @@
         size_hint_y: None
         height: dp(24)
     ViewText:
-        text: 'Chapa física no incluida'
+        text: 'Renovación manual · Chapa física no incluida'
+        wrap: True
         font_size: sp(12)
         color: rgba(design.MUTED)
         size_hint_y: None
-        height: dp(22)
+        height: self.texture_size[1] + dp(6)
 
 <PremiumBenefit@ViewRow>:
     height: max(dp(36), root.ids.benefit_text.texture_size[1] + dp(8))

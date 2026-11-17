@@ -90,6 +90,7 @@ class UxFeatures(BillingFeatures):
                 self.content.add_widget(view('AccountPrimary', text='Continuar con Google', callback=lambda *_: self.signin_google()))
             self.content.add_widget(view('AccountAction' if self.google_available else 'AccountPrimary', text='Crear cuenta', callback=lambda *_: self.auth_form(True)))
             self.content.add_widget(view('UxRow', title='Iniciar sesión', detail='Ya tengo una cuenta', icon='login', callback=lambda *_: self.auth_form(False)))
+            self.content.add_widget(view('AccountAction', text='Privacidad y estadísticas', callback=self.statistics_preferences))
             return
         self.heading('Mi cuenta', '')
         name = self.contact_profile().get('name') or 'Mi perfil'
@@ -102,6 +103,7 @@ class UxFeatures(BillingFeatures):
         self.content.add_widget(care)
         self.content.add_widget(view('UxSection', text='Preferencias'))
         settings = view('AccountGroup')
+        settings.add_widget(view('UxRow', title='Privacidad y estadísticas', detail='Tú eliges qué compartir', icon='shield-check-outline', callback=self.statistics_preferences))
         if self.mobile.configured:
             settings.add_widget(view('UxRow', title='Notificaciones', detail='Permisos y recordatorios', icon='bell-outline', callback=lambda *_: self.notice_preferences()))
         settings.add_widget(view('UxRow', title='Ajustes de cuenta', detail='Seguridad y opciones de datos', icon='cog-outline', callback=lambda *_: self.account_settings()))
