@@ -1,0 +1,17 @@
+"""Shared visual values for the native app."""
+INK = '#103D49'
+TEXT = '#193C47'
+MUTED = '#526A74'
+WHITE = '#FFFFFF'
+MINT = '#E2F0EA'
+LIME = '#DAEFA0'
+LAVENDER = '#EDE5FA'
+SURFACE = '#F4F8F8'
+BORDER = '#DCE6E7'
+TEAL = '#286F83'
+BLUE = '#E7F3F4'
+BODY = 14
+TITLE = 30
+GAP = 14
+CARD_RADIUS = 24
+CARD_PADDING = 18

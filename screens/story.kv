@@ -1,0 +1,156 @@
+#:import rgba kivy.utils.get_color_from_hex
+#:import design screens.theme
+
+<PetHero@ViewCard>:
+    bg: design.LAVENDER if root.context['kind'].strip().casefold() == 'gato' else design.MINT
+    shadow: False
+    padding: dp(16)
+    ViewRow:
+        height: max(dp(160), root.ids.hero_data.minimum_height)
+        spacing: dp(16)
+        PetPortrait:
+            size: dp(112), dp(144)
+            kind: root.context['kind']
+            breed: root.context['breed']
+            pos_hint: {'center_y': .5}
+        ViewColumn:
+            id: hero_data
+            adaptive: True
+            spacing: dp(6)
+            pos_hint: {'center_y': .5}
+            ViewText:
+                text: root.context['breed'] if root.context['breed'] not in ('Sin registrar', root.context['kind']) else ''
+                bold: True
+                font_size: sp(18)
+                wrap: True
+                size_hint_y: None
+                height: self.texture_size[1]
+            ViewText:
+                text: 'Edad'
+                font_size: sp(12)
+                color: rgba(design.MUTED)
+                size_hint_y: None
+                height: dp(18)
+            ViewText:
+                text: root.context['age']
+                wrap: True
+                bold: True
+                size_hint_y: None
+                height: self.texture_size[1]
+            ViewText:
+                text: 'Peso'
+                font_size: sp(12)
+                color: rgba(design.MUTED)
+                size_hint_y: None
+                height: dp(18)
+            ViewText:
+                text: root.context['weight']
+                wrap: True
+                bold: True
+                size_hint_y: None
+                height: self.texture_size[1]
+
+<PetNextCare@ViewCard>:
+    bg: design.INK
+    shadow: False
+    ViewText:
+        text: 'PRÓXIMO CUIDADO'
+        color: rgba(design.LIME)
+        font_size: sp(11)
+        size_hint_y: None
+        height: dp(20)
+    ViewText:
+        text: root.context['title']
+        wrap: True
+        bold: True
+        font_size: sp(22)
+        color: rgba(design.WHITE)
+        size_hint_y: None
+        height: self.texture_size[1]
+    ViewText:
+        text: root.context['date']
+        color: rgba(design.WHITE)
+        wrap: True
+        size_hint_y: None
+        height: self.texture_size[1] if self.text else 0
+    ViewAction:
+        text: root.context['action']
+        callback: root.context['callback']
+        bg: design.LIME
+        fg: design.INK
+
+<DayProgress@ViewCard>:
+    bg: design.MINT
+    shadow: False
+    padding: dp(16)
+    ViewText:
+        text: root.context['text']
+        bold: True
+        font_size: sp(20)
+        wrap: True
+        size_hint_y: None
+        height: self.texture_size[1] + dp(4)
+    Widget:
+        size_hint_y: None
+        height: dp(8)
+        canvas:
+            Color:
+                rgba: rgba(design.WHITE)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(4)]
+            Color:
+                rgba: rgba(design.INK)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.width * root.context['progress'], self.height
+                radius: [dp(4)]
+
+<StorySection@ViewText>:
+    text: root.context['text']
+    bold: True
+    font_size: sp(21)
+    size_hint_y: None
+    height: dp(40)
+
+<StoryEvent@ViewRow>:
+    height: root.ids.body.minimum_height + dp(16)
+    spacing: dp(12)
+    padding: [0, dp(8)]
+    canvas.before:
+        Color:
+            rgba: rgba(design.BORDER)
+        Line:
+            points: self.x + dp(20), self.y, self.x + dp(20), self.top
+            width: dp(1)
+    ViewIconTile:
+        icon: root.context['icon']
+        tile_size: 40
+        bg: design.MINT
+        pos_hint: {'top': 1}
+    ViewCard:
+        id: body
+        bg: design.SURFACE
+        shadow: False
+        padding: dp(14)
+        spacing: dp(6)
+        ViewText:
+            text: root.context['date']
+            wrap: True
+            color: rgba(design.MUTED)
+            font_size: sp(12)
+            size_hint_y: None
+            height: self.texture_size[1]
+        ViewText:
+            text: root.context['title']
+            wrap: True
+            bold: True
+            font_size: sp(17)
+            size_hint_y: None
+            height: self.texture_size[1]
+        ViewText:
+            text: root.context['detail']
+            wrap: True
+            size_hint_y: None
+            height: self.texture_size[1] if self.text else 0

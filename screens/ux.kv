@@ -1,3 +1,4 @@
+#:import design screens.theme
 #:import rgba kivy.utils.get_color_from_hex
 #:import md_icons kivymd.icon_definitions.md_icons
 #:import fonts_path kivymd.fonts_path
@@ -5,8 +6,8 @@
 <UxCaption@ViewText>:
     text: root.context['text']
     wrap: True
-    font_size: sp(14)
-    color: rgba('#526A74')
+    font_size: sp(design.BODY)
+    color: rgba(design.MUTED)
     size_hint_y: None
     height: max(dp(30), self.texture_size[1] + dp(12))
 
@@ -14,7 +15,7 @@
     text: root.context['text']
     font_size: sp(13)
     bold: True
-    color: rgba('#526A74')
+    color: rgba(design.MUTED)
     size_hint_y: None
     height: dp(28)
 
@@ -28,15 +29,15 @@
     ViewAction:
         icon: root.context['left_icon']
         callback: root.context['left']
-        bg: '#FFFFFF'
-        fg: '#286F83'
+        bg: design.WHITE
+        fg: design.TEAL
         size_hint_x: None
         width: dp(46)
     ViewAction:
         icon: root.context['right_icon']
         callback: root.context['right']
-        bg: '#FFFFFF'
-        fg: '#286F83'
+        bg: design.WHITE
+        fg: design.TEAL
         size_hint_x: None
         width: dp(46)
 
@@ -49,13 +50,19 @@
     height: max(dp(72), self.ids.row_copy.minimum_height + dp(24))
     padding: dp(12)
     spacing: dp(12)
-    bg: root.context.get('bg', '#FFFFFF')
+    bg: root.context.get('bg', design.WHITE)
     radius: 22
+    canvas.after:
+        Color:
+            rgba: rgba(design.BORDER) if root.parent and root.parent.__class__.__name__ == 'AccountGroup' and root.parent.children[0] is not root else (0, 0, 0, 0)
+        Line:
+            points: self.x + dp(16), self.y, self.right - dp(16), self.y
+            width: dp(.5)
     ViewText:
         text: md_icons.get(root.context['icon'], '')
         font_name: fonts_path + 'materialdesignicons-webfont.ttf'
         font_size: sp(24)
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
         size_hint_x: None
         width: dp(30)
         halign: 'center'
@@ -73,8 +80,8 @@
             height: self.texture_size[1]
         ViewText:
             text: root.context['detail']
-            font_size: sp(14)
-            color: rgba('#526A74')
+            font_size: sp(design.BODY)
+            color: rgba(design.MUTED)
             wrap: True
             size_hint_y: None
             height: self.texture_size[1] if self.text else 0
@@ -82,7 +89,7 @@
         text: md_icons['chevron-right']
         font_name: fonts_path + 'materialdesignicons-webfont.ttf'
         font_size: sp(20)
-        color: rgba('#526A74')
+        color: rgba(design.MUTED)
         size_hint_x: None
         width: dp(20)
 
@@ -92,7 +99,7 @@
     size_hint_y: None
     height: dp(112)
     padding: dp(16)
-    bg: '#DAEFA0'
+    bg: design.LIME
     ViewColumn:
         spacing: dp(3)
         ViewText:
@@ -102,13 +109,13 @@
             shorten: True
         ViewText:
             text: root.context['email']
-            font_size: sp(14)
-            color: rgba('#526A74')
+            font_size: sp(design.BODY)
+            color: rgba(design.MUTED)
             shorten: True
     ViewAction:
         icon: 'pencil-outline'
-        bg: '#FFFFFF'
-        fg: '#286F83'
+        bg: design.WHITE
+        fg: design.TEAL
         size_hint_x: None
         width: dp(46)
         height: dp(46)
@@ -116,7 +123,8 @@
         callback: root.context['callback']
 
 <AccountGroup@ViewCard>:
-    bg: '#FFFFFF'
+    border: True
+    bg: design.WHITE
     shadow: False
     padding: dp(4)
     spacing: 0
@@ -125,11 +133,11 @@
     bg: '#F4F6F6'
     shadow: False
     padding: dp(22)
-    spacing: dp(14)
+    spacing: dp(design.GAP)
     ViewIconTile:
         icon: 'message-text-outline'
         tile_size: 56
-        bg: '#FFFFFF'
+        bg: design.WHITE
     ViewText:
         text: root.context['text']
         wrap: True
@@ -146,10 +154,10 @@
     padding: dp(14)
     spacing: dp(10)
     radius: 16
-    bg: '#E2F0EA' if root.context['unread'] else '#FFFFFF'
+    bg: design.MINT if root.context['unread'] else design.WHITE
     canvas.after:
         Color:
-            rgba: rgba('#286F83') if root.context['unread'] else (0, 0, 0, 0)
+            rgba: rgba(design.TEAL) if root.context['unread'] else (0, 0, 0, 0)
         RoundedRectangle:
             pos: self.x, self.y + dp(18)
             size: dp(3), self.height - dp(36)
@@ -160,7 +168,7 @@
         font_size: sp(24)
         size_hint_x: None
         width: dp(28)
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
     ViewColumn:
         spacing: dp(3)
         ViewRow:
@@ -173,14 +181,14 @@
             ViewText:
                 text: root.context['date']
                 font_size: sp(10)
-                color: rgba('#526A74')
+                color: rgba(design.MUTED)
                 size_hint_x: None
                 width: dp(85)
                 halign: 'right'
         ViewText:
             text: root.context['detail']
-            font_size: sp(14)
-            color: rgba('#526A74')
+            font_size: sp(design.BODY)
+            color: rgba(design.MUTED)
             wrap: True
             shorten: True
             markup: False
@@ -192,7 +200,7 @@
         size_hint: None, None
         size: dp(28), dp(28)
         active: True
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
     Widget:
 
 <UxComposer@ViewCard>:
@@ -212,7 +220,7 @@
         background_normal: ''
         background_active: ''
         background_color: rgba('#F1F6F6')
-        foreground_color: rgba('#193C47')
+        foreground_color: rgba(design.TEXT)
         padding: dp(10), dp(10)
     ViewAction:
         icon: 'send'
@@ -224,7 +232,7 @@
 
 <UxQr@ViewCard>:
     padding: dp(12)
-    bg: '#FFFFFF'
+    bg: design.WHITE
     ViewImage:
         source: root.context['source']
         size_hint_y: None
@@ -238,9 +246,9 @@
     multiline: False
     size_hint_y: None
     height: dp(52)
-    font_size: sp(14)
+    font_size: sp(design.BODY)
     background_normal: ''
     background_active: ''
     background_color: rgba('#F1F6F6')
-    foreground_color: rgba('#193C47')
+    foreground_color: rgba(design.TEXT)
     padding: dp(10), dp(12)

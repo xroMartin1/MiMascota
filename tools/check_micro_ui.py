@@ -144,10 +144,10 @@ class Check(MiMascotaApp):
         assert Path(image.source).name == 'chapa-web-3d.png'
         assert image.width > 250 and image.height > 250
         next(w for w in self.modal.walk() if isinstance(w, ViewAction) and w.text == 'Ver reverso').dispatch('on_release')
-        assert Path(image.source).name == 'chapa-web-3d-reverso.png'
-        Clock.schedule_once(self.care, .3)
+        Clock.schedule_once(self.care, .5)
 
     def care(self, _):
+        assert any(isinstance(w, ViewImage) and Path(w.source).name == 'chapa-web-3d-reverso.png' for w in self.modal.walk())
         self.modal.export_to_png(str(self.output/'chapa-ampliada.png'))
         self.modal.dismiss(animation=False)
         self.s.show('Rutina')

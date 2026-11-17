@@ -19,7 +19,7 @@ class PublicTagFeatures:
         try:
             client = PublicChapas(self.cloud, self.cloud.site_url)
         except ValueError as exc:
-            self.message("URL de chapa pendiente", str(exc))
+            self.message("Chapa no disponible", "Inténtalo de nuevo más tarde.")
             return
         self.network(lambda: client.existing(pet["id"]),
                      lambda tag: self.public_tag_panel(pet, tag))
@@ -29,11 +29,10 @@ class PublicTagFeatures:
         modal.size_hint_y = .92
         scroll = view('QrInfoScroll')
         body = view('QrInfoBody')
-        body.add_widget(view('AccountNote', text='Un escaneo para ayudarle a volver a casa.'))
         contact = pet.get('qr_contact', {})
         shared = isinstance(contact, dict) and contact.get('share_phone') is True
         body.add_widget(view('AccountNote', text=(
-            'Contacto guardado: ' + contact.get('name', '') + ' · ' + contact.get('phone', '')
+            'Contacto guardado: ' + contact.get('name', '') + ', ' + contact.get('phone', '')
             if shared else 'Puedes recibir avisos sin publicar un teléfono.')))
 
         def action(label, callback, primary=False):
@@ -107,7 +106,7 @@ class PublicTagFeatures:
         try:
             client = PublicChapas(self.cloud, self.cloud.site_url)
         except ValueError as exc:
-            self.message('URL de chapa pendiente', str(exc))
+            self.message('Chapa no disponible', 'Inténtalo de nuevo más tarde.')
             return
         contact = pet.get('qr_contact', {})
         shared = isinstance(contact, dict) and contact.get('share_phone') is True

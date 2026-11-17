@@ -5,10 +5,10 @@ Precio: **$3.990 CLP por mascota al mes**. Mantiene vigente su ficha pública co
 ## Probar desde la aplicación
 
 1. Iniciar sesión en Mi Mascota, registrar la mascota y activar su chapa QR de prueba.
-2. Entrar en **Cuenta → Chapa y suscripción**, elegir la mascota y pulsar **Suscribirme en modo de prueba**.
-3. En **Correo del comprador de prueba**, ingresar el correo de la cuenta ficticia de comprador de Mercado Pago. No crear otra cuenta en Mi Mascota para esto.
+2. Entrar en **Cuenta → Ver Premium** o en **Chapa → Ver Premium**, elegir la mascota y pulsar **Elegir Premium**.
+3. En **Pago de prueba → Correo del comprador de prueba**, ingresar el correo de la cuenta ficticia de comprador de Mercado Pago y pulsar **Continuar a Mercado Pago**. No crear otra cuenta en Mi Mascota para esto.
 4. Completar el checkout del proveedor con su cuenta y tarjeta de prueba. Nunca usar una tarjeta personal para esta demo.
-5. Volver a la app y pulsar **Comprobar pago**. Autorizar una suscripción no garantiza un cobro inmediato: mientras no exista un pago aprobado seguirá pendiente.
+5. Volver a la app y pulsar **Actualizar estado**. Autorizar una suscripción no garantiza un cobro inmediato: mientras no exista un pago aprobado seguirá pendiente.
 6. Revisar el periodo confirmado y, si se desea, **Cancelar renovación**. Se conserva el periodo que ya se había confirmado.
 
 ## Código y configuración

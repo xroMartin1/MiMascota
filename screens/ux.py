@@ -94,14 +94,11 @@ class UxFeatures(BillingFeatures):
         self.heading('Mi cuenta', '')
         name = self.contact_profile().get('name') or 'Mi perfil'
         self.content.add_widget(view('UxProfile', name=name, email=user.get('email', ''), callback=lambda *_: self.edit_contact_profile()))
-        self._backup_label = view('UxCaption', text=self.backup_status)
-        self.content.add_widget(self._backup_label)
+        self.content.add_widget(self.premium_card())
         if self._backup_blocked:
             self.content.add_widget(view('UxRow', title='Revisar copias', detail='Tus cambios están protegidos', icon='cloud-alert-outline', callback=self.backup_options))
-        self.content.add_widget(view('UxSection', text='Cuidados y chapa'))
         care = view('AccountGroup')
         care.add_widget(view('UxRow', title='Cuidados compartidos', detail='Invita a alguien de confianza', icon='account-group-outline', callback=lambda *_: self.open_care_sharing()))
-        care.add_widget(view('UxRow', title='Chapa y suscripción', detail='Ficha QR y plan mensual', icon='qrcode-scan', callback=lambda *_: self.plan_info()))
         self.content.add_widget(care)
         self.content.add_widget(view('UxSection', text='Preferencias'))
         settings = view('AccountGroup')
@@ -184,7 +181,7 @@ class UxFeatures(BillingFeatures):
         if rows:
             self.content.add_widget(view('UxSection', text='MENSAJES'))
             for row in rows:
-                date = datetime.fromisoformat(row['updated_at']).astimezone().strftime('%d/%m · %H:%M')
+                date = datetime.fromisoformat(row['updated_at']).astimezone().strftime('%d/%m, %H:%M')
                 self.content.add_widget(view('UxNotice', title=row['pet_name'], detail=row['preview'], date=date,
                     unread=bool(row['unread']), icon='message-outline', callback=lambda *_, r=row: self.open_qr_conversation(r['id'])))
         elif not self._notice_loading:
@@ -262,7 +259,7 @@ class UxFeatures(BillingFeatures):
         if any(details):
             self.content.add_widget(view('UxCaption', text='\n'.join(value for value in details if value)))
         for message in result['messages']:
-            date = datetime.fromisoformat(message['created_at']).astimezone().strftime('%d/%m · %H:%M')
+            date = datetime.fromisoformat(message['created_at']).astimezone().strftime('%d/%m, %H:%M')
             self.content.add_widget(view('QrInboxConversation', sender=message['sender'],
                 label='Quien la encontró' if message['sender'] == 'visitor' else 'Tú', text=message['text'], date=date))
         if result.get('can_reply', True) and result['status'] in ('open', 'contacted'):
@@ -302,22 +299,24 @@ class UxFeatures(BillingFeatures):
         assets = Path(__file__).resolve().parents[1] / 'assets'
         modal, card = self.dialog('Chapa de ejemplo', 560)
         modal.size_hint_y = .85
-        frame = view('TagLarge', source=str(assets / ('chapa-web-3d-reverso.png' if back else 'chapa-web-3d.png')))
+        def switch(*_):
+            def swap():
+                nonlocal back
+                back = not back
+                frame.ids.image.source = str(assets / ('chapa-web-3d-reverso.png' if back else 'chapa-web-3d.png'))
+                button.text = 'Ver frente' if back else 'Ver reverso'
+            frame.flip(swap)
+        frame = view('TagLarge', source=str(assets / ('chapa-web-3d-reverso.png' if back else 'chapa-web-3d.png')), callback=switch)
         card.add_widget(frame)
-        def switch(button):
-            nonlocal back
-            back = not back
-            frame.ids.image.source = str(assets / ('chapa-web-3d-reverso.png' if back else 'chapa-web-3d.png'))
-            button.text = 'Ver frente' if back else 'Ver reverso'
-            self.reveal(frame.ids.image)
-        card.add_widget(view('AccountAction', text='Ver frente' if back else 'Ver reverso', callback=switch))
+        button = view('AccountAction', text='Ver frente' if back else 'Ver reverso', callback=switch)
+        card.add_widget(button)
+        modal.bind(on_dismiss=frame.cancel_flip)
         modal.open()
 
     def qr_page(self):
         self.heading('Su chapa QR', 'Una prueba de 14 días para una mascota')
         if not self.cloud.user:
             self.content.add_widget(self.tag_intro())
-            self.content.add_widget(view('UxCaption', text='Crea una cuenta o inicia sesión para probar la chapa de una mascota.'))
             self.content.add_widget(view('AccountPrimary', text='Crear cuenta o iniciar sesión', callback=self.account))
             return
         if not self.data['pets']:
@@ -352,13 +351,14 @@ class UxFeatures(BillingFeatures):
 
     def public_tag_panel(self, pet, tag):
         self.active, self.subtitle.text = 'Chapa', 'Chapa'
+        for tab in self.nav.children:
+            tab.context['selected'] = tab.text == 'Chapa'
         self.content.clear_widgets()
         self.content.add_widget(view('UxToolbar', title=pet['name'], left_icon='refresh', left=lambda *_: self.show('Chapa'),
             right_icon='dots-vertical', right=lambda *_: self.public_tag_options(pet, tag)))
         if tag is None:
-            self.heading('Prueba su chapa', '14 días · una mascota por cuenta')
+            self.heading('Prueba su chapa', '14 días, una mascota por cuenta')
             self.content.add_widget(self.tag_intro())
-            self.content.add_widget(view('UxCaption', text='El QR permitirá avisarte sin publicar tu teléfono. La prueba empieza al crear la chapa y no se renueva al borrar una mascota.'))
             self.content.add_widget(view('AccountPrimary', text='Crear chapa de prueba', callback=lambda *_: self.publish_public_tag(pet, 'issue')))
         elif tag['status'] == 'active':
             path = self.public_tag_path(pet)
@@ -367,15 +367,17 @@ class UxFeatures(BillingFeatures):
             date = datetime.fromisoformat(tag['expires_at']).astimezone().strftime('%d/%m/%Y')
             paid = tag.get('access_kind') == 'paid'
             days = max(1, ceil((datetime.fromisoformat(tag['expires_at'])-datetime.now(timezone.utc)).total_seconds()/86400))
-            label = 'Chapa activa · hasta el ' + date if paid else f'Prueba · quedan {days} días · hasta el {date}'
+            label = 'Chapa activa, hasta el ' + date if paid else f'Prueba, quedan {days} días, hasta el {date}'
             self.content.add_widget(view('UxCaption', text=label))
             self.content.add_widget(view('AccountPrimary', text='Ver ficha web', callback=lambda *_: webbrowser.open(tag['url'])))
         else:
             self.heading('Ficha pausada' if tag['status'] == 'expired' else 'Chapa desactivada', '')
-            text = 'Conserva tu chapa: al renovar el plan se reactivará el mismo QR.' if tag.get('access_kind') == 'paid' else 'La prueba de 14 días terminó. Tu QR se conserva; la suscripción aún está en preparación.'
+            text = 'Al renovar el plan podrás volver a usar el mismo QR.' if tag.get('access_kind') == 'paid' else 'La prueba terminó. Puedes mantener su ficha activa con Premium y conservar el mismo QR.'
             if tag['status'] == 'unavailable':
                 text = 'Esta chapa está desactivada. Renovar el plan no cambia tu decisión de privacidad.'
             self.content.add_widget(view('UxCaption', text=text))
+        self.content.add_widget(view('AccountAction', text='Gestionar suscripción' if tag and tag.get('access_kind') == 'paid' else 'Ver Premium',
+                                     callback=lambda *_: self.plan_info(pet)))
         self.scroll.scroll_y = 1
 
     def public_tag_options(self, pet, tag):
@@ -504,7 +506,7 @@ class UxFeatures(BillingFeatures):
                 self.content.add_widget(view('UxCaption', text='Sin registros todavía.'))
             for item in entries[:40]:
                 stamp = item.get('date') or item.get('time') or ''
-                status = ' · Completado' if item.get('done') else ''
+                status = ', Completado' if item.get('done') else ''
                 self.content.add_widget(view('QrInboxConversation', sender='owner', label=stamp + status, text=item['title']+'\n'+(item.get('detail') or ''), date=''))
             if len(entries) > 40:
                 self.content.add_widget(view('UxCaption', text='Se muestran hasta 40 registros por sección.'))

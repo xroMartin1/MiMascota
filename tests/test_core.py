@@ -212,7 +212,7 @@ class CloudTests(unittest.TestCase):
         client = self.client()
         client.set_session(dict(access_token="jwt", refresh_token="r", user={"id": "abc"}))
         request.return_value = Mock(ok=False, status_code=400, text="revision_conflict")
-        with self.assertRaisesRegex(CloudError, "otra versión"):
+        with self.assertRaisesRegex(CloudError, "otro dispositivo"):
             client.upload(empty_data())
         self.assertEqual(request.call_count, 1)
 

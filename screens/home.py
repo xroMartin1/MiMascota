@@ -67,7 +67,7 @@ class HomeScreen(RemoteConfigFeatures, BackupFeatures, UxFeatures, QrInboxFeatur
             if self.google_auth.pending:
                 Clock.schedule_once(lambda _: self.google_intent(intent), .8)
         if self.store.readonly:
-            Clock.schedule_once(lambda _: self.message("Archivo protegido", "No se pudo leer el archivo local. No se sobrescribirá. Revisa data/petcare.json y su copia .bak."), .5)
+            Clock.schedule_once(lambda _: self.message("Archivo protegido", "No pudimos abrir tus datos guardados. Los archivos se conservaron. Revisa tu copia de seguridad antes de continuar."), .5)
 
 
     def show(self, page, *_):

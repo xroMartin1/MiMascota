@@ -69,7 +69,7 @@ class QrInboxFeatures:
         def open_view(callback):
             modal.dismiss()
             callback()
-        count = f' · {self._qr_unread} sin leer' if self._qr_unread else ''
+        count = f', {self._qr_unread} sin leer' if self._qr_unread else ''
         card.add_widget(view('AccountAction', text='Mensajes de tus mascotas' + count,
                              callback=lambda *_: open_view(self.open_qr_inbox)))
         card.add_widget(view('AccountAction', text='Recordatorios de cuidados',
@@ -97,7 +97,7 @@ class QrInboxFeatures:
         if not rows:
             body.add_widget(view('QrInboxText', text='No hay conversaciones aquí todavía.'))
         for row in rows:
-            count = f" · {row['unread']} sin leer" if row['unread'] else ''
+            count = f", {row['unread']} sin leer" if row['unread'] else ''
             body.add_widget(view('QrInboxEntry', text=row['pet_name'] + count,
                                  callback=lambda *_, item=row: self.open_qr_conversation(item['id'], modal)))
             body.add_widget(view('QrInboxText', text=row['preview'][:160]))
@@ -227,11 +227,11 @@ class QrInboxFeatures:
         def set_mode(mode, confirmed=False):
             modal.dismiss()
             self.network(lambda: QrInbox(self.cloud).mode(pet['id'], mode, confirmed),
-                         lambda _: self.message('Privacidad actualizada', 'La opción se guardó en el servidor. El plazo de la chapa no cambió.'))
+                         lambda _: self.message('Privacidad actualizada', 'La privacidad de su chapa se actualizó.'))
         card.add_widget(view('AccountPrimary', text='Contacto protegido', callback=lambda *_: set_mode('protected')))
         def show_phone(*_):
             modal.dismiss()
-            self.confirm('¿Publicar tu teléfono?', 'Quien tenga el enlace podrá copiarlo o guardarlo. Primero debes haber elegido y autorizado un contacto para esta mascota y guardado los cambios en la nube.',
+            self.confirm('¿Publicar tu teléfono?', 'Quien escanee la chapa podrá ver y guardar el teléfono. Publicaremos el contacto que autorizaste para esta mascota.',
                          lambda: self.network(lambda: QrInbox(self.cloud).mode(pet['id'], 'phone', True),
                                               lambda _: self.message('Teléfono publicado', 'La ficha mostrará el contacto autorizado. Puedes volver al modo protegido desde estas opciones.')))
         card.add_widget(view('AccountAction', text='Mostrar teléfono autorizado', callback=show_phone))

@@ -3,6 +3,7 @@
 Los controladores crean las vistas con ``view(nombre, **datos)``. Los datos
 incluyen callbacks; tamaños, colores y jerarquías se definen en los .kv.
 """
+from screens import theme as design
 from pathlib import Path
 from kivy.app import App
 from kivy.animation import Animation
@@ -46,11 +47,21 @@ def interface_motion():
 
 
 class PressFeedback(ButtonBehavior):
+    compress_on_press = BooleanProperty(False)
+
     def on_state(self, _, state):
         Animation.cancel_all(self, 'press_amount')
+        animated = interface_motion() and self.parent is not None
+        if self.compress_on_press:
+            Animation.cancel_all(self, 'visual_scale')
+            if animated:
+                Animation(visual_scale=.985 if state == 'down' else 1,
+                          duration=.09 if state == 'down' else .16, t='out_cubic').start(self)
+            else:
+                self.visual_scale = 1
         if state == 'down':
             self.press_amount = 1
-        elif interface_motion() and self.parent:
+        elif animated:
             Animation(press_amount=0, duration=.12, t='out_cubic').start(self)
         else:
             self.press_amount = 0
@@ -95,6 +106,30 @@ class ViewColumn(BoxLayout):
 
 class PetPortrait(ViewColumn):
     kind = StringProperty('Perro')
+    breed = StringProperty('')
+
+
+class PetFormPreview(BoxLayout):
+    kind = StringProperty('Perro')
+    breed = StringProperty('')
+
+    def on_kv_post(self, _):
+        self.bind(kind=self.update_preview, breed=self.update_preview)
+        self.update_preview()
+
+    def update_preview(self, *changes):
+        portrait = self.ids.portrait
+        Animation.cancel_all(portrait, 'opacity')
+        portrait.kind, portrait.breed = self.kind, self.breed
+        portrait.opacity = 1
+        if changes and self.parent is not None and interface_motion():
+            portrait.opacity = .45
+            Animation(opacity=1, duration=.14, t='out_sine').start(portrait)
+
+    def on_parent(self, _, parent):
+        if parent is None and self.ids.get('portrait'):
+            Animation.cancel_all(self.ids.portrait, 'opacity')
+            self.ids.portrait.opacity = 1
 
 
 class ViewRow(BoxLayout):
@@ -108,25 +143,56 @@ class ViewText(Label):
 
 class ViewCard(ViewColumn):
     shadow = BooleanProperty(True)
-    bg = StringProperty("#FFFFFF")
-    radius = NumericProperty(23)
+    bg = StringProperty(design.WHITE)
+    radius = NumericProperty(design.CARD_RADIUS)
     accent = BooleanProperty(False)
     adaptive = BooleanProperty(True)
     visual_scale = NumericProperty(1)
     press_amount = NumericProperty(0)
+    border = BooleanProperty(False)
 
 
 class ViewAction(PressFeedback, ViewCard):
     text = StringProperty("")
     icon = StringProperty("")
-    fg = StringProperty("#FFFFFF")
+    fg = StringProperty(design.WHITE)
     vertical = BooleanProperty(False)
-    font_size = NumericProperty(14)
+    font_size = NumericProperty(design.BODY)
     callback = ObjectProperty(None, allownone=True)
 
     def on_release(self):
         if self.callback:
             self.callback(self)
+
+
+class TagTurner(PressFeedback, ViewCard):
+    turn_scale = NumericProperty(1)
+    turning = BooleanProperty(False)
+
+    def on_release(self):
+        if not self.turning:
+            self.context['callback'](self)
+
+    def flip(self, swap):
+        if self.turning:
+            return
+        if not interface_motion():
+            swap()
+            return
+        self.turning = True
+        def middle(*_):
+            swap()
+            finish = Animation(turn_scale=1, duration=.16, t='out_cubic')
+            finish.bind(on_complete=lambda *_: setattr(self, 'turning', False))
+            finish.start(self)
+        start = Animation(turn_scale=.04, duration=.12, t='in_cubic')
+        start.bind(on_complete=middle)
+        start.start(self)
+
+    def cancel_flip(self, *_):
+        Animation.cancel_all(self, 'turn_scale')
+        self.turn_scale = 1
+        self.turning = False
 
 
 class ViewSpinnerOption(SpinnerOption):
@@ -135,8 +201,23 @@ class ViewSpinnerOption(SpinnerOption):
 
 class ViewSpinner(Spinner):
     context = DictProperty({})
-    bg = StringProperty("#E7F3F4")
-    fg = StringProperty("#286F83")
+    bg = StringProperty(design.BLUE)
+    fg = StringProperty(design.TEAL)
+    arrow_angle = NumericProperty(0)
+
+    def on_is_open(self, instance, value):
+        super().on_is_open(instance, value)
+        Animation.cancel_all(self, 'arrow_angle')
+        if self.parent is not None and interface_motion():
+            Animation(arrow_angle=180 if value else 0, duration=.15, t='out_cubic').start(self)
+        else:
+            self.arrow_angle = 180 if value else 0
+
+    def on_parent(self, _, parent):
+        if parent is None:
+            self.is_open = False
+            Animation.cancel_all(self, 'arrow_angle')
+            self.arrow_angle = 0
 
 
 class ViewPill(ViewCard):
@@ -172,7 +253,7 @@ def load_views():
     for cls in (FloatingTag, PetAvatar, SpaArt, SpaBanner, TagArt):
         Factory.register(cls.__name__, cls=cls)
     Builder.load_file(str(KV_DIR / "widgets.kv"))
-    for filename in ("home.kv", "features.kv"):
+    for filename in ("home.kv", "features.kv", "billing.kv", "story.kv"):
         Builder.load_file(str(KV_DIR / filename))
     _loaded = True
 

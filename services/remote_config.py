@@ -13,6 +13,8 @@ def valid_message(value):
     if not isinstance(value, str):
         raise ValueError('Consejo inválido')
     value = value.strip()
+    if 'remote config' in value.casefold():
+        raise ValueError('Consejo de prueba')
     if not 1 <= len(value) <= 200 or any(unicodedata.category(c).startswith('C') for c in value):
         raise ValueError('Consejo inválido')
     return value

@@ -1,3 +1,4 @@
+#:import design screens.theme
 #:import rgba kivy.utils.get_color_from_hex
 
 <QrInboxLabel@ViewText>:
@@ -12,22 +13,22 @@
 <QrInboxEntry@ViewAction>:
     text: root.context['text']
     callback: root.context['callback']
-    bg: '#E7F3F4'
-    fg: '#193C47'
+    bg: design.BLUE
+    fg: design.TEXT
     height: dp(52)
 
 <QrInboxConversation@ViewCard>:
-    bg: '#DAEFA0' if root.context['sender'] == 'visitor' else '#E7F3F4'
+    bg: design.LIME if root.context['sender'] == 'visitor' else design.BLUE
     padding: dp(12)
     radius: 16
     QrInboxLabel:
         text: root.context['label']
         font_size: sp(11)
         bold: True
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
     QrInboxLabel:
         text: root.context['text']
     QrInboxLabel:
         text: root.context['date']
         font_size: sp(10)
-        color: rgba('#526A74')
+        color: rgba(design.MUTED)

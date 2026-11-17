@@ -1,13 +1,14 @@
+#:import design screens.theme
 #:import rgba kivy.utils.get_color_from_hex
 
 <HomeScreen>:
-    md_bg_color: rgba('#FFFFFF')
+    md_bg_color: rgba(design.WHITE)
 
 <HomeShell@ViewColumn>:
     spacing: dp(0)
     ViewCard:
         id: header
-        bg: '#FFFFFF'
+        bg: design.WHITE
         radius: 0
         orientation: 'horizontal'
         adaptive: False
@@ -17,7 +18,7 @@
         spacing: dp(10)
         ViewCard:
             id: brand_icon
-            bg: '#103D49'
+            bg: design.INK
             radius: 12
             adaptive: False
             size_hint: None, None
@@ -32,13 +33,13 @@
             id: branding
             spacing: dp(0)
             size_hint_y: None
-            height: dp(46)
+            height: dp(30)
             pos_hint: {'center_y': 0.5}
             ViewText:
                 id: brand_title
                 text: 'Mi Mascota'
                 font_size: sp(20)
-                color: rgba('#193C47')
+                color: rgba(design.TEXT)
                 bold: True
                 size_hint_y: None
                 height: dp(28)
@@ -48,7 +49,8 @@
                 font_size: sp(11)
                 color: rgba('#71838B')
                 size_hint_y: None
-                height: dp(18)
+                height: 0
+                opacity: 0
         ViewRow:
             id: header_actions
             height: dp(48)
@@ -63,9 +65,9 @@
                 ViewAction:
                     id: notifications
                     icon: 'bell-outline'
-                    bg: '#E7F3F4'
-                    fg: '#286F83'
-                    radius: 24
+                    bg: design.BLUE
+                    fg: design.TEAL
+                    radius: design.CARD_RADIUS
                     callback: root.context['notifications']
                     size_hint: 1, 1
                     pos_hint: {'x': 0, 'y': 0}
@@ -77,24 +79,24 @@
                     size: dp(19), dp(19)
                     pos_hint: {'right': 1.12, 'top': 1.12}
                     font_size: sp(9)
-                    color: rgba('#FFFFFF')
+                    color: rgba(design.WHITE)
                     halign: 'center'
                     bold: True
                     canvas.before:
                         Color:
-                            rgba: rgba('#193C47')
+                            rgba: rgba(design.TEXT)
                         Ellipse:
                             pos: self.pos
                             size: self.size
             ViewAction:
                 id: account
                 icon: 'account-outline'
-                bg: '#E7F3F4'
-                fg: '#286F83'
+                bg: design.BLUE
+                fg: design.TEAL
                 size_hint_x: None
                 width: dp(48)
                 height: dp(48)
-                radius: 24
+                radius: design.CARD_RADIUS
                 callback: root.context['account']
     ViewScrollView:
         id: scroll
@@ -108,7 +110,7 @@
             adaptive: True
     ViewCard:
         id: navigation
-        bg: '#FFFFFF'
+        bg: design.WHITE
         radius: 0
         orientation: 'horizontal'
         adaptive: False
@@ -123,8 +125,8 @@
     icon: root.context['icon']
     vertical: True
     font_size: 11
-    bg: '#103D49' if root.context['selected'] else '#FFFFFF'
-    fg: '#FFFFFF' if root.context['selected'] else '#286F83'
+    bg: design.INK if root.context['selected'] else design.WHITE
+    fg: design.WHITE if root.context['selected'] else design.TEAL
     callback: root.context['callback']
 
 <NavigationTab@ViewAction>:
@@ -133,8 +135,8 @@
     icon: root.context['icon']
     vertical: True
     font_size: 11
-    bg: '#DAEFA0' if root.context['selected'] else '#FFFFFF'
-    fg: '#103D49' if root.context['selected'] else '#526A74'
+    bg: design.LIME if root.context['selected'] else design.WHITE
+    fg: design.INK if root.context['selected'] else design.MUTED
     callback: root.context['callback']
 
 <HeadingBox@ViewColumn>:
@@ -155,8 +157,8 @@
 <HeadingTitle@ViewText>:
     text: root.context['text']
     wrap: True
-    font_size: sp(26)
-    color: rgba('#193C47')
+    font_size: sp(design.TITLE)
+    color: rgba(design.TEXT)
     bold: True
     size_hint_y: None
     height: max(dp(31), self.texture_size[1] + dp(4))
@@ -164,7 +166,7 @@
 <HeadingSubtitle@ViewText>:
     text: root.context['text']
     wrap: True
-    font_size: sp(14)
+    font_size: sp(design.BODY)
     color: rgba('#71838B')
     size_hint_y: None
     height: max(dp(22), self.texture_size[1] + dp(4))
@@ -174,13 +176,13 @@
     spacing: dp(12)
     ViewIconTile:
         icon: root.context['icon']
-        bg: '#FBEAE1' if root.context['warm'] else '#E7F3F4'
+        bg: '#FBEAE1' if root.context['warm'] else design.BLUE
     ViewColumn:
         spacing: dp(2)
         ViewText:
             text: root.context['title']
             font_size: sp(16)
-            color: rgba('#193C47')
+            color: rgba(design.TEXT)
             bold: True
             size_hint_y: None
             height: dp(26)
@@ -205,8 +207,8 @@
     icon: 'arrow-right'
     size_hint_x: None
     width: dp(38)
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     callback: root.context['callback']
     radius: 19
 
@@ -219,7 +221,7 @@
         id: card
         adaptive: False
         padding: dp(22)
-        spacing: dp(14)
+        spacing: dp(design.GAP)
         ViewRow:
             height: max(dp(48), root.ids.dialog_title.texture_size[1])
             ViewText:
@@ -229,21 +231,21 @@
                 size_hint_y: None
                 height: self.texture_size[1]
                 font_size: sp(20)
-                color: rgba('#193C47')
+                color: rgba(design.TEXT)
                 bold: True
             ViewAction:
                 icon: 'close'
                 size_hint_x: None
                 width: dp(48)
                 height: dp(48)
-                bg: '#E7F3F4'
-                fg: '#286F83'
+                bg: design.BLUE
+                fg: design.TEAL
                 callback: root.context['callback']
 
 <MessageBody@ViewText>:
     text: root.context['text']
     wrap: True
-    font_size: sp(14)
+    font_size: sp(design.BODY)
     color: rgba('#71838B')
     size_hint_y: None
     height: self.texture_size[1] + dp(12)
@@ -259,11 +261,11 @@
     height: dp(52)
     pos_hint: {'center_x': .5}
     y: dp(88)
-    bg: '#193C47'
+    bg: design.TEXT
     radius: 20
     padding: [dp(16), dp(10)]
     ViewText:
         text: root.context['text']
-        color: rgba('#FFFFFF')
-        font_size: sp(14)
+        color: rgba(design.WHITE)
+        font_size: sp(design.BODY)
         bold: True

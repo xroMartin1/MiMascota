@@ -3,12 +3,16 @@ from pathlib import Path
 import math
 from kivy.clock import Clock
 from kivy.core.image import Image as CoreImage
+from kivy.core.text import Label as CoreLabel
 from kivy.graphics import Color, RoundedRectangle, Ellipse, Line, Triangle, Rectangle, PushMatrix, PopMatrix, Rotate
 from kivy.metrics import dp
 from kivy.properties import StringProperty
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.widget import Widget
 from kivy.utils import get_color_from_hex as rgba
+from services.pet_profiles import portrait_path
+from kivymd import fonts_path
+from kivymd.icon_definitions import md_icons
 
 PRIMARY = "#286F83"
 INK = "#193C47"
@@ -44,25 +48,34 @@ def pet_face(x, y, size, cat=False):
 
 class PetAvatar(Widget):
     kind = StringProperty("Perro")
+    breed = StringProperty('')
     portrait_source = StringProperty("")
+    fallback_icon = StringProperty('paw')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.bind(pos=self.draw, size=self.draw, kind=self.draw)
+        self.bind(pos=self.draw, size=self.draw, kind=self.draw, breed=self.draw)
 
     def draw(self, *_):
         self.canvas.clear()
         kind = self.kind.strip().casefold()
-        portrait = Path(__file__).resolve().parents[1] / 'assets' / 'avatars' / ('gato.png' if kind == 'gato' else 'perro.png')
-        self.portrait_source = str(portrait) if kind in ('perro', 'gato') and portrait.is_file() else ''
+        self.portrait_source = portrait_path(self.kind, self.breed)
         size = min(self.width, self.height)
         x, y = self.center_x - size / 2, self.center_y - size / 2
         with self.canvas:
             if self.portrait_source:
+                self.fallback_icon = ''
                 Color(1, 1, 1, 1)
-                Ellipse(pos=(x, y), size=(size, size), texture=CoreImage(self.portrait_source).texture)
+                Rectangle(pos=(x, y), size=(size, size), texture=CoreImage(self.portrait_source).texture)
             else:
-                pet_face(x, y, size, kind == 'gato')
+                self.fallback_icon = {'conejo': 'rabbit', 'ave': 'bird', 'pez': 'fish', 'reptil': 'snake',
+                                      'hámster': 'rodent', 'hamster': 'rodent'}.get(kind, 'paw')
+                label = CoreLabel(text=md_icons[self.fallback_icon], font_name=fonts_path + 'materialdesignicons-webfont.ttf',
+                                  font_size=size * .65, color=rgba('#286F83'))
+                label.refresh()
+                Color(1, 1, 1, 1)
+                Rectangle(pos=(self.center_x-label.texture.width/2, self.center_y-label.texture.height/2),
+                          size=label.texture.size, texture=label.texture)
 
 
 class TagArt(Widget):

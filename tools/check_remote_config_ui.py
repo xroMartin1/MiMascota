@@ -5,7 +5,7 @@ os.environ['KIVY_NO_ARGS'] = '1'
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from kivy.clock import Clock
 from kivy.core.window import Window
@@ -17,7 +17,7 @@ from services.remote_config import RemoteConfig
 class Check(MiMascotaApp):
     def build(self):
         self.temp = TemporaryDirectory()
-        with patch('screens.home.DATA_FILE', Path(self.temp.name)/'guest.json'):
+        with patch('screens.home.DATA_FILE', Path(self.temp.name)/'guest.json'), patch('screens.home.Supabase',return_value=Mock(user=None,configured=True,config={},url='https://example.invalid',restore_session=Mock(return_value=False),request=Mock(return_value=[{'message':'Revisa que tenga agua fresca.','updated_at':'2026-11-17T12:00:00Z'}]))):
             return super().build()
 
     def on_start(self):
@@ -65,7 +65,7 @@ class Check(MiMascotaApp):
         card.export_to_png(str(self.output/'consejo-sin-conexion.png'))
         for page in ('Mascotas','Rutina','Salud','Cuenta','Inicio'):
             self.screen.show(page)
-        print('PASS: UI 390/320, consejo remoto real, recuperación sin conexión y navegación.')
+        print('PASS: UI 390/320, consejo remoto simulado, recuperación sin conexión y navegación.')
         self.stop()
 
 

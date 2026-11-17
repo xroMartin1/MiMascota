@@ -12,6 +12,7 @@ from main import MiMascotaApp
 from services.store import empty_data, pet_values
 from services.cloud import CloudError
 from kivy.clock import Clock
+from kivy.core.window import Window
 
 OWNER='10000000-0000-4000-8000-000000000001'
 
@@ -64,6 +65,13 @@ class Check(MiMascotaApp):
         assert self.s.data['pets'][0]['name']=='Luna'
         assert self.s.data['cloud_revision']==3
         assert self.s.backup_status=='Todo guardado en tu cuenta'
+        self.s.account_options('data')
+        modal=next(w for w in Window.children if hasattr(w,'dismiss'))
+        self.s.backup_status='Guardando en tu cuenta…'
+        self.s.refresh_backup_status()
+        assert self.s._backup_label.text=='Guardando en tu cuenta…'
+        self.s.backup_status='Todo guardado en tu cuenta'
+        modal.dismiss(animation=False)
         self.s.data['pets'][0]['name']='Lunita'
         assert self.s.save()
         self.s.retry_backup()

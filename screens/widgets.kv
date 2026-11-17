@@ -1,3 +1,4 @@
+#:import design screens.theme
 #:import rgba kivy.utils.get_color_from_hex
 #:import md_icons kivymd.icon_definitions.md_icons
 #:import fonts_path kivymd.fonts_path
@@ -13,15 +14,15 @@
     spacing: dp(8)
 
 <ViewText>:
-    font_size: sp(14)
-    color: rgba('#193C47')
+    font_size: sp(design.BODY)
+    color: rgba(design.TEXT)
     halign: 'left'
     valign: 'middle'
     text_size: (self.width, None) if self.wrap else self.size
     shorten_from: 'right'
 
 <ViewCard>:
-    padding: dp(18)
+    padding: dp(design.CARD_PADDING)
     spacing: dp(10)
     canvas.before:
         PushMatrix:
@@ -42,7 +43,12 @@
             size: self.size
             radius: [dp(self.radius)]
         Color:
-            rgba: rgba('#286F83') if self.accent else (0, 0, 0, 0)
+            rgba: rgba(design.BORDER) if self.border else (0, 0, 0, 0)
+        Line:
+            rounded_rectangle: (self.x + dp(.5), self.y + dp(.5), max(0, self.width - dp(1)), max(0, self.height - dp(1)), dp(self.radius))
+            width: dp(.7)
+        Color:
+            rgba: rgba(design.TEAL) if self.accent else (0, 0, 0, 0)
         RoundedRectangle:
             pos: self.x + dp(13), self.top - dp(3)
             size: max(0, self.width - dp(26)), dp(3)
@@ -58,7 +64,7 @@
 
 <ViewAction>:
     shadow: False
-    bg: '#103D49'
+    bg: design.INK
     radius: 16
     adaptive: False
     orientation: 'vertical' if self.vertical else 'horizontal'
@@ -94,9 +100,9 @@
 <ViewSpinnerOption>:
     background_normal: ''
     background_down: ''
-    background_color: rgba('#FFFFFF')
-    color: rgba('#193C47')
-    font_size: sp(14)
+    background_color: rgba(design.WHITE)
+    color: rgba(design.TEXT)
+    font_size: sp(design.BODY)
     height: dp(50)
 
 <ViewSpinner>:
@@ -104,9 +110,13 @@
     background_down: ''
     background_color: 0, 0, 0, 0
     color: rgba(self.fg)
-    font_size: sp(14)
+    font_size: sp(design.BODY)
     option_cls: 'ViewSpinnerOption'
-    padding: dp(12), 0
+    padding: 0, 0
+    text_size: max(0, self.width - dp(48)), self.height
+    halign: 'center'
+    valign: 'middle'
+    shorten: True
     canvas.before:
         Color:
             rgba: rgba(self.bg)
@@ -115,13 +125,24 @@
             size: self.size
             radius: [dp(14)]
         Color:
-            rgba: rgba('#286F83') if self.is_open else (0, 0, 0, 0)
+            rgba: rgba(design.TEAL) if self.is_open else (0, 0, 0, 0)
         Line:
             rounded_rectangle: (self.x, self.y, self.width, self.height, dp(14))
             width: 1.2
+    canvas.after:
+        PushMatrix:
+        Rotate:
+            angle: self.arrow_angle
+            origin: self.right - dp(18), self.center_y
+        Color:
+            rgba: rgba(self.fg)
+        Line:
+            points: self.right - dp(23), self.center_y + dp(3), self.right - dp(18), self.center_y - dp(2), self.right - dp(13), self.center_y + dp(3)
+            width: dp(1.2)
+        PopMatrix:
 
 <ViewPill>:
-    bg: '#FBEAE1' if self.warm else '#E7F3F4'
+    bg: '#FBEAE1' if self.warm else design.BLUE
     radius: 14
     orientation: 'horizontal'
     padding: [dp(10), dp(4)]
@@ -134,17 +155,17 @@
         font_name: fonts_path + 'materialdesignicons-webfont.ttf'
         font_size: sp(13)
         halign: 'center'
-        color: rgba('#A44D2E' if root.warm else '#286F83')
+        color: rgba('#A44D2E' if root.warm else design.TEAL)
         size_hint_x: None
         width: dp(14) if root.icon else 0
     ViewText:
         text: root.text
         font_size: sp(10)
-        color: rgba('#A44D2E' if root.warm else '#286F83')
+        color: rgba('#A44D2E' if root.warm else design.TEAL)
         shorten: True
 
 <ViewIconTile>:
-    bg: '#E7F3F4'
+    bg: design.BLUE
     radius: 13
     adaptive: False
     padding: 0
@@ -155,7 +176,7 @@
         text: md_icons.get(root.icon, '')
         font_name: fonts_path + 'materialdesignicons-webfont.ttf'
         font_size: sp(23)
-        color: rgba('#A44D2E' if root.bg == '#FBEAE1' else '#286F83')
+        color: rgba('#A44D2E' if root.bg == '#FBEAE1' else design.TEAL)
         halign: 'center'
 
 <PetPortrait>:
@@ -164,12 +185,13 @@
     padding: [dp(5), dp(8), dp(5), dp(4)]
     canvas.before:
         Color:
-            rgba: rgba('#F4F6F6' if root.kind == 'Gato' else '#D9EAE1')
+            rgba: rgba(design.WHITE)
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [self.width / 2, self.width / 2, dp(12), dp(12)]
     ViewPetAvatar:
+        breed: root.breed
         kind: root.kind
 
 <FloatingTag>:
@@ -185,13 +207,13 @@
         id: tag
         text: 'DÍA DE SPA & BELLEZA'
         font_size: sp(10)
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
         bold: True
     ViewText:
         id: title
         text: 'Momento de consentimiento'
         font_size: sp(18)
-        color: rgba('#FFFFFF')
+        color: rgba(design.WHITE)
         bold: True
     ViewText:
         id: caption
@@ -206,7 +228,7 @@
         size_hint: 1, 1
         pos_hint: {'x': 0, 'y': 0}
     ViewCard:
-        bg: '#103D49'
+        bg: design.INK
         radius: 0
         padding: 0
         adaptive: False
@@ -214,7 +236,7 @@
         height: dp(44)
         pos_hint: {'x': 0, 'y': 0}
     ViewCard:
-        bg: '#FFFFFF'
+        bg: design.WHITE
         radius: 15
         padding: [dp(10), 0]
         adaptive: False
@@ -224,12 +246,12 @@
         ViewText:
             text: 'DÍA DE SPA & MIMOS'
             font_size: sp(10)
-            color: rgba('#286F83')
+            color: rgba(design.TEAL)
             bold: True
     ViewText:
         text: 'Su momento de mimos'
         font_size: sp(19)
-        color: rgba('#FFFFFF')
+        color: rgba(design.WHITE)
         bold: True
         size_hint: .9, None
         height: dp(31)

@@ -83,6 +83,6 @@ La guía de defensa del equipo está en [GUIA-EQUIPO.md](GUIA-EQUIPO.md), y la d
 
 ## Suscripción de prueba
 
-En **Cuenta → Chapa y suscripción** está el checkout mensual ficticio de $3.990 CLP por mascota. Usa el correo y la tarjeta del comprador de prueba de Mercado Pago Chile; nunca una tarjeta personal. La app consulta al servidor antes de confirmar el periodo. Preparación, código del backend y límites en [PAGOS-DE-PRUEBA.md](PAGOS-DE-PRUEBA.md).
+En **Cuenta → Ver Premium**, o desde **Chapa → Ver Premium**, está el checkout mensual ficticio de $3.990 CLP por mascota. Usa el correo y la tarjeta del comprador de prueba de Mercado Pago Chile; nunca una tarjeta personal. La app consulta al servidor antes de confirmar el periodo. Preparación, código del backend y límites en [PAGOS-DE-PRUEBA.md](PAGOS-DE-PRUEBA.md).
 
 `services/subscription.py` realiza las solicitudes autenticadas; `screens/billing.py` muestra el estado, abre Mercado Pago y permite cancelar la renovación. La integración aún requiere validar una operación completa con el comprador de prueba del equipo.

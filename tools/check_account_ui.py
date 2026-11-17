@@ -17,17 +17,15 @@ from kivy.core.window import Window
 class Check(MiMascotaApp):
     def build(self):
         self.temp = TemporaryDirectory()
-        with patch('screens.home.DATA_FILE',Path(self.temp.name)/'guest.json'):
+        with patch('screens.home.DATA_FILE',Path(self.temp.name)/'guest.json'),patch('screens.home.Supabase',return_value=Mock(user=None,configured=False,config={})):
             return super().build()
 
     def on_start(self):
         self.screen = self.root.get_screen('home')
-        self.screen.cloud.configured if False else None
         self.screen.cloud.request = Mock(side_effect=Exception('No real network in UI test'))
         self.screen.cloud.restore_session = Mock(return_value=False)
         self.screen.check_google_provider = lambda *_: None
         self.screen._backup_clock.cancel()
-        self.screen.mobile.configured if False else None
         Clock.schedule_once(self.date_form,.5)
 
     def date_form(self,_):
@@ -65,7 +63,7 @@ class Check(MiMascotaApp):
         self.picker.dispatch('on_save',time(9,15))
         assert self.field.text == '2030-10-12 09:15'
         self.modal.dismiss()
-        self.screen.cloud.configured if False else None
+        self.screen.cloud.configured=True
         self.screen.auth_form(False)
         Clock.schedule_once(self.login,.4)
 

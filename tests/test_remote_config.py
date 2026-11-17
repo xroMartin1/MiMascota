@@ -50,6 +50,17 @@ class RemoteConfigTests(unittest.TestCase):
         self.assertFalse(RemoteConfig(self.cloud,self.path).refresh())
         self.cloud.request.assert_not_called()
 
+    def test_diagnostic_placeholder_keeps_the_last_care_tip(self):
+        config = RemoteConfig(self.cloud, self.path)
+        config.refresh()
+        previous = config.message
+        self.cloud.request.return_value = [{'message': 'Mensaje modificado vía Remote Config', 'updated_at': '2026-11-16'}]
+        self.assertFalse(config.refresh())
+        self.assertEqual(config.message, previous)
+        self.path.write_text(json.dumps({'origin': self.cloud.url,
+                                        'message': 'Mensaje modificado via Remote Config'}), encoding='utf-8')
+        self.assertEqual(RemoteConfig(self.cloud, self.path).message, DEFAULT_TIP)
+
     def test_disk_failure_still_displays_remote_tip(self):
         config = RemoteConfig(self.cloud,self.path)
         self.path.mkdir()

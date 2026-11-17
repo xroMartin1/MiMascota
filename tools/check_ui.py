@@ -84,7 +84,12 @@ class CheckUI(MiMascotaApp):
         s = self.screen
         captured = []
         original_form = s.form
-        s.form = lambda title, fields, submit, **kwargs: captured.append((fields, submit))
+        def capture_form(title, fields, submit, **kwargs):
+            captured.append((fields, submit))
+            result = original_form(title, fields, submit, **kwargs)
+            result[0].dismiss(animation=False)
+            return result
+        s.form = capture_form
         s.register_pet()
         fields, submit = captured.pop()
         values = {key: value for key, _, value in fields}

@@ -51,7 +51,7 @@ class Check(MiMascotaApp):
    labels=[w.text for w in self.s.content.walk() if isinstance(w,ViewText)]
    assert 'Hecho' in labels and 'Ver detalles' in labels
    from screens.views import ViewAction
-   assert not any(w.__class__.__name__ in ('RoutineImageBanner','RoutineVectorBanner') for w in self.s.content.walk())
+   assert any(w.__class__.__name__ == 'RoutineImageBanner' for w in self.s.content.walk())
    next(w for w in self.s.content.walk() if isinstance(w,ViewAction) and w.text=='Hecho').dispatch('on_release')
    assert self.s.data['routines'][0]['done']
    next(w for w in self.s.content.walk() if isinstance(w,ViewAction) and w.text=='Reabrir').dispatch('on_release')

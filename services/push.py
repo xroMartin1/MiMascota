@@ -11,7 +11,7 @@ class PushClient:
         if not self.cloud.user:
             raise CloudError('Inicia sesión para vincular los avisos a tu cuenta.')
         if not self.mobile.configured:
-            raise CloudError('Los avisos push están disponibles en Android con Firebase configurado.')
+            raise CloudError('Los avisos no están disponibles en este dispositivo.')
         bridge, activity = self.mobile.native()
         return bridge, activity, str(bridge.deviceId(activity))
 
@@ -28,7 +28,7 @@ class PushClient:
                 self.mobile._push_registration = (self.cloud.user['id'], token, time.monotonic())
                 return result
             time.sleep(.25)
-        raise CloudError('Firebase todavía está preparando el teléfono. Revisa internet y vuelve a intentarlo en unos segundos.')
+        raise CloudError('No pudimos activar los avisos todavía. Revisa tu conexión e inténtalo de nuevo.')
 
     def refresh_registration(self):
         if not self.cloud.user or not self.mobile.configured:

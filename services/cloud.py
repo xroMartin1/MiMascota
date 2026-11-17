@@ -47,7 +47,7 @@ class Supabase:
         if authorized:
             with self.session_lock:
                 if not self.session:
-                    raise CloudError("Inicia sesión para usar la nube.")
+                    raise CloudError("Inicia sesión para continuar.")
                 if self.session["expires_at"] <= time.time() + 60:
                     renewed = self.request("POST", "/auth/v1/token?grant_type=refresh_token",
                                            {"refresh_token": self.session["refresh_token"]})
@@ -57,7 +57,7 @@ class Supabase:
             response = requests.request(method, self.url + path, headers=headers, json=payload,
                                         timeout=(8, 20), allow_redirects=False)
         except requests.RequestException:
-            raise CloudError("No se pudo conectar. Tus datos locales siguen disponibles; revisa internet e inténtalo otra vez.") from None
+            raise CloudError("Revisa tu conexión e inténtalo de nuevo. Tus mascotas siguen guardadas.") from None
         if not response.ok:
             try:
                 details = response.json()
@@ -70,14 +70,14 @@ class Supabase:
                 'firebase_auth': 'No pudimos activar los avisos. Inténtalo más tarde.',
                 'firebase_send': 'No pudimos enviar el aviso. Inténtalo más tarde.',
                 'device_not_registered': 'Este teléfono dejó de recibir avisos. Vuelve a activarlos desde Notificaciones.',
-                'plan_conflict': 'Otro dispositivo cambió el calendario. En Recordatorios automáticos puedes publicar los cuidados de este teléfono para reemplazarlo, después de revisar sus fechas.',
+                'plan_conflict': 'Otro dispositivo cambió los recordatorios. Revisa las fechas antes de guardar los de este teléfono.',
                 'invalid_plan': 'Revisa la zona horaria y las fechas del calendario (máximo 500 cuidados).',
                 'device_limit': 'Esta cuenta ya tiene cinco teléfonos registrados.',
             }
             if path == '/functions/v1/subscription-payments':
                 raise CloudError({
-                    'billing_not_configured': 'El pago de prueba todavía no está configurado.',
-                    'test_account_required': 'Necesitamos las credenciales de prueba de Mercado Pago Chile. No se creó ningún cobro.',
+                    'billing_not_configured': 'Los pagos no están disponibles ahora. Inténtalo más tarde.',
+                    'test_account_required': 'Este pago solo admite una cuenta de prueba de Mercado Pago. No se realizó ningún cobro.',
                     'invalid_payer_email': 'Revisa el correo del comprador de prueba de Mercado Pago.',
                     'tag_not_found': 'Activa primero la chapa de prueba de esta mascota desde Chapa.',
                     'payment_not_verified': 'El pago todavía no pudo verificarse. No se activó un nuevo periodo.',
@@ -101,7 +101,7 @@ class Supabase:
                         self.session = None
                         raise CloudError("Tu sesión dejó de ser válida. Inicia sesión de nuevo; tus mascotas siguen guardadas.")
             if "revision_conflict" in response.text:
-                raise CloudError("La nube tiene otra versión. Restaura la copia de nube antes de volver a guardarla; tus cambios locales no se han borrado.")
+                raise CloudError("Hay cambios guardados desde otro dispositivo. Revisa la copia de tu cuenta antes de continuar. Tus cambios siguen guardados.")
             if response.status_code in (400, 401, 403, 422):
                 raise CloudError("No pudimos completar la solicitud. Revisa tu correo y contraseña.")
             if response.status_code == 429:
@@ -110,7 +110,7 @@ class Supabase:
         try:
             return response.json() if response.content else {}
         except ValueError:
-            raise CloudError("Respuesta no válida del servidor.") from None
+            raise CloudError("No pudimos completar la acción. Inténtalo de nuevo.") from None
 
     def set_session(self, result):
         if not result.get("access_token") or not result.get("refresh_token") or not result.get("user", {}).get("id"):
@@ -202,7 +202,7 @@ class Supabase:
 
     def download(self):
         if not self.user:
-            raise CloudError("Inicia sesión para usar la nube.")
+            raise CloudError("Inicia sesión para continuar.")
         rows = self.request("GET", "/rest/v1/petcare_state?select=data,revision", authorized=True)
         return rows[0] if rows else None
 

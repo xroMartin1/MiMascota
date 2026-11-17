@@ -16,7 +16,7 @@ class BackupFeatures:
 
     def queue_backup(self, *_):
         if self.cloud.user and not self._backup_blocked:
-            self.backup_status = 'Cambios guardados aquí · esperando conexión'
+            self.backup_status = 'Cambios guardados aquí, esperando conexión'
             if self._backup_event:
                 self._backup_event.cancel()
             self._backup_event = Clock.schedule_once(self.retry_backup, 2)
@@ -50,8 +50,8 @@ class BackupFeatures:
                     return
                 if error:
                     self._backup_blocked = isinstance(error, SyncConflict)
-                    self.backup_status = ('Hay cambios que revisar · tus datos siguen aquí' if self._backup_blocked
-                                          else 'Guardado aquí · se enviará al recuperar conexión')
+                    self.backup_status = ('Hay cambios que revisar, tus datos siguen aquí' if self._backup_blocked
+                                          else 'Guardado aquí, se enviará al recuperar conexión')
                 else:
                     try:
                         # Include edits made while the worker was sending the snapshot.
@@ -75,13 +75,13 @@ class BackupFeatures:
                             self.show(self.active)
                     except (OSError, ValueError, KeyError, TypeError) as exc:
                         self._backup_blocked = isinstance(exc, SyncConflict)
-                        self.backup_status = 'Tus cambios siguen aquí · revisa las copias' if self._backup_blocked else 'Guardado aquí · pendiente de enviar'
+                        self.backup_status = 'Tus cambios siguen aquí, revisa las copias' if self._backup_blocked else 'Guardado aquí, pendiente de enviar'
                 self.refresh_backup_status()
             Clock.schedule_once(done)
         Thread(target=run, daemon=True).start()
 
     def refresh_backup_status(self):
-        if self.active == 'Cuenta' and hasattr(self, '_backup_label'):
+        if hasattr(self, '_backup_label'):
             self._backup_label.text = self.backup_status
 
     def backup_options(self, *_):

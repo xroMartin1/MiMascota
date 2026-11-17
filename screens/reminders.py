@@ -40,7 +40,7 @@ class ReminderFeatures:
         owner=self.cloud.user['id']
         path=self.data_file
         self._reminder_running=True
-        self.reminder_status='Sincronizando avisos…'
+        self.reminder_status='Actualizando recordatorios…'
         def run():
             try:
                 result=ReminderClient(self.cloud,self.mobile).publish(payload,revision,replace)
@@ -55,24 +55,24 @@ class ReminderFeatures:
                     return
                 if error:
                     self._reminder_conflict='Otro dispositivo' in error
-                    self.reminder_status='Cambios pendientes de sincronizar'
+                    self.reminder_status='Recordatorios pendientes de actualizar'
                     if feedback:
-                        self.message('Avisos sin confirmar',error+' Los avisos anteriores pueden seguir activos hasta sincronizar.')
+                        self.message('Avisos sin confirmar',error+' Los recordatorios anteriores pueden seguir activos hasta completar el cambio.')
                 else:
                     self._reminder_conflict=False
                     self._reminder_accepted=payload
                     self.data['reminder_revision']=result['revision']
                     self.data['reminder_dirty']=plan_payload(self.data)!=payload
-                    self.reminder_status='Avisos sincronizados' if payload['enabled'] else 'Avisos automáticos desactivados'
+                    self.reminder_status='Recordatorios actualizados' if payload['enabled'] else 'Avisos automáticos desactivados'
                     if payload['enabled']:
                         bridge, activity = self.mobile.native()
                         self._reminder_token = str(bridge.token(activity))
                     if feedback:
-                        self.message('Calendario actualizado','Los avisos de tus cuidados ya están actualizados.' if payload['enabled'] else 'El calendario automático se desactivó en el servidor.')
+                        self.message('Calendario actualizado','Los avisos de tus cuidados ya están actualizados.' if payload['enabled'] else 'Los recordatorios automáticos se desactivaron.')
                 try:
                     self.store.save(self.data)
                 except (OSError,ValueError):
-                    self.message('No se pudo guardar','El servidor puede haber actualizado el calendario; vuelve a sincronizar para confirmar la revisión.')
+                    self.message('No se pudo guardar','No pudimos confirmar los cambios. Actualiza los recordatorios para comprobarlos.')
                 if self.active == 'Rutina':
                     self.show('Rutina')
                 if not error and self.data['reminder_dirty']:
@@ -96,7 +96,7 @@ class ReminderFeatures:
             ('timezone','¿Dónde se programan tus cuidados?',zone_label(zone))],submit,
             choices={'enabled':('No','Sí'),'timezone':tuple(options)},persist=False,
             submit_text='Guardar recordatorios',
-            description='Te avisaremos aunque minimices la app. Confirma la zona horaria de tus cuidados. Al guardar, se usarán los cuidados de este teléfono para los avisos de tu cuenta, reemplazando los de otro teléfono si los hubiera. Necesitas internet para actualizar los cambios.')
+            description='Recibe avisos aunque salgas de la app. Revisa la zona horaria. Al guardar, los cuidados de este teléfono reemplazarán los recordatorios de tu cuenta.')
 
     def retry_reminders(self, *_):
         # QR messages need a registered phone even without a care calendar.

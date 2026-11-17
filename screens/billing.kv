@@ -1,0 +1,160 @@
+#:import design screens.theme
+#:import rgba kivy.utils.get_color_from_hex
+#:import md_icons kivymd.icon_definitions.md_icons
+#:import fonts_path kivymd.fonts_path
+
+<PremiumTeaser@UxPress>:
+    compress_on_press: True
+    callback: root.context['callback']
+    bg: design.INK
+    shadow: False
+    radius: design.CARD_RADIUS
+    padding: dp(18)
+    spacing: dp(8)
+    ViewRow:
+        height: max(dp(118), root.ids.teaser_copy.minimum_height)
+        spacing: dp(8)
+        ViewColumn:
+            id: teaser_copy
+            adaptive: True
+            spacing: dp(5)
+            ViewText:
+                text: 'MI MASCOTA'
+                color: rgba('#C5DAD9')
+                font_size: sp(11)
+                size_hint_y: None
+                height: dp(18)
+            ViewText:
+                text: 'Premium'
+                color: rgba(design.LIME)
+                bold: True
+                font_size: sp(design.TITLE)
+                size_hint_y: None
+                height: dp(40)
+            ViewText:
+                text: 'Mantén activa su ficha con el mismo QR.'
+                color: rgba(design.WHITE)
+                wrap: True
+                size_hint_y: None
+                height: self.texture_size[1]
+        ViewImage:
+            source: root.context['source']
+            fit_mode: 'contain'
+            size_hint_x: None
+            width: dp(88)
+    ViewText:
+        text: '$3.990 CLP / mes por mascota'
+        color: rgba('#D7E8E2')
+        font_size: sp(13)
+        wrap: True
+        size_hint_y: None
+        height: self.texture_size[1] + dp(6)
+    ViewAction:
+        text: 'Ver Premium'
+        icon: 'arrow-right'
+        bg: design.LIME
+        fg: design.INK
+        callback: root.context['callback']
+
+<PremiumHero@ViewCard>:
+    bg: design.INK
+    shadow: False
+    padding: dp(16)
+    spacing: dp(5)
+    ViewRow:
+        height: max(dp(128), root.ids.hero_copy.minimum_height)
+        ViewColumn:
+            id: hero_copy
+            adaptive: True
+            spacing: dp(4)
+            ViewText:
+                text: 'PREMIUM'
+                color: rgba(design.LIME)
+                bold: True
+                font_size: sp(12)
+                size_hint_y: None
+                height: dp(24)
+            ViewText:
+                text: 'Su chapa\nQR'
+                color: rgba(design.WHITE)
+                font_size: sp(28)
+                bold: True
+                wrap: True
+                size_hint_y: None
+                height: self.texture_size[1]
+        ViewImage:
+            source: root.context['source']
+            fit_mode: 'contain'
+            size_hint_x: .45
+    ViewText:
+        text: 'Para ' + root.context['name']
+        color: rgba('#D7E8E2')
+        wrap: True
+        font_size: sp(13)
+        size_hint_y: None
+        height: self.texture_size[1] + dp(6)
+    ViewText:
+        text: 'Chapa de ejemplo'
+        color: rgba('#D7E8E2')
+        font_size: sp(11)
+        size_hint_y: None
+        height: dp(16)
+
+<PremiumPrice@ViewColumn>:
+    adaptive: True
+    padding: [dp(4), dp(8)]
+    spacing: dp(2)
+    ViewText:
+        text: '$3.990 CLP'
+        font_size: sp(29)
+        bold: True
+        size_hint_y: None
+        height: dp(42)
+    ViewText:
+        text: 'al mes por mascota'
+        color: rgba(design.MUTED)
+        size_hint_y: None
+        height: dp(24)
+    ViewText:
+        text: 'Chapa física no incluida'
+        font_size: sp(12)
+        color: rgba(design.MUTED)
+        size_hint_y: None
+        height: dp(22)
+
+<PremiumBenefit@ViewRow>:
+    height: max(dp(36), root.ids.benefit_text.texture_size[1] + dp(8))
+    ViewText:
+        text: md_icons[root.context['icon']]
+        font_name: fonts_path + 'materialdesignicons-webfont.ttf'
+        color: rgba(design.TEAL)
+        font_size: sp(21)
+        size_hint_x: None
+        width: dp(30)
+        halign: 'center'
+    ViewText:
+        id: benefit_text
+        text: root.context['text']
+        wrap: True
+        font_size: sp(design.BODY)
+
+<PremiumStatus@ViewCard>:
+    bg: root.context['bg']
+    border: True
+    shadow: False
+    padding: dp(14)
+    spacing: dp(6)
+    ViewText:
+        text: root.context['title']
+        wrap: True
+        bold: True
+        font_size: sp(16)
+        size_hint_y: None
+        height: self.texture_size[1]
+    ViewText:
+        text: root.context['detail']
+        wrap: True
+        color: rgba(design.MUTED)
+        font_size: sp(13)
+        size_hint_y: None
+        height: self.texture_size[1] if self.text else 0

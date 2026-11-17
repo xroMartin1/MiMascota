@@ -102,7 +102,7 @@ class LocalStore:
 
     def save(self, data):
         if self.readonly:
-            raise ValueError("No se pudo leer el archivo original. Se conservó intacto; revisa el archivo y su copia .bak.")
+            raise ValueError("No pudimos abrir tus datos guardados. Recupera una copia de seguridad antes de continuar.")
         clean = normalize(data)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         temp = self.path.with_suffix(".tmp")

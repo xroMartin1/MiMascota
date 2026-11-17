@@ -1,3 +1,5 @@
+#:import design screens.theme
+#:import Window kivy.core.window.Window
 #:import rgba kivy.utils.get_color_from_hex
 #:import md_icons kivymd.icon_definitions.md_icons
 #:import fonts_path kivymd.fonts_path
@@ -10,9 +12,11 @@
     size_hint_x: None
     width: dp(112)
 
-<RoutineImageBanner@ViewSpaBanner>:
+<RoutineImageBanner@ViewImage>:
+    source: root.context['source']
+    fit_mode: 'cover'
     size_hint_y: None
-    height: dp(112)
+    height: min(dp(144), Window.height * .17)
 
 <RoutineVectorBanner@ViewSpaArt>:
     size_hint_y: None
@@ -27,28 +31,32 @@
     ViewAction:
         text: root.context['action']
         callback: root.context['callback']
-        bg: '#FFFFFF'
-        fg: '#286F83'
+        bg: design.WHITE
+        fg: design.TEAL
         size_hint_x: None
         width: dp(94)
         height: dp(48)
 
 <HomePetRow@UxPress>:
+    compress_on_press: True
+    border: not root.context.get('selected', False)
     callback: root.context['callback']
     adaptive: False
     orientation: 'horizontal'
     size_hint_y: None
-    height: max(dp(124), self.ids.pet_copy.minimum_height + dp(32))
+    height: max(dp(160), self.ids.pet_copy.minimum_height + dp(32))
     padding: dp(14)
-    spacing: dp(14)
-    radius: 24
-    bg: '#FFFFFF'
+    spacing: dp(design.GAP)
+    radius: design.CARD_RADIUS
+    bg: design.LAVENDER if root.context['kind'].strip().casefold() == 'gato' else design.MINT
     ViewColumn:
         size_hint: None, None
-        size: dp(80), dp(96)
+        size: dp(104), dp(128)
         pos_hint: {'center_y': .5}
         PetPortrait:
+            size: dp(104), dp(128)
             kind: root.context['kind']
+            breed: root.context.get('breed', '')
     ViewColumn:
         id: pet_copy
         adaptive: True
@@ -58,14 +66,14 @@
             text: root.context['name']
             wrap: True
             bold: True
-            font_size: sp(20)
+            font_size: sp(23)
             size_hint_y: None
             height: self.texture_size[1]
         ViewText:
             text: root.context['detail']
             wrap: True
             font_size: sp(13)
-            color: rgba('#526A74')
+            color: rgba(design.MUTED)
             size_hint_y: None
             height: self.texture_size[1]
 
@@ -73,7 +81,7 @@
         text: md_icons['check-circle'] if root.context.get('selected') else md_icons['chevron-right']
         font_name: fonts_path + 'materialdesignicons-webfont.ttf'
         font_size: sp(24)
-        color: rgba('#526A74')
+        color: rgba(design.MUTED)
         halign: 'center'
         size_hint_x: None
         width: self.font_size + dp(8)
@@ -89,15 +97,15 @@
 <HomeNote@ViewText>:
     text: root.context['text']
     wrap: True
-    font_size: sp(14)
-    color: rgba('#526A74')
+    font_size: sp(design.BODY)
+    color: rgba(design.MUTED)
     size_hint_y: None
     height: self.texture_size[1] + dp(4)
 
 <HomeEmptyPets@ViewCard>:
     adaptive: True
-    bg: '#E2F0EA'
-    spacing: dp(14)
+    bg: design.MINT
+    spacing: dp(design.GAP)
     ViewPetAvatar:
         kind: 'Perro'
         size_hint: None, None
@@ -112,86 +120,97 @@
     ViewText:
         text: 'Crea su perfil para registrar sus cuidados, vacunas y citas. Puedes empezar sin una cuenta.'
         wrap: True
-        font_size: sp(14)
-        color: rgba('#526A74')
+        font_size: sp(design.BODY)
+        color: rgba(design.MUTED)
         size_hint_y: None
         height: self.texture_size[1] + dp(8)
 
 <HomeRegisterPet@ViewAction>:
     text: 'Añadir mascota'
     icon: 'plus'
-    bg: '#103D49'
-    fg: '#FFFFFF'
+    bg: design.INK
+    fg: design.WHITE
     height: dp(48)
     callback: root.context['callback']
 
 <HomeViewPets@ViewAction>:
     text: 'Ver todas mis mascotas'
-    bg: '#FFFFFF'
-    fg: '#286F83'
+    bg: design.WHITE
+    fg: design.TEAL
     height: dp(48)
     callback: root.context['callback']
 
 
 <HomeQrCard@UxPress>:
     callback: root.context['callback']
-    bg: '#103D49'
-    radius: 24
+    bg: design.MINT
+    shadow: False
+    radius: design.CARD_RADIUS
     padding: dp(18)
     spacing: dp(6)
     ViewRow:
         height: max(dp(54), root.ids.qr_copy.minimum_height)
-        spacing: dp(14)
-        ViewImage:
-            source: root.context['source']
-            fit_mode: 'contain'
+        spacing: dp(design.GAP)
+        ViewIconTile:
+            icon: 'tag-outline'
+            tile_size: 52
+            bg: design.WHITE
             size_hint_x: None
-            width: dp(64)
+            width: dp(52)
+            pos_hint: {'center_y': .5}
         ViewColumn:
             id: qr_copy
             adaptive: True
             spacing: dp(4)
             ViewText:
-                text: 'Su camino de vuelta'
-                font_size: sp(20)
-                color: rgba('#FFFFFF')
+                text: 'Chapa QR'
+                font_size: sp(23)
+                color: rgba(design.INK)
                 bold: True
                 wrap: True
                 size_hint_y: None
                 height: self.texture_size[1]
             ViewText:
-                text: 'Chapa QR · ficha pública y contacto'
+                text: 'Consulta su ficha y elige cómo pueden contactarte.'
                 font_size: sp(13)
-                color: rgba('#D7E8E2')
+                color: rgba(design.MUTED)
                 wrap: True
                 size_hint_y: None
                 height: self.texture_size[1]
     ViewAction:
-        text: 'Ver chapa QR'
+        text: 'Abrir chapa'
         icon: 'arrow-right'
-        bg: '#DAEFA0'
-        fg: '#103D49'
+        bg: design.INK
+        fg: design.WHITE
         callback: root.context['callback']
 
 <TagPreview>:
     adaptive: False
     padding: 0
-    bg: '#103D49'
+    bg: design.INK
     ViewImage:
         source: root.source
         fit_mode: 'contain'
 
-<TagLarge@ViewCard>:
+<TagLarge@TagTurner>:
     adaptive: False
-    bg: '#103D49'
+    bg: design.INK
     padding: dp(12)
     ViewImage:
         id: image
         source: root.context['source']
         fit_mode: 'contain'
+        canvas.before:
+            PushMatrix:
+            Scale:
+                x: root.turn_scale
+                y: 1
+                origin: self.center
+        canvas.after:
+            PopMatrix:
 
 <ChapaIntro@ViewCard>:
-    bg: '#103D49'
+    bg: design.INK
     padding: dp(22)
     spacing: dp(12)
     ViewRow:
@@ -229,29 +248,29 @@
         size_hint_y: None
         height: dp(20)
     ViewText:
-        text: 'Una forma de volver a casa'
+        text: 'Su información al escanear'
         font_size: sp(24)
-        color: rgba('#FFFFFF')
+        color: rgba(design.WHITE)
         bold: True
         wrap: True
         size_hint_y: None
         height: self.texture_size[1] + dp(4)
     ViewText:
         text: 'Quien la encuentre podrá escanear su chapa y contactar contigo según las opciones que autorices.'
-        font_size: sp(14)
+        font_size: sp(design.BODY)
         color: rgba('#D7E8E2')
         wrap: True
         size_hint_y: None
         height: self.texture_size[1] + dp(4)
 
 <HomeAccount@ViewCard>:
-    bg: '#E7F3F4'
+    bg: design.BLUE
     padding: dp(16)
     spacing: dp(10)
     ViewText:
         text: 'Guarda tus mascotas en tu cuenta'
         font_size: sp(16)
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
         bold: True
         size_hint_y: None
         height: dp(25)
@@ -269,8 +288,8 @@
 <PetsRegister@ViewAction>:
     text: 'Registrar mascota'
     icon: 'plus'
-    bg: '#103D49'
-    fg: '#FFFFFF'
+    bg: design.INK
+    fg: design.WHITE
     callback: root.context['callback']
 
 <PetsEmpty@ViewText>:
@@ -286,7 +305,7 @@
     accent: True
     ViewRow:
         height: dp(76)
-        spacing: dp(14)
+        spacing: dp(design.GAP)
         ViewPetAvatar:
             kind: root.context['kind']
             size_hint_x: None
@@ -296,7 +315,7 @@
             ViewText:
                 text: root.context['name']
                 font_size: sp(21)
-                color: rgba('#193C47')
+                color: rgba(design.TEXT)
                 bold: True
                 size_hint_y: None
                 height: dp(30)
@@ -311,21 +330,21 @@
     ViewText:
         text: root.context['details']
         font_size: sp(12)
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
         size_hint_y: None
         height: dp(30)
         shorten: True
     ViewAction:
         text: root.context['qr_label']
         icon: 'qrcode-scan'
-        bg: '#E7F3F4'
-        fg: '#286F83'
+        bg: design.BLUE
+        fg: design.TEAL
         callback: root.context['open_qr']
     ViewAction:
         text: 'Ver perfil'
         icon: 'arrow-right'
-        bg: '#286F83'
-        fg: '#FFFFFF'
+        bg: design.TEAL
+        fg: design.WHITE
         callback: root.context['open_profile']
 
 <PetsQrCard@ViewCard>:
@@ -341,14 +360,15 @@
     height: dp(140)
     Widget:
     PetPortrait:
+        breed: root.context.get('breed', '')
         kind: root.context['kind']
         size: dp(112), dp(140)
     Widget:
 
 <ProfileSummary@ViewText>:
     text: root.context['text']
-    font_size: sp(14)
-    color: rgba('#193C47')
+    font_size: sp(design.BODY)
+    color: rgba(design.TEXT)
     wrap: True
     size_hint_y: None
     height: self.texture_size[1] + dp(12)
@@ -361,15 +381,15 @@
 <ProfileQr@ViewAction>:
     text: 'Ver chapa QR'
     icon: 'qrcode-scan'
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     callback: root.context['callback']
 
 <ProfileEdit@ViewAction>:
     text: 'Editar perfil'
     icon: 'pencil-outline'
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     callback: root.context['callback']
 
 <ProfileDelete@ViewAction>:
@@ -386,7 +406,7 @@
 <RoutineCount@ViewText>:
     text: root.context['text']
     font_size: sp(13)
-    color: rgba('#526A74')
+    color: rgba(design.MUTED)
     wrap: True
     size_hint_y: None
     height: self.texture_size[1] + dp(4)
@@ -400,21 +420,22 @@
     height: dp(55)
 
 <CareTaskCard@ViewCard>:
-    bg: root.context.get('bg', '#FFFFFF')
-    radius: 24
+    border: True
+    bg: root.context.get('bg', design.WHITE)
+    radius: design.CARD_RADIUS
     shadow: False
     padding: dp(14)
     spacing: dp(8)
 
 <AgendaEntry@ViewRow>:
     height: max(root.ids.body.minimum_height, root.ids.stamp.minimum_height) + dp(28)
-    spacing: dp(14)
+    spacing: dp(design.GAP)
     padding: [0, dp(14)]
     canvas.after:
         Color:
             rgba: rgba('#D9E3DC')
         Line:
-            points: self.x, self.y, self.right, self.y
+            points: self.x + dp(72), self.y, self.x + dp(72), self.top
             width: .6
     ViewColumn:
         id: stamp
@@ -437,7 +458,7 @@
             height: self.texture_size[1] + dp(4)
         ViewText:
             text: '✓ Hecho' if root.context['done'] else ''
-            color: rgba('#286F83')
+            color: rgba(design.TEAL)
             font_size: sp(12)
             wrap: True
             size_hint_y: None
@@ -453,7 +474,7 @@
     ViewIconTile:
         icon: root.context['icon']
         tile_size: 40
-        bg: '#FFFFFF'
+        bg: design.WHITE
     ViewText:
         id: task_title
         text: root.context['text']
@@ -464,8 +485,8 @@
 <CareTaskDate@ViewText>:
     text: root.context['text']
     wrap: True
-    font_size: sp(14)
-    color: rgba('#286F83')
+    font_size: sp(design.BODY)
+    color: rgba(design.TEAL)
     size_hint_y: None
     height: self.texture_size[1] + dp(4)
 
@@ -474,22 +495,22 @@
     spacing: dp(8)
     ViewAction:
         text: 'Ver detalles'
-        bg: '#FFFFFF'
-        fg: '#286F83'
+        bg: design.WHITE
+        fg: design.TEAL
         callback: root.context['callback']
 
 <CareTaskToggle@ViewAction>:
     text: root.context['text']
     icon: root.context['icon']
-    bg: '#DAEFA0'
-    fg: '#103D49'
+    bg: design.LIME
+    fg: design.INK
     callback: root.context['callback']
 
 <TaskTitle@ViewText>:
     text: root.context['text']
     wrap: True
     font_size: sp(20)
-    color: rgba('#193C47')
+    color: rgba(design.TEXT)
     bold: True
     size_hint_y: None
     height: max(dp(32), self.texture_size[1] + dp(4))
@@ -497,7 +518,7 @@
 <TaskSummary@ViewText>:
     text: root.context['text']
     font_size: sp(13)
-    color: rgba('#286F83')
+    color: rgba(design.TEAL)
     size_hint_y: None
     wrap: True
     height: self.texture_size[1] + dp(12)
@@ -520,8 +541,8 @@
 
 <TaskEdit@ViewAction>:
     text: 'Editar cuidado'
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     callback: root.context['callback']
 
 <TaskDelete@ViewAction>:
@@ -545,24 +566,25 @@
 <HealthChange@ViewAction>:
     text: 'Cambiar mascota'
     icon: 'chevron-down'
-    bg: '#E2F0EA'
-    fg: '#103D49'
+    bg: design.MINT
+    fg: design.INK
     font_size: 14
     callback: root.context['callback']
 
 <HealthPetOption@HomePetRow>:
-    bg: '#E2F0EA' if root.context['selected'] else '#FFFFFF'
+    bg: design.LIME if root.context['selected'] else design.WHITE
 
 <HealthSummary@ViewCard>:
-    bg: '#E2F0EA'
+    bg: design.MINT
     shadow: False
     padding: dp(16)
     spacing: dp(8)
     ViewRow:
         height: max(dp(80), root.ids.health_name.minimum_height)
-        spacing: dp(14)
+        spacing: dp(design.GAP)
         PetPortrait:
             kind: root.context['kind']
+            breed: root.context.get('breed', '')
             size: dp(64), dp(80)
             pos_hint: {'center_y': .5}
         ViewColumn:
@@ -579,13 +601,13 @@
     ViewText:
         text: root.context['weight']
         wrap: True
-        font_size: sp(14)
+        font_size: sp(design.BODY)
         size_hint_y: None
         height: self.texture_size[1] + dp(4) if self.text else 0
     ViewText:
         text: root.context['summary']
         wrap: True
-        font_size: sp(14)
+        font_size: sp(design.BODY)
         color: rgba('#71838B')
         size_hint_y: None
         height: self.texture_size[1] + dp(8)
@@ -594,8 +616,8 @@
         icon: 'file-export-outline'
         text: 'Compartir PDF'
         callback: root.context.get('export')
-        bg: '#FFFFFF'
-        fg: '#103D49'
+        bg: design.WHITE
+        fg: design.INK
 
 <HealthAddEvent@ViewAction>:
     text: 'Añadir al historial'
@@ -605,15 +627,15 @@
 <HealthHistory@ViewAction>:
     text: 'Ver historial'
     icon: 'history'
-    bg: '#E2F0EA'
-    fg: '#103D49'
+    bg: design.MINT
+    fg: design.INK
     callback: root.context['callback']
 
 <HealthTreatmentTitle@ViewText>:
     wrap: True
     text: 'Cuidados de salud pendientes'
     font_size: sp(18)
-    color: rgba('#193C47')
+    color: rgba(design.TEXT)
     bold: True
     size_hint_y: None
     height: max(dp(30), self.texture_size[1] + dp(4))
@@ -639,19 +661,20 @@
 
 <HistoryEmpty@ViewText>:
     text: 'Todavía no hay eventos registrados.'
-    font_size: sp(14)
+    font_size: sp(design.BODY)
     color: rgba('#71838B')
     size_hint_y: None
     height: dp(70)
 
 <HistoryItem@ViewCard>:
-    bg: '#E7F3F4'
+    border: True
+    bg: design.BLUE
     padding: dp(12)
     spacing: dp(6)
     ViewText:
         text: root.context['title']
         font_size: sp(17)
-        color: rgba('#193C47')
+        color: rgba(design.TEXT)
         bold: True
         size_hint_y: None
         height: dp(32)
@@ -666,20 +689,20 @@
 <HistoryBody@ViewText>:
     text: root.context['text']
     font_size: sp(13)
-    color: rgba('#193C47')
+    color: rgba(design.TEXT)
     size_hint_y: None
     wrap: True
     height: self.texture_size[1] + dp(10)
 
 <HistoryEdit@ViewAction>:
     text: 'Editar evento'
-    bg: '#FFFFFF'
-    fg: '#286F83'
+    bg: design.WHITE
+    fg: design.TEAL
     callback: root.context['callback']
 
 <HistoryDelete@ViewAction>:
     text: 'Eliminar evento'
-    bg: '#FFFFFF'
+    bg: design.WHITE
     fg: '#71838B'
     callback: root.context['callback']
 
@@ -697,7 +720,7 @@
         text: root.context['text']
         wrap: True
         font_size: sp(12)
-        color: rgba('#71838B')
+        color: rgba(design.MUTED)
         size_hint_y: None
         height: max(dp(25), self.texture_size[1] + dp(4))
 
@@ -705,7 +728,18 @@
     text: root.context['text']
     values: root.context['values']
     size_hint_y: None
-    height: dp(44)
+    height: dp(48)
+
+<PetFormPreview>:
+    size_hint_y: None
+    height: dp(96)
+    spacing: dp(design.GAP)
+    padding: [dp(4), dp(4)]
+    Widget:
+    PetPortrait:
+        id: portrait
+        size: dp(72), dp(88)
+    Widget:
 
 <FormTextInput@ViewTextInput>:
     text: root.context['text']
@@ -713,27 +747,30 @@
     password: root.context['password']
     size_hint_y: None
     height: dp(96 if root.context['multiline'] else 48)
-    font_size: sp(14)
-    padding: [dp(12), dp(10)]
+    font_size: sp(design.BODY)
+    padding: [dp(12), dp(10) if self.multiline else max(0, (self.height - self.line_height) / 2)]
     background_normal: ''
     background_active: ''
     background_color: 0, 0, 0, 0
     foreground_color: (0.06, 0.19, 0.22, 1)
     hint_text: root.context['hint_text']
+    hint_text_color: rgba(design.MUTED)
     input_type: root.context['input_type']
-    cursor_color: rgba('#103D49')
+    cursor_color: rgba(design.INK)
     canvas.before:
         Color:
-            rgba: rgba('#FFFFFF' if self.focus else '#F1F5F1')
+            rgba: rgba(design.WHITE if self.focus else '#F1F5F1')
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [dp(14)]
         Color:
-            rgba: rgba('#286F83' if self.focus else '#D5E2DB')
+            rgba: rgba(design.TEAL if self.focus else '#718D8A')
         Line:
             rounded_rectangle: (self.x, self.y, self.width, self.height, dp(14))
             width: 1.2 if self.focus else .6
+        Color:
+            rgba: self.disabled_foreground_color if self.disabled else (self.foreground_color if self.text else self.hint_text_color)
 
 <FormShortcuts@ViewRow>:
     height: dp(36)
@@ -741,8 +778,8 @@
 
 <FormDateShortcut@ViewAction>:
     text: root.context['text']
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     height: dp(36)
     font_size: 10
     callback: root.context['callback']
@@ -751,9 +788,9 @@
     adaptive: True
     spacing: dp(4)
     ViewText:
-        text: 'EMPEZAR CON UNA IDEA · PUEDES CAMBIAR TODO'
+        text: 'Ideas rápidas'
         font_size: sp(10)
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
         size_hint_y: None
         height: dp(23)
 
@@ -761,11 +798,11 @@
     text: 'Elegir idea rápida'
     values: root.context['values']
     size_hint_y: None
-    height: dp(44)
+    height: dp(48)
 
 <FormError@ViewText>:
     text: ''
-    font_size: sp(14)
+    font_size: sp(design.BODY)
     wrap: True
     color: rgba('#AA4625')
     size_hint_y: None
@@ -778,7 +815,7 @@
 
 <RegistrationPrompt@ViewText>:
     text: root.context['text']
-    font_size: sp(14)
+    font_size: sp(design.BODY)
     color: rgba('#71838B')
     wrap: True
     size_hint_y: None
@@ -791,13 +828,13 @@
 
 <RegistrationCancel@ViewAction>:
     text: 'Ahora no'
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     callback: root.context['callback']
 
 <ConfirmationBody@ViewText>:
     text: root.context['text']
-    font_size: sp(14)
+    font_size: sp(design.BODY)
     color: rgba('#71838B')
     wrap: True
     size_hint_y: None
@@ -809,8 +846,8 @@
 
 <ConfirmationCancel@ViewAction>:
     text: 'Cancelar'
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     callback: root.context['callback']
 
 <NotificationsScroll@ViewScrollView>:
@@ -819,12 +856,6 @@
 <NotificationsContent@ViewColumn>:
     adaptive: True
     spacing: dp(12)
-    ViewText:
-        text: 'Avisos locales mientras la app está abierta.\nLas notificaciones push aún no están activadas.'
-        font_size: sp(12)
-        color: rgba('#71838B')
-        size_hint_y: None
-        height: dp(50)
 
 <NotificationDate@ViewText>:
     text: root.context['text']
@@ -835,14 +866,14 @@
 
 <NotificationOpenTask@ViewAction>:
     text: root.context['text']
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     callback: root.context['callback']
 
 <NotificationsEmpty@ViewText>:
     text: 'No hay recordatorios vencidos.'
-    font_size: sp(14)
-    color: rgba('#193C47')
+    font_size: sp(design.BODY)
+    color: rgba(design.TEXT)
     size_hint_y: None
     height: dp(60)
 
@@ -856,9 +887,9 @@
     width: self.parent.width if self.parent else dp(100)
 
 <QrTitle@ViewText>:
-    text: '02 / TU CHAPA DIGITAL'
+    text: 'Vista previa del QR'
     font_size: sp(11)
-    color: rgba('#286F83')
+    color: rgba(design.TEAL)
     bold: True
     size_hint_y: None
     height: dp(24)
@@ -866,22 +897,22 @@
 <QrExpiredTitle@ViewText>:
     text: 'La prueba terminó'
     font_size: sp(22)
-    color: rgba('#193C47')
+    color: rgba(design.TEXT)
     bold: True
     size_hint_y: None
     height: dp(36)
 
 <QrExpiredDescription@ViewText>:
-    text: 'Esta prueba de texto terminó. Con tu cuenta puedes crear una chapa con ficha web.'
+    text: 'La vista previa terminó. Crea una cuenta para activar su chapa.'
     font_size: sp(13)
     color: rgba('#71838B')
     size_hint_y: None
     height: dp(84)
 
 <QrActiveTitle@ViewText>:
-    text: 'Pruébala con otra cámara'
+    text: 'Escanea para ver sus datos'
     font_size: sp(21)
-    color: rgba('#193C47')
+    color: rgba(design.TEXT)
     bold: True
     size_hint_y: None
     height: dp(36)
@@ -889,13 +920,13 @@
 <QrTrialPeriod@ViewText>:
     text: root.context['text']
     font_size: sp(10)
-    color: rgba('#286F83')
+    color: rgba(design.TEAL)
     bold: True
     size_hint_y: None
     height: dp(25)
 
 <QrInfoQrFrame@ViewCard>:
-    bg: '#FFFFFF'
+    bg: design.WHITE
     padding: dp(8)
     radius: 20
     ViewImage:
@@ -906,12 +937,12 @@
 <QrExpiry@ViewText>:
     text: root.context['text']
     font_size: sp(12)
-    color: rgba('#193C47')
+    color: rgba(design.TEXT)
     size_hint_y: None
     height: dp(43)
 
 <QrPrivacy@ViewText>:
-    text: 'El QR muestra nombre y especie, y contacto solo si lo autorizaste. No publica una web. Una foto conserva el texto y los datos aunque cambies el contacto o termine la prueba.'
+    text: 'Este QR guarda una copia de sus datos. No cambia al editar el perfil. Quien guarde una imagen podrá conservar esa información.'
     font_size: sp(12)
     color: rgba('#71838B')
     size_hint_y: None
@@ -925,14 +956,14 @@
     height: dp(47)
 
 <QrInfoPlate@ViewCard>:
-    bg: '#E7F3F4'
+    bg: design.BLUE
     padding: dp(14)
     spacing: dp(8)
     radius: 20
     ViewText:
-        text: 'PRÓXIMAMENTE · PLACA FÍSICA'
+        text: 'PRÓXIMAMENTE, PLACA FÍSICA'
         font_size: sp(11)
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
         bold: True
         size_hint_y: None
         height: dp(25)
@@ -940,7 +971,7 @@
 <PlateSideTitle@ViewText>:
     text: root.context['text']
     font_size: sp(12)
-    color: rgba('#193C47')
+    color: rgba(design.TEXT)
     bold: True
     size_hint_y: None
     height: dp(24)
@@ -957,14 +988,14 @@
     height: dp(180)
 
 <PlateFallback@ViewText>:
-    text: 'Una placa con su nombre y un QR permanente para volver a casa.'
-    font_size: sp(14)
-    color: rgba('#193C47')
+    text: 'Vista de la chapa no disponible.'
+    font_size: sp(design.BODY)
+    color: rgba(design.TEXT)
     size_hint_y: None
     height: dp(56)
 
 <PlateDisclaimer@ViewText>:
-    text: 'Vista referencial: el QR del mockup no funciona. Cada placa real necesitará un código propio. Compra y envío aún no disponibles.'
+    text: 'Chapa de ejemplo. Ese QR no se puede usar. Venta y envío no disponibles.'
     font_size: sp(11)
     color: rgba('#71838B')
     size_hint_y: None
@@ -979,7 +1010,7 @@
     ViewText:
         text: root.context['text']
         font_size: sp(16)
-        color: rgba('#286F83')
+        color: rgba(design.TEAL)
         size_hint_y: None
         height: dp(50)
     ViewText:
@@ -991,21 +1022,21 @@
 
 <AccountAction@ViewAction>:
     text: root.context['text']
-    bg: '#E7F3F4'
-    fg: '#193C47'
+    bg: design.BLUE
+    fg: design.TEXT
     callback: root.context['callback']
 
 <AccountPrimary@ViewAction>:
     text: root.context['text']
-    bg: '#103D49'
-    fg: '#FFFFFF'
+    bg: design.INK
+    fg: design.WHITE
     callback: root.context['callback']
 
 <AccountSection@ViewText>:
     text: root.context['text']
     bold: True
     font_size: sp(11)
-    color: rgba('#286F83')
+    color: rgba(design.TEAL)
     size_hint_y: None
     height: dp(30)
 
@@ -1018,7 +1049,7 @@
     height: self.texture_size[1] + dp(18)
 
 <AccountProfile@ViewCard>:
-    bg: '#E7F3F4'
+    bg: design.BLUE
     ViewIconTile:
         icon: 'account-heart-outline'
     ViewText:
@@ -1030,7 +1061,7 @@
         height: self.texture_size[1] + dp(8)
     ViewText:
         text: root.context['detail']
-        font_size: sp(14)
+        font_size: sp(design.BODY)
         wrap: True
         size_hint_y: None
         height: self.texture_size[1] + dp(8)
@@ -1041,14 +1072,14 @@
 
 <PasswordEye@ViewAction>:
     icon: 'eye-outline'
-    bg: '#E7F3F4'
-    fg: '#286F83'
+    bg: design.BLUE
+    fg: design.TEAL
     size_hint_x: None
     width: dp(48)
     callback: root.context['callback']
 
 <AccountSessionNote@ViewText>:
-    text: 'Al cerrar sesión vuelves al espacio del invitado.'
+    text: 'Al cerrar sesión verás las mascotas guardadas sin cuenta.'
     font_size: sp(12)
     color: rgba('#71838B')
     size_hint_y: None
@@ -1065,7 +1096,7 @@
         MDSpinner:
             size_hint: None, None
             size: dp(36), dp(36)
-            color: rgba('#286F83')
+            color: rgba(design.TEAL)
             active: root.opacity > 0
 
 
@@ -1087,6 +1118,6 @@
         text: root.context['message']
         markup: False
         wrap: True
-        font_size: sp(14)
+        font_size: sp(design.BODY)
         size_hint_y: None
         height: self.texture_size[1] + dp(6)
