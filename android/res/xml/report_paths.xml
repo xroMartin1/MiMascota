@@ -1,3 +1,4 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
   <cache-path name="health_reports" path="health-reports/" />
+  <cache-path name="usage_exports" path="usage-exports/" />
 </paths>

@@ -17,7 +17,7 @@ class BillingFeatures:
             return
         pets = self.data['pets']
         if not pets:
-            self.prompt_register_pet('Elegir su suscripción')
+            self.prompt_register_pet('Elegir Premium')
         elif pet is not None:
             self.open_subscription(pet)
         elif len(pets) == 1:
@@ -57,6 +57,12 @@ class BillingFeatures:
         def closed(*_):
             if self._billing_modal is modal:
                 self._billing_pet = None
+            from kivy.clock import Clock
+            def restore_screen(_):
+                current = getattr(self, '_billing_modal', None)
+                if not current or not current._is_open:
+                    self.measurement_screen(self.active)
+            Clock.schedule_once(restore_screen, .1)
         modal.bind(on_dismiss=closed)
         card.add_widget(view('PremiumHero', name=pet['name'], source=self.premium_image()))
         card.add_widget(view('PremiumPrice'))
@@ -64,13 +70,13 @@ class BillingFeatures:
         card.add_widget(view('PremiumBenefit', icon='qrcode', text='Conserva el mismo QR'))
         state = result['state']
         labels = {
-            'none': ('Sin suscripción', ''),
-            'creating': ('Estamos comprobando tu solicitud', 'No vuelvas a pagar. Actualiza el estado antes de intentarlo otra vez.'),
-            'pending': ('Pago pendiente', 'Completa el pago en Mercado Pago y vuelve para comprobarlo.'),
-            'authorized': ('Esperando confirmación del pago', ''),
-            'active': ('Premium activo', ''),
-            'paused': ('Suscripción pausada', ''),
-            'cancelled': ('Renovación cancelada', 'No se solicitarán nuevos cobros de esta suscripción.'),
+            'none': ('Sin Premium', 'Un pago habilita un mes. La renovación es manual.'),
+            'creating': ('Estamos comprobando tu solicitud', 'Actualiza el estado antes de intentar otro pago.'),
+            'pending': ('Pago pendiente', 'Completa el pago de prueba en Webpay y vuelve para comprobarlo.'),
+            'active': ('Premium activo', 'Puedes renovar manualmente y conservar el tiempo ya pagado.'),
+            'rejected': ('Pago rechazado', 'No se activó un nuevo periodo. Puedes intentar otro pago.'),
+            'cancelled': ('Pago anulado', 'No se activó un nuevo periodo. Puedes intentar otro pago.'),
+            'expired': ('Pago vencido', 'El plazo terminó. Puedes intentar otro pago.'),
         }
         title, detail = labels[state]
         if result.get('paid_until'):
@@ -79,38 +85,43 @@ class BillingFeatures:
         card.add_widget(view('PremiumStatus', title=title, detail=detail,
                              bg='#E2F0EA' if state == 'active' else '#F4F8F8'))
         refresh = lambda *_: self.open_subscription(pet)
-        if state in ('none', 'cancelled'):
+        if result.get('order_id'):
+            card.add_widget(view('PremiumStatus', title='Referencia de pago',
+                                 detail=result['order_id'], bg='#F4F8F8'))
+        if state in ('none', 'active', 'rejected', 'cancelled', 'expired'):
             def signup(*_):
-                modal.dismiss()
-                def submit(values):
-                    self.network(lambda: Subscription(self.cloud).call(pet['id'], 'create', values['email']), created)
+                def submit():
+                    if not self.cloud.user or self.cloud.user['id'] != owner:
+                        return
+                    self.network(lambda: Subscription(self.cloud).call(pet['id'], 'create'), created)
                 def created(data):
                     if not self.cloud.user or self.cloud.user['id'] != owner:
                         return
                     self.render_subscription(pet, data)
                     if data.get('checkout_url'):
                         webbrowser.open(data['checkout_url'])
-                self.form('Pago de prueba', [('email', 'Correo del comprador de prueba', '')], submit,
-                    persist=False, submit_text='Continuar a Mercado Pago',
-                    description='$3.990 CLP al mes por mascota. Usa una cuenta y una tarjeta de prueba de Mercado Pago.')
-            container.add_widget(view('AccountPrimary', text='Elegir Premium', callback=signup))
+                self.confirm('Pago de prueba',
+                    '$3.990 CLP por un mes por mascota. Renovación manual. '
+                    'Webpay está en modo de prueba: usa solo tarjetas de prueba, nunca tarjetas reales.', submit)
+            container.add_widget(view('AccountPrimary',
+                text='Renovar Premium' if state == 'active' else 'Pagar con Webpay', callback=signup))
             card.add_widget(view('AccountAction', text='Actualizar estado', callback=refresh))
         elif state == 'pending' and result.get('checkout_url'):
-            container.add_widget(view('AccountPrimary', text='Continuar en Mercado Pago', callback=lambda *_: self.continue_checkout(result['checkout_url'])))
+            container.add_widget(view('AccountPrimary', text='Continuar con Webpay',
+                callback=lambda *_: self.continue_checkout(result['checkout_url'], owner)))
             card.add_widget(view('AccountAction', text='Actualizar estado', callback=refresh))
         else:
             container.add_widget(view('AccountPrimary', text='Actualizar estado', callback=refresh))
-        if state in ('pending', 'authorized', 'active', 'paused'):
-            def cancel(*_):
-                self.confirm('Cancelar renovación', 'No se solicitarán nuevos cobros. Conservarás el periodo ya confirmado.',
-                    lambda: self.network(lambda: Subscription(self.cloud).call(pet['id'], 'cancel'),
-                        lambda data: self.render_subscription(pet, data) if self.cloud.user and self.cloud.user['id'] == owner else None))
-            card.add_widget(view('AccountAction', text='Cancelar renovación', callback=cancel))
         modal.open()
+        self.measurement_screen('Premium')
 
-    def continue_checkout(self, url):
-        self.confirm('Pago de prueba', 'Usa una cuenta y una tarjeta de prueba de Mercado Pago.',
-                     lambda: webbrowser.open(url))
+    def continue_checkout(self, url, owner=None):
+        def open_checkout():
+            if not self.cloud.user or (owner is not None and self.cloud.user['id'] != owner):
+                return
+            webbrowser.open(Subscription(self.cloud).validate_checkout(url))
+        self.confirm('Pago de prueba',
+            'Webpay está en modo de prueba: usa solo tarjetas de prueba, nunca tarjetas reales.', open_checkout)
 
     def refresh_subscription(self, *_):
         pet = getattr(self, '_billing_pet', None)

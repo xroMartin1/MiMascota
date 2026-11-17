@@ -47,14 +47,18 @@ def readable_date(value, now=None):
 
 
 class CareFeatures(ReminderFeatures, PublicTagFeatures):
-    def save(self):
+    def save(self, *, completed=None):
         try:
             self.store.save(self.data)
+            if completed:
+                self.record_care_completion(*completed)
+            self.observe_measurement()
             self.queue_reminders()
             if hasattr(self, "queue_backup"):
                 self.queue_backup()
             return True
         except (OSError, ValueError, TypeError) as exc:
+            self.track_event('usage_error', code='storage')
             self.data = deepcopy(self.store.data)
             self.message("No se pudo guardar", "Tus datos anteriores se conservaron. Inténtalo de nuevo." if isinstance(exc, ValueError) else "Revisa el espacio disponible e inténtalo de nuevo.")
             return False
@@ -167,7 +171,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
                   visible_when={"custom_kind": ("kind", "Otro"), "custom_breed": ("breed", "Otra raza"), "chip": ("chip_status", "Sí")},
                   hints={"name": "Ej.: Luna", "custom_kind": "Ej.: Tortuga", "age": "Ej.: 3 años",
                          "weight": "Ej.: 4,2", "chip": "Número de la cartilla"},
-                  input_types={"weight": "number", "chip": "number"}, preview=preview)
+                  input_types={"weight": "number", "chip": "number"}, preview=preview, operation='pet')
         def update_breeds(_, kind):
             options = breed_choices(kind)
             entries['breed'].values = list(options)
@@ -321,7 +325,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
                   date_shortcuts={"due_at": (("En 1 hora", timedelta(hours=1)),
                                              ("Mañana", timedelta(days=1)),
                                              ("En 7 días", timedelta(days=7)))},
-                  hints={"title": "Ej.: Paseo de la tarde", "due_at": "AAAA-MM-DD HH:MM"})
+                  hints={"title": "Ej.: Paseo de la tarde", "due_at": "AAAA-MM-DD HH:MM"}, operation='care')
 
     def task_detail(self, task, *_):
         modal, card = self.dialog("Detalle del cuidado", 530)
@@ -363,8 +367,9 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
     def toggle_routine(self, task_id, *_):
         task = next(r for r in self.data["routines"] if r["id"] == task_id)
         was_done = task['done']
+        due_at = task['due_at']
         complete_task(self.data, task)
-        if self.save():
+        if self.save(completed=(task_id, due_at, was_done)):
             self.show(self.active)
             matches = [w for w in self.content.children if w.context.get('task_id') == task_id]
             entry = next((w for w in matches if w.context.get('completed')), matches[0] if matches else None)
@@ -463,7 +468,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
             date_shortcuts={"date": (("Ahora", timedelta()),
                                      ("Ayer", timedelta(days=-1)),
                                      ("Hace 7 días", timedelta(days=-7)))},
-            hints={"title": "Ej.: Control anual", "date": "AAAA-MM-DD HH:MM"})
+            hints={"title": "Ej.: Control anual", "date": "AAAA-MM-DD HH:MM"}, operation='health')
 
     def history(self, *_):
         modal, card = self.dialog("Historial médico", 580)
@@ -502,7 +507,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
                     icon={'Vacuna':'needle','Medicamento':'pill','Cita':'calendar-heart','Control':'heart-pulse'}.get(event.get('kind'), 'clipboard-check-outline'))
 
     def form(self, title, fields, submit, choices=None, password=False, persist=True,
-             visible_when=None, hints=None, input_types=None, templates=None, date_shortcuts=None, description=None, submit_text=None, preview=None):
+             visible_when=None, hints=None, input_types=None, templates=None, date_shortcuts=None, description=None, submit_text=None, preview=None, operation=None):
         modal, card = self.dialog(title)
         modal.size_hint_y = .88
         scroll = view('FormScroll')
@@ -579,6 +584,13 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         card.add_widget(scroll)
         error = view('FormError')
         card.add_widget(error)
+        modal._measurement_operation = operation
+        modal._measurement_attempt = False
+        def measured_result(result):
+            if operation and modal._measurement_attempt:
+                self.track_event('save_result', operation=operation, result=result)
+                modal._measurement_attempt = False
+        modal._measurement_result = measured_result
         def clear_error(*_):
             error.text = ""
         for entry in entries.values():
@@ -587,6 +599,10 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
             if self.busy or getattr(modal, '_network_pending', False):
                 return
             error.text = ''
+            if operation:
+                self.track_event('save_attempt', operation=operation)
+                modal._measurement_attempt = True
+            pets_before = len(self.data['pets'])
             values = {key: field.text if "password" in key else field.text.strip() for key, field in entries.items()}
             try:
                 self._submitting_form = modal
@@ -599,11 +615,18 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
                 if getattr(modal, '_network_pending', False):
                     return
                 if persist and not self.save():
+                    measured_result('failed')
                     error.text = 'No se guardaron los cambios. Puedes volver a intentarlo.'
                     return
             except (ValueError, KeyError) as exc:
+                measured_result('validation')
+                if operation:
+                    self.track_event('usage_error', code='validation')
                 error.text = str(exc)
                 return
+            measured_result('success')
+            if operation == 'pet' and len(self.data['pets']) > pets_before:
+                self.track_event('pet_saved')
             modal.dismiss()
             if persist:
                 self.show(self.active)
@@ -614,6 +637,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         modal.ids.form_submit = button
         modal.ids.form_inputs = inputs
         def close_form(*_):
+            measured_result('abandoned')
             for entry in list(entries.values()) + list(modal.walk()):
                 if isinstance(entry, ViewSpinner):
                     entry.is_open = False
@@ -819,6 +843,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
     def mobile_preferences(self):
         prefs = self.mobile.preferences()
         def submit(values):
+            self.set_statistics(values['analytics'] == 'Sí')
             self.mobile.configure(values['notifications'] == 'Sí', values['analytics'] == 'Sí')
             if values['notifications'] == 'No' and self.cloud.user:
                 self.network(lambda: PushClient(self.cloud, self.mobile).unregister(), lambda _: None)
@@ -927,7 +952,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
                   ('phone', 'Teléfono con código de país', source.get('phone', '')),
                   ('city', 'Comuna / ciudad (opcional, privada)', source.get('city', ''))], submit,
                   persist=False, submit_text='Guardar perfil', input_types={'phone': 'tel'}, hints={'phone': '+56 9 1234 5678'},
-                  description='Para cambiar el contacto de una chapa, edítalo desde Chapa.')
+                  description='Para cambiar el contacto de una chapa, edítalo desde Chapa.', operation='account')
 
     def choose_qr_contact(self):
         if not self.data['pets']:
@@ -1053,11 +1078,13 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
             self.message("Tus mascotas siguen contigo", "Para traerlas a esta cuenta, abre Mi cuenta → Ajustes de cuenta → Datos y respaldos → Traer mascotas del invitado.")
 
     def switch_store(self, path):
+        self.pause_measurement()
         self._backup_blocked = False
         self.backup_status = "Guardado en este teléfono"
         self.store = LocalStore(path)
         self.data_file = self.store.path
         self.data = deepcopy(self.store.data)
+        self.start_measurement()
         self.selected_pet = self.data["pets"][0]["id"] if self.data["pets"] else None
         self.notified.clear()
         self._reminder_accepted = None
@@ -1108,16 +1135,21 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
                     form.ids.form_submit.text = form.ids.form_submit.context['text']
                     form.ids.form_inputs.disabled = False
                 def failed(message):
+                    if form is not None and hasattr(form, '_measurement_result'):
+                        form._measurement_result('failed')
                     if form is not None and form._is_open:
                         form.ids.form_error.text = message
                     else:
                         self.message('No se completó', message)
                 if error:
+                    self.track_event('usage_error', code='network')
                     failed(error)
                 else:
                     try:
                         callback(result)
                         if form is not None:
+                            if hasattr(form, '_measurement_result'):
+                                form._measurement_result('success')
                             form.dismiss()
                     except (OSError, ValueError, KeyError, TypeError):
                         failed('No pudimos completar la acción. Tus datos anteriores se conservaron.')

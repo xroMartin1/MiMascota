@@ -59,7 +59,7 @@ def create_health_report(data, pet_id, target):
     return target
 
 
-def share_health_report(path):
+def share_health_report(path, mime='application/pdf', title='Resumen de salud'):
     from kivy.utils import platform
     if platform == 'android':
         from jnius import autoclass
@@ -69,11 +69,11 @@ def share_health_report(path):
         uri = provider.getUriForFile(activity, activity.getPackageName()+'.files', file)
         intent = autoclass('android.content.Intent')()
         intent.setAction('android.intent.action.SEND')
-        intent.setType('application/pdf')
+        intent.setType(mime)
         intent.putExtra('android.intent.extra.STREAM', uri)
-        intent.setClipData(autoclass('android.content.ClipData').newRawUri('Resumen de salud', uri))
+        intent.setClipData(autoclass('android.content.ClipData').newRawUri(title, uri))
         intent.addFlags(1)  # Temporary read grant; no exported directory or storage permission.
-        activity.startActivity(autoclass('android.content.Intent').createChooser(intent, 'Compartir resumen'))
+        activity.startActivity(autoclass('android.content.Intent').createChooser(intent, 'Compartir archivo'))
     else:
         import webbrowser
         webbrowser.open(Path(path).resolve().as_uri())

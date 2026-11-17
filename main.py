@@ -56,11 +56,13 @@ class MiMascotaApp(MDApp):
 
     def on_pause(self):
         if self.root:
+            self.root.get_screen("home").pause_measurement()
             self.root.get_screen("home").cloud.retry_session_cache()
         return True
 
     def on_resume(self):
         self.configure_system_bars()
+        self.root.get_screen("home").resume_measurement()
         from kivy.clock import Clock
         Clock.schedule_once(self.root.get_screen("home").retry_reminders, .5)
         Clock.schedule_once(self.root.get_screen("home").retry_backup, 1)
@@ -87,6 +89,9 @@ class MiMascotaApp(MDApp):
 
     def on_stop(self):
         if self.root and hasattr(self.root, "get_screen"):
+            screen = self.root.get_screen('home')
+            screen.pause_measurement()
+            Window.unbind(on_touch_down=screen.measurement_touch, on_key_down=screen.measurement_touch)
             self.root.get_screen("home").reminder_clock.cancel()
             self.root.get_screen("home").push_sync_clock.cancel()
             self.root.get_screen("home")._backup_clock.cancel()

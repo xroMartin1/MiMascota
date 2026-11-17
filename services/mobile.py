@@ -1,5 +1,7 @@
 """Adaptador Android opcional. No inicia SDK ni recopila datos sin configuración y elección."""
 from kivy.utils import platform
+import json
+from services.measurement import SCREENS, optional, valid_event
 
 
 class MobileServices:
@@ -48,6 +50,12 @@ class MobileServices:
         else:
             bridge.notifications(False)
 
+    @optional
     def screen(self, name):
-        if self.configured and self.preferences()['analytics']:
+        if name in SCREENS and self.configured and self.preferences()['analytics']:
             self.initialize().screen(name)
+
+    @optional
+    def event(self, name, params):
+        if valid_event(name, params) and self.configured and self.preferences()['analytics']:
+            self.initialize().event(name, json.dumps(params))
