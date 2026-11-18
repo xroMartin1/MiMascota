@@ -2,6 +2,8 @@
 
 Este documento describe el uso de inteligencia artificial durante el desarrollo de Mi Mascota, las decisiones del equipo y su reflexión sobre el proceso.
 
+Actualizado para la versión **0.2.17** y el sitio web asociado, el 18 de noviembre de 2026.
+
 La entrega de medición MJV y Webpay Plus también tuvo asistencia de un agente de programación con IA para diseño técnico, código, pruebas, revisión y documentación. El equipo eligió Firebase gratuito y pago mensual con renovación manual, y proporcionó la rúbrica y la definición del método MJV. Las pruebas automatizadas son evidencia técnica con datos ficticios; no son entrevistas, uso de participantes ni resultados de impacto creados por la IA. La muestra y las conclusiones de evaluación deben ser recogidas y contrastadas por el equipo.
 
 ## 1. IA usada
@@ -25,10 +27,18 @@ Estos ejemplos resumen fielmente solicitudes que guiaron decisiones del proyecto
 7. **Problemas técnicos:** se informó que la aplicación aparecía en blanco tanto en PC como en Android y se pidió investigar la causa. También se pidió corregir la superposición de la interfaz con las barras del sistema del teléfono.
 8. **Notificaciones y configuración remota:** se pidió explicar una notificación local útil y, para la evaluación, añadir un consejo de cuidado obtenido desde una fuente remota que se muestre en Inicio y conserve una alternativa cuando no haya conexión.
 9. **Entrega y defensa:** se solicitó compilar el APK, publicarlo en la página de descarga y preparar una guía que explique la organización del código, los servicios y preguntas que podrían aparecer durante la evaluación.
+10. **Revisión visual:** se pidió sustituir fondos crema por blanco, evitar textos técnicos o de relleno, simplificar la selección de mascotas y adaptar los retratos a las razas. Se solicitaron microanimaciones, un indicador que viaje entre pestañas y una confirmación de Premium con la mascota seleccionada.
+11. **Pagos y medición:** a partir de la rúbrica se pidió integrar Firebase, KPIs y el método «Medir, Juzgar, Validar». El equipo eligió Webpay Plus con pago de $3.990 al mes y renovación manual, y un dashboard automático accesible mediante código, sin una sesión Google para cada visitante.
+12. **Errores observados en teléfono y servidor:** se enviaron capturas de fallos al compartir PDF/JSON y al consultar Analytics. Se pidió investigar las causas, corregirlas y añadir comprobaciones para no confundir datos incompletos con resultados exitosos.
+13. **Actualización de la web:** se pidió publicar el APK 0.2.17, renovar las capturas de la app y sustituir la chapa decorativa del menú por la marca y un acceso a la descarga. Las capturas de presentación usan la interfaz actual con mascotas y registros ficticios, sin acceder a cuentas reales.
 
 ## 4. Outputs
 
 La IA entregó propuestas de código Python, KV, SQL y Java, pruebas, diagnósticos, documentación, explicaciones y prompts de imágenes. Se incorporaron partes para la interfaz, persistencia, autenticación, QR, avisos, sincronización y consejo remoto. Algunas propuestas visuales se revisaron: una imagen de chapa demasiado realista se consideró inadecuada para la ilustración de Inicio, y se pidieron alternativas. Los detalles de otros descartes deben ser confirmados por quienes trabajaron en ellos.
+
+En las entregas recientes también implementó el checkout sandbox, el consentimiento y registro de eventos, el dashboard de GA4, las metas y sus estados incompletos. Preparó ramas y commits para que el equipo revisara e integrara los cambios. Los archivos de instalación fueron compilados por el equipo en otro PC con WSL; verificar el nombre, tamaño, versión interna e integridad del archivo no equivale a probar todas sus funciones en Android.
+
+Para el fallo de compartir se utilizaron pruebas de regresión y una reproducción con Pyjnius y clases Java de prueba. La primera corrección no resolvió todas las llamadas: el equipo volvió a reportar el fallo y se corrigió también el título del selector. En Analytics se añadieron casos para resultados ausentes y nombres de pantalla vacíos. Estos ejemplos muestran por qué una suite que pasa no garantiza que todas las respuestas reales o todos los teléfonos hayan sido cubiertos.
 
 ## 5. Ajustes
 
@@ -37,6 +47,8 @@ Al comienzo del proyecto realizamos ajustes nosotros mismos. Más adelante utili
 Por ejemplo, pedimos pasar del fondo crema a blanco, aclarar los textos sobre cuidados pendientes, corregir la alineación de la navegación, facilitar los formularios y cambiar el diseño de la chapa. También informamos problemas observados al probar la app, como la pantalla blanca y la pérdida de sesión, para que la IA investigara y aplicara correcciones.
 
 Por lo tanto, los ajustes posteriores no se presentan como cambios de código escritos manualmente por cada integrante: nuestras aportaciones consistieron en decidir qué cambiar, dar indicaciones y revisar los resultados. Para la defensa debemos estudiar y comprender el código que finalmente se entrega.
+
+No se presentan los datos de prueba, los usuarios virtuales ni las capturas con información ficticia como evidencia de uso humano. Las conclusiones sobre cumplimiento de metas requieren datos reales, consentimiento y revisión del equipo. Las credenciales privadas de Analytics, los secretos de pago y los códigos de acceso no forman parte de esta declaración ni deben publicarse en el repositorio.
 
 ## 6. Reflexión en el uso de IA
 
