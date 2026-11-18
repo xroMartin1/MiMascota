@@ -173,12 +173,29 @@ class BillingFeatures:
             modal.open()
 
     def open_subscription(self, pet):
+        from services.public_qr import PublicChapas
         owner = self.cloud.user['id']
         source = self.data_file
+        def fetch():
+            tag = PublicChapas(self.cloud, self.cloud.site_url).existing(pet['id'])
+            return Subscription(self.cloud).call(pet['id']) if tag else None
         def received(result):
-            if self.cloud.user and self.cloud.user['id'] == owner and self.data_file == source:
+            if not self.cloud.user or self.cloud.user['id'] != owner or self.data_file != source:
+                return
+            if result is not None:
                 self.accept_premium_result(pet, result)
-        self.network(lambda: Subscription(self.cloud).call(pet['id']), received)
+                return
+            modal, card = self.dialog('Crea primero su chapa QR', 440)
+            card.add_widget(view('AccountNote', text='Premium mantiene activa la ficha de ' + pet['name']
+                                 + ' con el mismo QR. Antes de comprar, crea su chapa web desde Chapa. '
+                                 'La prueba es única por cuenta y no se reinicia al borrar una mascota.'))
+            def create(*_):
+                modal.dismiss()
+                if self.cloud.user and self.cloud.user['id'] == owner and self.data_file == source:
+                    self.show('Chapa')
+            card.add_widget(view('AccountPrimary', text='Ir a Chapa', callback=create))
+            modal.open()
+        self.network(fetch, received)
 
     def render_subscription(self, pet, result):
         previous = getattr(self, '_billing_modal', None)
@@ -205,7 +222,9 @@ class BillingFeatures:
         card.add_widget(view('PremiumPrice'))
         card.add_widget(view('PremiumBenefit', icon='web', text='Su ficha sigue disponible'))
         card.add_widget(view('PremiumBenefit', icon='qrcode', text='Conserva el mismo QR'))
-        card.add_widget(view('PremiumBenefit', icon='tag-heart-outline', text='Chapa física incluida en la primera compra'))
+        card.add_widget(view('PremiumBenefit', icon='tag-heart-outline', text='Chapa física incluida', badge='1ª compra'))
+        card.add_widget(view('AccountNote', text='El plan corresponde a esta mascota. Mientras esté vigente, '
+                             'su perfil no se puede eliminar. Puedes registrar otras mascotas sin transferir el plan.'))
         state = result['state']
         labels = {
             'none': ('Sin Premium', 'Un pago habilita un mes. La renovación es manual.'),

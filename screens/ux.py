@@ -353,8 +353,7 @@ class UxFeatures(BillingFeatures):
 
     def public_tag_panel(self, pet, tag):
         self.active, self.subtitle.text = 'Chapa', 'Chapa'
-        for tab in self.nav.children:
-            tab.context['selected'] = tab.text == 'Chapa'
+        self.nav.select('Chapa')
         self.content.clear_widgets()
         self.content.add_widget(view('UxToolbar', title=pet['name'], left_icon='refresh', left=lambda *_: self.show('Chapa'),
             right_icon='dots-vertical', right=lambda *_: self.public_tag_options(pet, tag)))
@@ -547,5 +546,7 @@ class UxFeatures(BillingFeatures):
             try:
                 share_health_report(result)
             except Exception:
-                self.message('No se pudo compartir el PDF', 'Inténtalo otra vez. Revisa que tengas una app para abrir o compartir PDF.')
+                from kivy.logger import Logger
+                Logger.exception('Health report: could not share prepared PDF')
+                self.message('No se pudo compartir el PDF', 'El PDF se preparó, pero no pudimos abrir el menú para compartir. Inténtalo otra vez. Revisa que tengas una app para abrir o compartir PDF.')
         self.network(lambda: create_health_report(snapshot, pet_id, path), ready)

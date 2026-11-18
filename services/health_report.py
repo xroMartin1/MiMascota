@@ -62,7 +62,7 @@ def create_health_report(data, pet_id, target):
 def share_health_report(path, mime='application/pdf', title='Resumen de salud'):
     from kivy.utils import platform
     if platform == 'android':
-        from jnius import autoclass
+        from jnius import autoclass, cast
         activity = autoclass('org.kivy.android.PythonActivity').mActivity
         file = autoclass('java.io.File')(str(path))
         provider = autoclass('androidx.core.content.FileProvider')
@@ -70,7 +70,8 @@ def share_health_report(path, mime='application/pdf', title='Resumen de salud'):
         intent = autoclass('android.content.Intent')()
         intent.setAction('android.intent.action.SEND')
         intent.setType(mime)
-        intent.putExtra('android.intent.extra.STREAM', uri)
+        # Pyjnius cannot reliably choose the Parcelable overload from a raw Uri.
+        intent.putExtra('android.intent.extra.STREAM', cast('android.os.Parcelable', uri))
         intent.setClipData(autoclass('android.content.ClipData').newRawUri(title, uri))
         intent.addFlags(1)  # Temporary read grant; no exported directory or storage permission.
         activity.startActivity(autoclass('android.content.Intent').createChooser(intent, 'Compartir archivo'))

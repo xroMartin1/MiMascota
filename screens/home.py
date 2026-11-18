@@ -54,6 +54,11 @@ class HomeScreen(MeasurementFeatures, RemoteConfigFeatures, BackupFeatures, UxFe
         self.scroll = self.shell.ids.scroll
         self.content = self.shell.ids.content
         self.nav = self.shell.ids.navigation
+        for title, icon in [("Inicio", "home-outline"), ("Mascotas", "paw"),
+                            ("Chapa", "qrcode-scan"), ("Rutina", "creation"),
+                            ("Salud", "heart-pulse")]:
+            self.nav.add_widget(view('NavigationQr' if title == 'Chapa' else 'NavigationTab',
+                                     text=title, icon=icon, selected=False, callback=partial(self.show, title)))
         self.add_widget(self.shell)
         self.shell.size = self.size
         self.bind(size=self.shell.setter('size'))
@@ -83,20 +88,7 @@ class HomeScreen(MeasurementFeatures, RemoteConfigFeatures, BackupFeatures, UxFe
         self.content.spacing = dp(14)
         self.subtitle.text = page
         self.content.clear_widgets()
-        self.nav.clear_widgets()
-        for title, icon in [("Inicio", "home-outline"), ("Mascotas", "paw"),
-                            ("Chapa", "qrcode-scan"), ("Rutina", "creation"),
-                            ("Salud", "heart-pulse")]:
-            if title == "Chapa":
-                self.nav.add_widget(view('NavigationQr', text=title, icon=icon, callback=partial(self.show, 'Chapa'), selected=page == 'Chapa'))
-            else:
-                self.nav.add_widget(view(
-                    'NavigationTab',
-                    text=title,
-                    icon=icon,
-                    selected=title == page,
-                    callback=partial(self.show, title),
-                ))
+        self.nav.select(page)
         {"Inicio": self.home, "Mascotas": self.pets, "Rutina": self.routine, "Salud": self.health,
          "Avisos": self.render_notices, "Cuenta": self.render_account, "Chapa": self.qr_page,
          "Conversación": self.render_conversation, "Compartidos": self.render_care_sharing,

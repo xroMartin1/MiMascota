@@ -60,6 +60,29 @@ class MeasurementIntegrationTests(unittest.TestCase):
             self.screen.set_statistics(False)
             self.assertEqual(list(usage.iterdir()), [])
 
+    def test_export_failure_reports_preparation_without_trying_to_share(self):
+        self.screen.message = Mock()
+        self.screen.measurement.export.return_value = None
+        with TemporaryDirectory() as folder, patch('tempfile.gettempdir', return_value=folder), \
+                patch('kivy.utils.platform', 'win'), patch('kivy.logger.Logger.exception'), \
+                patch('services.health_report.share_health_report') as share:
+            self.screen.prepare_measurement_export()
+        share.assert_not_called()
+        self.assertEqual(self.screen.message.call_args.args[0], 'No se pudieron preparar las estadísticas')
+
+    def test_share_failure_keeps_prepared_statistics_and_reports_sharing(self):
+        self.screen.message = Mock()
+        def export(path):
+            path.write_text('{}', encoding='utf-8')
+            return path
+        self.screen.measurement.export.side_effect = export
+        with TemporaryDirectory() as folder, patch('tempfile.gettempdir', return_value=folder), \
+                patch('kivy.utils.platform', 'win'), patch('kivy.logger.Logger.exception'), \
+                patch('services.health_report.share_health_report', side_effect=RuntimeError('JNI failure')):
+            self.screen.prepare_measurement_export()
+            self.assertEqual(len(list(Path(folder).rglob('uso-*.json'))), 1)
+        self.assertEqual(self.screen.message.call_args.args[0], 'No se pudo compartir')
+
 
 if __name__ == '__main__':
     unittest.main()

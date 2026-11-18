@@ -223,7 +223,26 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         self.add_routine()
 
     def delete_pet(self, pet):
+        owner = self.cloud.user['id'] if self.cloud.user else None
+        source = self.data_file
+        def current():
+            return ((self.cloud.user['id'] if self.cloud.user else None) == owner
+                    and self.data_file == source and any(p['id'] == pet['id'] for p in self.data['pets']))
+        def protected():
+            state = self.premium_state()
+            if not state.active(pet['id']):
+                return False
+            end = datetime.fromisoformat(state.pets[pet['id']]).astimezone().strftime('%d/%m/%Y')
+            self.message('Esta mascota tiene Premium activo',
+                         f'No puedes eliminar a {pet["name"]} mientras su Premium esté vigente hasta el {end}. '
+                         'El pago y su QR pertenecen a esta mascota y no se transfieren a otra. '
+                         'Puedes editar su perfil o registrar otra mascota sin borrar esta.')
+            return True
+        if protected():
+            return
         def remove():
+            if not current() or protected():
+                return
             self.data["pets"] = [p for p in self.data["pets"] if p["id"] != pet["id"]]
             self.data["qr_trials"].pop(pet["id"], None)
             for key in ("routines", "events"):
@@ -235,8 +254,32 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
                     pass
                 self.selected_pet = self.data["pets"][0]["id"] if self.data["pets"] else None
                 self.show("Mascotas")
-        shared = ' Al guardarse en tu cuenta, se retirarán sus accesos compartidos e invitaciones.' if self.cloud.user else ''
-        self.confirm("Eliminar mascota", f'Se eliminará {pet["name"]} y sus cuidados e historial.' + shared, remove)
+        def confirm_delete():
+            if not current() or protected():
+                return
+            shared = ' Al guardarse en tu cuenta, se retirarán sus accesos compartidos e invitaciones.' if owner else ''
+            self.confirm("Eliminar mascota", f'Se eliminará {pet["name"]} y sus cuidados e historial.' + shared, remove)
+        if owner and self.cloud.configured:
+            from services.public_qr import PublicChapas
+            from services.subscription import Subscription
+            def verify():
+                try:
+                    tag = PublicChapas(self.cloud, self.cloud.site_url).existing(pet['id'])
+                    return Subscription(self.cloud).call(pet['id']) if tag else None
+                except (CloudError, ValueError):
+                    raise CloudError('Conéctate para comprobar su plan antes de eliminar la mascota. '
+                                     'Si la conexión está disponible, actualiza el estado e inténtalo de nuevo.') from None
+            def checked(result):
+                if not current():
+                    return
+                if result is not None:
+                    self._premium_refresh_token = None
+                    self.premium_state().record(pet['id'], result, acknowledge=False)
+                    self.update_premium_badge()
+                confirm_delete()
+            self.network(verify, checked)
+        else:
+            confirm_delete()
 
     def routine(self):
         self.heading("Rutina", "Paseos, medicamentos y citas")

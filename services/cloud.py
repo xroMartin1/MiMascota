@@ -74,6 +74,14 @@ class Supabase:
                 'invalid_plan': 'Revisa la zona horaria y las fechas del calendario (máximo 500 cuidados).',
                 'device_limit': 'Esta cuenta ya tiene cinco teléfonos registrados.',
             }
+            if path == '/functions/v1/webpay-payments':
+                if response.status_code == 429:
+                    raise CloudError('Demasiados intentos. Espera unos minutos antes de consultar o pagar de nuevo.')
+                raise CloudError({
+                    'authentication_required': 'Tu sesión dejó de ser válida. Inicia sesión para consultar Premium.',
+                    'tag_not_found': 'Crea primero la chapa web de esta mascota desde Chapa y vuelve a elegir Premium.',
+                    'unavailable': 'No pudimos consultar Premium para esta mascota. Revisa su chapa y actualiza el estado.',
+                }.get(code, 'Webpay no pudo completar la operación. Actualiza el estado antes de volver a pagar.'))
             if path == '/functions/v1/subscription-payments':
                 raise CloudError({
                     'billing_not_configured': 'Los pagos no están disponibles ahora. Inténtalo más tarde.',
