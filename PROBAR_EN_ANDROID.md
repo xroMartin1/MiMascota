@@ -58,8 +58,10 @@ Conecta el teléfono por USB y copia el `.apk` de la carpeta `apk` a Descargas. 
 
 La app abrirá en modo invitado. Prueba a registrar una mascota, agregar un cuidado, cerrar y volver a abrir: los datos deben seguir allí. En Android se guardan en la carpeta privada de la app; son independientes de `data/petcare.json` de Windows. Si desinstalas el APK, esos datos pueden perderse: exporta una copia o usa una cuenta con respaldo antes de hacerlo.
 
-Para probar el QR local, registra una mascota, abre «Mi chapa QR» y escanéala con otro teléfono. Verás nombre y especie, sin datos de contacto. Los 14 días solo controlan su presentación dentro de la app; el contenido de una foto del QR no se puede desactivar sin un servidor.
+Para probar la ficha pública, inicia sesión, registra una mascota y activa su chapa desde «Chapa». Escanea el QR con otro teléfono: la ficha web consulta al servidor y permite el contacto que hayas autorizado. La prueba de 14 días y la vigencia Premium se validan en el backend; borrar la mascota no crea otra prueba. La vista de ejemplo local no sustituye ese flujo.
 
-La nube requiere crear un proyecto Supabase, ejecutar [supabase/schema.sql](supabase/schema.sql) y copiar `config.example.json` a `config.json` con la URL y **clave publicable**, nunca secretos. Las notificaciones push de Firebase y la ficha QR pública aún no están activadas.
+La nube requiere el proyecto de Supabase del equipo y sus migraciones y funciones desplegadas; sigue [CUENTA-Y-QR.md](CUENTA-Y-QR.md) y las instrucciones de `supabase/`. Copia `config.example.json` a `config.json` con la URL y **clave publicable**, nunca secretos. Las notificaciones push utilizan Firebase y el backend: activa sus permisos desde «Cuenta → Notificaciones» y revisa [ANDROID-SERVICIOS.md](ANDROID-SERVICIOS.md). No basta con ejecutar el SQL inicial para habilitar todos los servicios.
+
+En 0.2.17 comprueba también «Compartir PDF» en Salud y la exportación JSON desde «Privacidad y estadísticas». Debe abrirse el selector de Android y la app elegida debe poder leer el archivo. Si falla, comparte el código de soporte del diálogo; no es necesario publicar el contenido del archivo ni conectarse por USB para informar de esa etapa.
 
 Si tu teléfono es iPhone, esta ruta no genera una app iOS. Para iOS se necesita macOS y el flujo `kivy-ios`/Xcode; [Buildozer describe los requisitos](https://buildozer.readthedocs.io/en/latest/installation/#targeting-ios).
