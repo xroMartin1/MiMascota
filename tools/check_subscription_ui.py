@@ -39,7 +39,8 @@ class Check(MiMascotaApp):
   assert ('Premium activo' in texts)==(self.state=='active')
   expected={'active':'Renovar Premium','pending':'Continuar con Webpay','creating':'Actualizar estado'}.get(self.state,'Pagar con Webpay')
   assert any(isinstance(w,ViewAction) and w.text==expected for w in modal.ids.card.children)
-  assert 'order-123' in texts
+  assert 'order-123' not in texts
+  assert not any('Referencia de pago' in text or 'no incluida' in text for text in texts)
   assert not any('checkout=' in text for text in texts)
   if self.state in ('active','cancelled'):
    assert any('Disponible hasta el' in text for text in texts)

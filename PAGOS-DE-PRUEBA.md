@@ -1,6 +1,6 @@
 # Premium con Webpay Plus de prueba
 
-Precio: **$3.990 CLP por un mes calendario por mascota**. La renovación es manual; no se guarda tarjeta ni se solicitan cobros futuros. Mantiene la ficha pública con el mismo QR. No incluye fabricación o envío de chapa física. Solo ambiente de integración Transbank, sin dinero real.
+Precio: **$3.990 CLP por un mes calendario por mascota**, mostrado como `$3.990 CLP / mes` en la tarjeta del perfil. La primera compra incluye la chapa física; las renovaciones mantienen el servicio. La renovación es manual; no se guarda tarjeta ni se solicitan cobros futuros. Mantiene la ficha pública con el mismo QR. Solo ambiente de integración Transbank, sin dinero real. La preparación y entrega física requieren coordinación operativa: esta versión no inventa un estado de envío ni gestiona direcciones.
 
 ## Probar desde la aplicación
 
@@ -9,7 +9,9 @@ Precio: **$3.990 CLP por un mes calendario por mascota**. La renovación es manu
 3. Pulsar **Pagar con Webpay** o **Renovar Premium**. Confirmar el aviso de sandbox y usar únicamente las tarjetas de integración publicadas por Transbank. No se necesita una cuenta de comprador de Mercado Pago.
 4. Completar el formulario alojado por Webpay. La app no recibe números de tarjeta ni claves bancarias.
 5. Regresar y pulsar **Actualizar estado**. Abrir el navegador o llegar al retorno no activa Premium; solo una aprobación confirmada en servidor concede el periodo.
-6. Una renovación aprobada conserva el tiempo vigente y agrega un mes. Un rechazo, anulación o vencimiento no elimina un periodo ya pagado. Un resultado incierto se comprueba antes de volver a intentar pagar.
+6. Una aprobación confirmada muestra la mascota y una celebración breve una vez por orden en este dispositivo. Al renovar se conserva el tiempo vigente y se agrega un mes. Un rechazo, anulación o vencimiento no elimina un periodo ya pagado. Un resultado incierto se comprueba antes de volver a intentar pagar.
+
+El perfil muestra un contorno Premium suave mientras una mascota de la cuenta tiene vigencia confirmada. La caché visual está separada por cuenta, se revisa al iniciar y reanudar y no otorga permisos: el acceso a la ficha sigue verificado en el servidor. La referencia de orden permanece interna y ya no aparece como una tarjeta en el recorrido habitual. Para pruebas MJV, el operador toma las referencias del snapshot administrativo y las asigna a la cohorte de la prueba; no inferir que todo el snapshot pertenece a participantes.
 
 ## Código y configuración
 

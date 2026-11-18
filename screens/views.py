@@ -249,6 +249,8 @@ def load_views():
     global _loaded
     if _loaded:
         return
+    from screens.premium import register
+    register()
     # Las clases de ilustración conservan sus animaciones/dibujo en Python.
     for cls in (FloatingTag, PetAvatar, SpaArt, SpaBanner, TagArt):
         Factory.register(cls.__name__, cls=cls)

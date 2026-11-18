@@ -33,8 +33,8 @@ class PetProfilesTests(unittest.TestCase):
     def test_portraits_are_small_transparent_cutouts(self):
         folder = Path(portrait_path('Perro')).parent
         portraits = list(folder.glob('*.png'))
-        self.assertEqual(len(portraits), 12)
-        self.assertLess(sum(path.stat().st_size for path in portraits), 1200000)
+        self.assertEqual(len(portraits), 16)
+        self.assertLess(sum(path.stat().st_size for path in portraits), 1600000)
         for path in portraits:
             with self.subTest(path=path.name), Image.open(path) as portrait:
                 self.assertEqual(portrait.size, (256, 256))

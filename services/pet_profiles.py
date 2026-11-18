@@ -4,14 +4,16 @@ import unicodedata
 from pathlib import Path
 
 BREEDS = {
-    'Perro': ('Golden retriever', 'Labrador', 'Pastor alemán', 'Bulldog francés', 'Poodle', 'Chihuahua'),
-    'Gato': ('Siamés', 'Persa', 'Maine coon', 'Británico de pelo corto', 'Bengalí'),
+    'Perro': ('Golden retriever', 'Labrador', 'Pastor alemán', 'Bulldog francés', 'Poodle', 'Chihuahua',
+              'Beagle', 'Dachshund', 'Husky'),
+    'Gato': ('Siamés', 'Persa', 'Maine coon', 'Británico de pelo corto', 'Bengalí', 'Ragdoll'),
 }
 PORTRAITS = {
     'perro': {'golden retriever': 'perro', 'labrador': 'labrador', 'pastor aleman': 'pastor-aleman',
-              'bulldog frances': 'bulldog-frances', 'poodle': 'poodle', 'chihuahua': 'chihuahua'},
+              'bulldog frances': 'bulldog-frances', 'poodle': 'poodle', 'chihuahua': 'chihuahua',
+              'beagle': 'beagle', 'dachshund': 'dachshund', 'husky': 'husky'},
     'gato': {'siames': 'siames', 'persa': 'persa', 'maine coon': 'maine-coon',
-             'britanico de pelo corto': 'britanico', 'bengali': 'bengali'},
+             'britanico de pelo corto': 'britanico', 'bengali': 'bengali', 'ragdoll': 'ragdoll'},
 }
 
 
