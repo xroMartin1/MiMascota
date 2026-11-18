@@ -522,7 +522,7 @@ class UxFeatures(BillingFeatures):
         self.confirm('Compartir resumen de salud', 'El PDF incluirá los registros de salud y cuidados de esta mascota. Compártelo solo con quien tú elijas.', self.prepare_health_report)
 
     def prepare_health_report(self):
-        from services.health_report import create_health_report, share_health_report
+        from services.health_report import create_health_report, share_health_report, ShareError
         from kivy.utils import platform
         try:
             if platform == 'android':
@@ -545,8 +545,9 @@ class UxFeatures(BillingFeatures):
                 return
             try:
                 share_health_report(result)
-            except Exception:
+            except Exception as error:
                 from kivy.logger import Logger
                 Logger.exception('Health report: could not share prepared PDF')
-                self.message('No se pudo compartir el PDF', 'El PDF se preparó, pero no pudimos abrir el menú para compartir. Inténtalo otra vez. Revisa que tengas una app para abrir o compartir PDF.')
+                diagnostic = '\nCódigo para soporte: ' + error.code if isinstance(error, ShareError) else ''
+                self.message('No se pudo compartir el PDF', 'El PDF se preparó, pero no pudimos abrir el menú para compartir. Inténtalo otra vez. Revisa que tengas una app para abrir o compartir PDF.' + diagnostic)
         self.network(lambda: create_health_report(snapshot, pet_id, path), ready)

@@ -173,7 +173,7 @@ class MeasurementFeatures:
                      self.prepare_measurement_export)
 
     def prepare_measurement_export(self):
-        from services.health_report import share_health_report
+        from services.health_report import share_health_report, ShareError
         from kivy.logger import Logger
         from kivy.utils import platform
         try:
@@ -195,6 +195,7 @@ class MeasurementFeatures:
             return
         try:
             share_health_report(path, mime='application/json', title='Estadísticas de uso')
-        except Exception:
+        except Exception as error:
             Logger.exception('Measurement: could not share statistics export')
-            self.message('No se pudo compartir', 'El archivo se preparó, pero no pudimos abrir el menú para compartir. Inténtalo otra vez. Revisa que tengas una app para compartir archivos.')
+            diagnostic = '\nCódigo para soporte: ' + error.code if isinstance(error, ShareError) else ''
+            self.message('No se pudo compartir', 'El archivo se preparó, pero no pudimos abrir el menú para compartir. Inténtalo otra vez. Revisa que tengas una app para compartir archivos.' + diagnostic)
