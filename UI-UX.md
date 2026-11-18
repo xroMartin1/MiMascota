@@ -57,7 +57,7 @@ Los formularios remotos conservan los campos abiertos durante la petición, mues
 
 ## Premium y perfiles por raza · 16 de noviembre de 2026
 
-Premium tiene una tarjeta propia en Cuenta y acceso contextual desde Chapa. Su diálogo separa precio, beneficios y estado confirmado; la acción principal permanece fuera del scroll. Las instrucciones del entorno de prueba se muestran antes de abrir Mercado Pago. Se conserva la validación de servidor, el precio mensual por mascota y la integración exclusivamente de prueba.
+Premium tiene una tarjeta propia en Cuenta y acceso contextual desde Chapa. Su diálogo separa precio, beneficios y estado confirmado; la acción principal permanece fuera del scroll. El aviso de pago de prueba se muestra antes de abrir Webpay. Se conserva la validación de servidor, el precio mensual por mascota y la integración exclusivamente de prueba.
 
 Las superficies blancas mantienen bordes opcionales y las fichas de mascotas ganan retratos más grandes, menta y lavanda. Inicio usa un acceso práctico a Chapa sin el hueso ni eslóganes. El encabezado muestra solo la marca. Rutina recupera la ilustración de mascotas en un banner compacto. Se sustituyen los puntos intermedios por texto separado con comas o líneas.
 
@@ -88,3 +88,11 @@ screens/theme.py centraliza la paleta, tipografía base, separación y radios pr
 Se revisaron las pantallas principales, perfiles, formularios, mensajes, acceso, chapa, estados Premium, copias y recordatorios en escritorio a 390/320 px y con altura reducida. Se corrigió la selección de navegación al abrir Chapa desde un perfil: ahora marca Chapa, aunque el acceso parta de Inicio o Mascotas. El banner de Rutina se adapta a la altura de ventana para dejar más espacio a la agenda.
 
 Las comprobaciones históricas de mensajes y publicación de QR se actualizaron a las páginas y acciones actuales; el consejo remoto se prueba con una respuesta simulada válida, sin depender del marcador de diagnóstico del proyecto remoto. Los 18 recorridos de interfaz y las 95 pruebas unitarias pasan; logs y capturas de repaso en previews/final-review. La validación no incluye APK, Android físico ni pagos reales.
+
+## Experiencia Premium 0.2.13
+
+La confirmación usa el mismo retrato por raza que el perfil, con un pequeño salto, corazones y huellas durante una animación breve. Solo una respuesta aprobada del servidor puede dispararla; la orden se recuerda por cuenta para no repetirla al refrescar o reiniciar. La ventana se ajusta al contenido y permite scroll en pantallas bajas.
+
+La chapa de producto está centrada y su nombre se dibuja sobre una placa sin texto fijo. La tarjeta de cuenta resume el precio como $3.990 CLP / mes y cambia a Mi Premium cuando la mascota seleccionada tiene vigencia. Un contorno suave del perfil cambia lentamente de color, con pausa fuera de foco, al suspender o con movimiento reducido. El registro local es un indicador visual y no concede permisos de servidor.
+
+La primera compra incluye la chapa física; las renovaciones mantienen el servicio. No se muestra la referencia de orden en el recorrido habitual ni se simula un estado de envío. El catálogo añade Beagle, Dachshund, Husky y Ragdoll en recortes transparentes de 256 px.

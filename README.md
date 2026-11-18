@@ -85,6 +85,8 @@ La guía de defensa del equipo está en [GUIA-EQUIPO.md](GUIA-EQUIPO.md), y la d
 
 En **Cuenta → Ver Premium**, o desde **Chapa → Ver Premium**, está el checkout de prueba de **Webpay Plus**: $3.990 CLP por un mes por mascota, con renovación manual. Solo usar tarjetas de integración de Transbank; nunca tarjetas personales. La app consulta al servidor antes de confirmar el periodo. Preparación, código del backend y límites en [PAGOS-DE-PRUEBA.md](PAGOS-DE-PRUEBA.md).
 
+La primera compra incluye la chapa física y las renovaciones mantienen el servicio. La confirmación muestra la mascota con una animación breve; el perfil conserva un distintivo mientras haya Premium vigente en la cuenta. El nombre de la placa de producto se dibuja con los datos de la mascota, sin generar una imagen por nombre. La entrega física no tiene un flujo logístico implementado en esta beta.
+
 `services/subscription.py` realiza solicitudes autenticadas a `webpay-payments`; `screens/billing.py` muestra el estado y abre el checkout del sitio propio. No pide correo de comprador ni autoriza cobros automáticos. El backend y las rutas web se entregan en la rama correspondiente de MiMascotaWeb; requieren configurar y desplegar antes de usar este cliente.
 
 ## Medición y evaluación MJV

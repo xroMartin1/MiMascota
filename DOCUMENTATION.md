@@ -47,6 +47,6 @@ Usar el entorno de desarrollo con dependencias instaladas; los scripts UI requie
 
 - La nueva app y el nuevo backend/web deben integrarse y desplegarse juntos; el endpoint anterior de Mercado Pago no sirve a este cliente.
 - Falta la prueba física Android de Analytics/DebugView y del retorno del sandbox con la firma de distribución prevista.
-- No se compiló un APK de esta rama en este equipo. `buildozer.spec` declara 0.2.12 para la próxima compilación, no para renombrar un binario antiguo.
+- No se compiló un APK de esta rama en este equipo. `buildozer.spec` declara 0.2.13 para la próxima compilación, no para renombrar un binario antiguo.
 - La transacción se conserva y se puede consultar si se interrumpe el navegador. Los pasos operativos y límites están en [PAGOS-DE-PRUEBA.md](PAGOS-DE-PRUEBA.md).
 - Las métricas no prueban que una mascota perdida haya vuelto a casa ni beneficios sanitarios. Evitar atribuciones que la muestra y el instrumento no midan.

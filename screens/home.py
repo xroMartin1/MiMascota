@@ -61,6 +61,7 @@ class HomeScreen(MeasurementFeatures, RemoteConfigFeatures, BackupFeatures, UxFe
         self.start_backup()
         self.start_ux()
         self.start_remote_config()
+        self.start_premium_status()
         self.show("Inicio")
         self.reminder_clock = Clock.schedule_interval(self.check_reminders, 30)
         self.push_sync_clock = Clock.schedule_interval(self.retry_reminders, 30)

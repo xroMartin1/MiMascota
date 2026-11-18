@@ -50,6 +50,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
     def save(self, *, completed=None):
         try:
             self.store.save(self.data)
+            self.update_premium_badge()
             if completed:
                 self.record_care_completion(*completed)
             self.observe_measurement()
@@ -1085,6 +1086,7 @@ class CareFeatures(ReminderFeatures, PublicTagFeatures):
         self.data_file = self.store.path
         self.data = deepcopy(self.store.data)
         self.start_measurement()
+        self.start_premium_status()
         self.selected_pet = self.data["pets"][0]["id"] if self.data["pets"] else None
         self.notified.clear()
         self._reminder_accepted = None

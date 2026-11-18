@@ -33,6 +33,14 @@ class MiMascotaApp(MDApp):
     def on_start(self):
         self.configure_system_bars()
         Window.bind(on_keyboard=self.back_navigation)
+        Window.bind(focus=self.premium_focus)
+
+    def premium_focus(self, window, focused):
+        if self.root:
+            screen = self.root.get_screen('home')
+            screen.set_premium_motion(bool(focused))
+            if focused:
+                screen.refresh_subscription()
 
     def back_navigation(self, window, key, *_):
         if key != 27 or not self.root:
@@ -57,18 +65,21 @@ class MiMascotaApp(MDApp):
     def on_pause(self):
         if self.root:
             self.root.get_screen("home").pause_measurement()
+            self.root.get_screen("home").set_premium_motion(False)
             self.root.get_screen("home").cloud.retry_session_cache()
         return True
 
     def on_resume(self):
         self.configure_system_bars()
         self.root.get_screen("home").resume_measurement()
+        self.root.get_screen("home").set_premium_motion(True)
         from kivy.clock import Clock
         Clock.schedule_once(self.root.get_screen("home").retry_reminders, .5)
         Clock.schedule_once(self.root.get_screen("home").retry_backup, 1)
         Clock.schedule_once(self.root.get_screen("home").refresh_care_tip, 1.2)
         Clock.schedule_once(self.root.get_screen("home").check_google_provider, 1)
         Clock.schedule_once(self.root.get_screen("home").refresh_subscription, 1.5)
+        Clock.schedule_once(self.root.get_screen("home").refresh_premium_badge, 2)
 
     def build(self):
 
@@ -91,6 +102,7 @@ class MiMascotaApp(MDApp):
         if self.root and hasattr(self.root, "get_screen"):
             screen = self.root.get_screen('home')
             screen.pause_measurement()
+            screen.stop_premium_status()
             Window.unbind(on_touch_down=screen.measurement_touch, on_key_down=screen.measurement_touch)
             self.root.get_screen("home").reminder_clock.cancel()
             self.root.get_screen("home").push_sync_clock.cancel()
@@ -99,6 +111,7 @@ class MiMascotaApp(MDApp):
             self.root.get_screen('home')._qr_poll.cancel()
             self.root.get_screen('home')._notice_timer.cancel()
             Window.unbind(on_keyboard=self.back_navigation)
+            Window.unbind(focus=self.premium_focus)
 
 
 if __name__ == "__main__":
