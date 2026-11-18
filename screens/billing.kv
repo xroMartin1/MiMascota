@@ -201,6 +201,21 @@
         text: root.context['text']
         wrap: True
         font_size: sp(design.BODY)
+    ViewCard:
+        adaptive: False
+        size_hint: None, None
+        size: dp(74), dp(24)
+        pos_hint: {'center_y': .5}
+        padding: 0
+        radius: 12
+        bg: design.MINT
+        shadow: False
+        ViewText:
+            text: root.context.get('badge', 'Premium')
+            color: rgba(design.TEAL)
+            bold: True
+            halign: 'center'
+            font_size: sp(11)
 
 <PremiumStatus@ViewCard>:
     bg: root.context['bg']

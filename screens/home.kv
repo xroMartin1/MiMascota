@@ -108,7 +108,7 @@
             spacing: dp(16)
             padding: [dp(v) for v in [18, 18, 18, 26]]
             adaptive: True
-    ViewCard:
+    ViewNavigation:
         id: navigation
         bg: design.WHITE
         radius: 0
@@ -119,14 +119,23 @@
         padding: [dp(6), dp(6)]
         spacing: dp(2)
 
+<ViewNavigation>:
+    canvas.before:
+        Color:
+            rgba: rgba(design.LIME) if self.indicator_visible else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.indicator_pos
+            size: self.indicator_size
+            radius: [dp(16)]
+
 <NavigationQr@ViewAction>:
     padding: [dp(1), dp(5)]
     text: root.context['text']
     icon: root.context['icon']
     vertical: True
     font_size: 11
-    bg: design.INK if root.context['selected'] else design.WHITE
-    fg: design.WHITE if root.context['selected'] else design.TEAL
+    bg: '#FFFFFF00'
+    fg: design.INK if root.context['selected'] else design.TEAL
     callback: root.context['callback']
 
 <NavigationTab@ViewAction>:
@@ -135,7 +144,7 @@
     icon: root.context['icon']
     vertical: True
     font_size: 11
-    bg: design.LIME if root.context['selected'] else design.WHITE
+    bg: '#FFFFFF00'
     fg: design.INK if root.context['selected'] else design.MUTED
     callback: root.context['callback']
 

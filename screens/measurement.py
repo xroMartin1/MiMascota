@@ -174,6 +174,7 @@ class MeasurementFeatures:
 
     def prepare_measurement_export(self):
         from services.health_report import share_health_report
+        from kivy.logger import Logger
         from kivy.utils import platform
         try:
             if platform == 'android':
@@ -188,6 +189,12 @@ class MeasurementFeatures:
             path = folder / ('uso-' + uuid4().hex + '.json')
             if not self.measurement_call('export', path):
                 raise OSError('measurement export unavailable')
+        except Exception:
+            Logger.exception('Measurement: could not prepare statistics export')
+            self.message('No se pudieron preparar las estadísticas', 'Inténtalo otra vez. Revisa el espacio disponible.')
+            return
+        try:
             share_health_report(path, mime='application/json', title='Estadísticas de uso')
         except Exception:
-            self.message('No se pudo compartir', 'Inténtalo otra vez. Revisa el espacio disponible y las apps para compartir archivos.')
+            Logger.exception('Measurement: could not share statistics export')
+            self.message('No se pudo compartir', 'El archivo se preparó, pero no pudimos abrir el menú para compartir. Inténtalo otra vez. Revisa que tengas una app para compartir archivos.')

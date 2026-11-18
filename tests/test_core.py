@@ -164,6 +164,19 @@ class StorageTests(unittest.TestCase):
 
 class CloudTests(unittest.TestCase):
     @patch('services.cloud.requests.request')
+    def test_webpay_errors_explain_payment_or_qr_instead_of_credentials(self, request):
+        client = self.client()
+        for code, status, expected in [('tag_not_found', 400, 'chapa'),
+                                       ('authentication_required', 401, 'sesión'),
+                                       ('billing_unavailable', 503, 'Webpay'),
+                                       ('unavailable', 404, 'mascota'),
+                                       ('billing_unavailable', 429, 'intentos')]:
+            with self.subTest(code=code, status=status):
+                request.return_value = Mock(ok=False, status_code=status, text='', json=lambda: {'error': code})
+                with self.assertRaisesRegex(CloudError, expected):
+                    client.request('POST', '/functions/v1/webpay-payments', {})
+
+    @patch('services.cloud.requests.request')
     def test_contact_metadata_saved_without_public_table_or_password(self, request):
         client = self.client()
         profile = dict(name='Mar', phone='+56912345678', city='Santiago')

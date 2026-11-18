@@ -10,7 +10,7 @@ from kivy.animation import Animation
 
 from kivy.factory import Factory
 from kivy.lang import Builder
-from kivy.properties import BooleanProperty, DictProperty, NumericProperty, ObjectProperty, StringProperty
+from kivy.properties import BooleanProperty, DictProperty, ListProperty, NumericProperty, ObjectProperty, StringProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -163,6 +163,52 @@ class ViewAction(PressFeedback, ViewCard):
     def on_release(self):
         if self.callback:
             self.callback(self)
+
+
+class ViewNavigation(ViewCard):
+    indicator_pos = ListProperty([0, 0])
+    indicator_size = ListProperty([0, 0])
+    indicator_visible = BooleanProperty(False)
+
+    def __init__(self, **kwargs):
+        self._selected = None
+        self._indicator_ready = False
+        self._indicator_geometry = None
+        super().__init__(**kwargs)
+
+    def select(self, page):
+        target = None
+        for tab in self.children:
+            tab.context['selected'] = tab.text == page
+            if tab.text == page:
+                target = tab
+        if target is self._selected:
+            if not interface_motion():
+                self._place_indicator(False)
+            return
+        animated = self._selected is not None and self._indicator_ready and interface_motion()
+        self._selected = target
+        self._place_indicator(animated)
+
+    def do_layout(self, *args):
+        super().do_layout(*args)
+        # Layout changes snap to the new geometry, cancelling stale travel targets.
+        if self._selected and tuple(self._selected.pos + self._selected.size) != self._indicator_geometry:
+            self._place_indicator(False)
+        self._indicator_ready = True
+
+    def _place_indicator(self, animated):
+        Animation.cancel_all(self, 'indicator_pos')
+        self.indicator_visible = self._selected is not None
+        if self._selected is None:
+            return
+        self._indicator_geometry = tuple(self._selected.pos + self._selected.size)
+        self.indicator_size = self._selected.size
+        position = list(self._selected.pos)
+        if animated:
+            Animation(indicator_pos=position, duration=.22, t='out_cubic').start(self)
+        else:
+            self.indicator_pos = position
 
 
 class TagTurner(PressFeedback, ViewCard):
