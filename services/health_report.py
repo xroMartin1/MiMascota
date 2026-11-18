@@ -4,6 +4,12 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 
+class ShareError(RuntimeError):
+    def __init__(self, stage, error):
+        self.code = 'share-' + stage + '-' + type(error).__name__
+        super().__init__(self.code)
+
+
 def create_health_report(data, pet_id, target):
     from reportlab.lib import colors
     from reportlab.lib.styles import ParagraphStyle
@@ -62,19 +68,34 @@ def create_health_report(data, pet_id, target):
 def share_health_report(path, mime='application/pdf', title='Resumen de salud'):
     from kivy.utils import platform
     if platform == 'android':
-        from jnius import autoclass, cast
-        activity = autoclass('org.kivy.android.PythonActivity').mActivity
-        file = autoclass('java.io.File')(str(path))
-        provider = autoclass('androidx.core.content.FileProvider')
-        uri = provider.getUriForFile(activity, activity.getPackageName()+'.files', file)
-        intent = autoclass('android.content.Intent')()
-        intent.setAction('android.intent.action.SEND')
-        intent.setType(mime)
-        # Pyjnius cannot reliably choose the Parcelable overload from a raw Uri.
-        intent.putExtra('android.intent.extra.STREAM', cast('android.os.Parcelable', uri))
-        intent.setClipData(autoclass('android.content.ClipData').newRawUri(title, uri))
-        intent.addFlags(1)  # Temporary read grant; no exported directory or storage permission.
-        activity.startActivity(autoclass('android.content.Intent').createChooser(intent, 'Compartir archivo'))
+        stage = 'init'
+        try:
+            from jnius import autoclass, cast
+            activity = autoclass('org.kivy.android.PythonActivity').mActivity
+            java_string = autoclass('java.lang.String')
+            stage = 'uri'
+            file = autoclass('java.io.File')(str(path))
+            provider = autoclass('androidx.core.content.FileProvider')
+            uri = provider.getUriForFile(activity, activity.getPackageName()+'.files', file)
+            stage = 'intent'
+            intent_class = autoclass('android.content.Intent')
+            intent = intent_class()
+            intent.setAction('android.intent.action.SEND')
+            intent.setType(mime)
+            stage = 'stream'
+            # Pyjnius needs explicit interface types when choosing overloaded methods.
+            intent.putExtra('android.intent.extra.STREAM', cast('android.os.Parcelable', uri))
+            stage = 'clip'
+            label = cast('java.lang.CharSequence', java_string(title))
+            intent.setClipData(autoclass('android.content.ClipData').newRawUri(label, uri))
+            intent.addFlags(1)  # Temporary read grant; no exported directory or storage permission.
+            stage = 'chooser'
+            chooser_title = cast('java.lang.CharSequence', java_string('Compartir archivo'))
+            chooser = intent_class.createChooser(intent, chooser_title)
+            stage = 'open'
+            activity.startActivity(chooser)
+        except Exception as error:
+            raise ShareError(stage, error) from error
     else:
         import webbrowser
         webbrowser.open(Path(path).resolve().as_uri())

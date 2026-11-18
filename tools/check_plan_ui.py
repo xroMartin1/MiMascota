@@ -93,10 +93,13 @@ class Review(MiMascotaApp):
             submit=form.call_args.args[2]
             assert 'Revisa el código' in submit({'code':'invalid'})
             network.assert_not_called()
-        with patch('services.health_report.create_health_report',return_value=Mock()) as create, patch('services.health_report.share_health_report',side_effect=RuntimeError('native chooser unavailable')), patch.object(self.s,'message') as message:
+        from services.health_report import ShareError
+        with patch('services.health_report.create_health_report',return_value=Mock()) as create, patch('services.health_report.share_health_report',side_effect=ShareError('chooser',RuntimeError('PRIVATE path'))), patch.object(self.s,'message') as message:
             self.s.prepare_health_report()
             message.assert_called_once()
             assert message.call_args.args[0]=='No se pudo compartir el PDF'
+            assert 'share-chooser-RuntimeError' in message.call_args.args[1]
+            assert 'PRIVATE' not in message.call_args.args[1]
         owner=self.s.cloud.user
         file=Mock()
         def switch_account(*_):

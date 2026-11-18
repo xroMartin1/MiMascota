@@ -71,6 +71,7 @@ class MeasurementIntegrationTests(unittest.TestCase):
         self.assertEqual(self.screen.message.call_args.args[0], 'No se pudieron preparar las estadísticas')
 
     def test_share_failure_keeps_prepared_statistics_and_reports_sharing(self):
+        from services.health_report import ShareError
         self.screen.message = Mock()
         def export(path):
             path.write_text('{}', encoding='utf-8')
@@ -78,10 +79,13 @@ class MeasurementIntegrationTests(unittest.TestCase):
         self.screen.measurement.export.side_effect = export
         with TemporaryDirectory() as folder, patch('tempfile.gettempdir', return_value=folder), \
                 patch('kivy.utils.platform', 'win'), patch('kivy.logger.Logger.exception'), \
-                patch('services.health_report.share_health_report', side_effect=RuntimeError('JNI failure')):
+                patch('services.health_report.share_health_report',
+                      side_effect=ShareError('chooser', RuntimeError('PRIVATE file path'))):
             self.screen.prepare_measurement_export()
             self.assertEqual(len(list(Path(folder).rglob('uso-*.json'))), 1)
         self.assertEqual(self.screen.message.call_args.args[0], 'No se pudo compartir')
+        self.assertIn('share-chooser-RuntimeError', self.screen.message.call_args.args[1])
+        self.assertNotIn('PRIVATE', self.screen.message.call_args.args[1])
 
 
 if __name__ == '__main__':

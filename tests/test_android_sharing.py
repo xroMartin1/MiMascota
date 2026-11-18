@@ -25,28 +25,47 @@ class AndroidSharingTests(unittest.TestCase):
                         raise TypeError('Invalid Uri instance for selected putExtra overload')
                 intent.putExtra.side_effect = put_extra
                 intent_class = Mock(return_value=intent)
-                chooser = intent_class.createChooser.return_value
+                labels = {title: object(), 'Compartir archivo': object()}
+                chooser = object()
+                def create_chooser(send, label):
+                    if label is not labels['Compartir archivo']:
+                        raise TypeError('No matching createChooser CharSequence overload')
+                    return chooser
+                intent_class.createChooser.side_effect = create_chooser
                 provider, clip = Mock(), Mock()
                 provider.getUriForFile.return_value = raw_uri
                 classes = {'org.kivy.android.PythonActivity': SimpleNamespace(mActivity=activity),
                            'java.io.File': Mock(), 'androidx.core.content.FileProvider': provider,
-                           'android.content.Intent': intent_class, 'android.content.ClipData': clip}
+                           'android.content.Intent': intent_class, 'android.content.ClipData': clip,
+                           'java.lang.String': lambda value: SimpleNamespace(value=value)}
                 def cast(name, value):
-                    self.assertEqual(name, 'android.os.Parcelable')
-                    self.assertIs(value, raw_uri)
-                    return parcelable
+                    if name == 'android.os.Parcelable':
+                        self.assertIs(value, raw_uri)
+                        return parcelable
+                    self.assertEqual(name, 'java.lang.CharSequence')
+                    return labels[value.value]
                 jnius = SimpleNamespace(autoclass=classes.__getitem__, cast=cast)
                 with patch('kivy.utils.platform', 'android'), patch.dict('sys.modules', jnius=jnius):
                     share_health_report(Path('private-cache/report'), mime=mime, title=title)
                 intent.setAction.assert_called_once_with('android.intent.action.SEND')
                 intent.setType.assert_called_once_with(mime)
                 intent.putExtra.assert_called_once_with('android.intent.extra.STREAM', parcelable)
-                clip.newRawUri.assert_called_once_with(title, raw_uri)
+                clip.newRawUri.assert_called_once_with(labels[title], raw_uri)
+                intent_class.createChooser.assert_called_once_with(intent, labels['Compartir archivo'])
                 intent.setClipData.assert_called_once_with(clip.newRawUri.return_value)
                 intent.addFlags.assert_called_once_with(1)
                 activity.startActivity.assert_called_once_with(chooser)
                 provider.getUriForFile.assert_called_once_with(
                     activity, 'org.mimascota.mimascota.files', classes['java.io.File'].return_value)
+
+    def test_share_diagnostic_does_not_expose_exception_paths_or_content(self):
+        error = RuntimeError('PRIVATE /cache/pet-name.pdf content://private/token')
+        jnius = SimpleNamespace(autoclass=Mock(side_effect=error), cast=Mock())
+        with patch('kivy.utils.platform', 'android'), patch.dict('sys.modules', jnius=jnius):
+            with self.assertRaisesRegex(RuntimeError, '^share-init-RuntimeError$') as caught:
+                share_health_report('PRIVATE path')
+        self.assertEqual(caught.exception.code, 'share-init-RuntimeError')
+        self.assertIs(caught.exception.__cause__, error)
 
     def test_desktop_still_opens_local_file(self):
         with TemporaryDirectory() as folder:
